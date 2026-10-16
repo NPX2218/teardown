@@ -6,7 +6,7 @@
 **Architecture:** The JSON is the "facts layer": the viewer reads it for grouping and explode, the agent reads it as its only source of numbers. `lib/parts.ts` validates it in tests.
 **Tech Stack:** JSON, TypeScript, vitest.
 **Spec:** planning doc §5 "Falcon 9 node map". The prototype's `PARTS` array (in `teardown-falcon9.html`) already has the text; convert it.
-**Owner:** B. **Needs:** 01. **Deadline:** rough version committed by **Fri 5:30 PM** (it unblocks A).
+**Owner:** Anders. **Needs:** 01. A rough version already exists from 01 Task 5, so nobody waits on this; 02 polishes it (real specs, kid wording, glossary, validator).
 
 ## Global Constraints
 See `00-index.md`.
@@ -48,7 +48,7 @@ Example `say` for `legs`: "These are the landing legs. They stay folded on the w
 
 **Glossary:** add `glossary` with a one-sentence plain explanation for each term the app uses: payload, orbit, thrust, kilonewton, fairing, stage, interstage, stage separation, MECO, max-Q, boostback, entry burn, grid fins, cold gas thrusters, droneship, RP-1, liquid oxygen (LOX), Merlin, octaweb. Example: `"max-Q": "The moment the air pushes hardest on the rocket as it speeds up."`
 
-- [ ] **Step 1:** Write the file (rough `say` lines are fine by 5:30 PM; polish the kid wording by 9 PM). **Step 2:** Commit `feat: falcon 9 parts data` and tell A it's in.
+- [ ] **Step 1:** Polish the rough file from 01 (real specs, kid wording). **Step 2:** Commit `feat: falcon 9 parts data`. Neel's viewer picks it up on the next merge; nobody is waiting on it.
 
 ### Task 2: Validator
 

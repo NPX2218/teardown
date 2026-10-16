@@ -5,8 +5,8 @@
 **Goal:** Ask "show me what lands back on Earth" and Grok answers while calling scene functions that move the model.
 **Architecture:** The server route only talks to Grok (it holds the key). The browser runs the tool calls against the store, sends results back, and loops until Grok gives a final answer. Tool definitions and their handlers live in **one file** so they can't drift apart.
 **Tech Stack:** xAI API (OpenAI-compatible chat completions with function calling), Next.js route handlers, zustand, vitest.
-**Spec:** planning doc §2 feature 1, §3 "Shared contract" rule.
-**Owner:** B. **Needs:** 01, 02, and `lib/engines.ts` from 08 Task 1 (pure math, ~15 min). If A hasn't merged it yet, B implements 08 Task 1 exactly as written and tells A.
+**Spec:** planning doc §2 feature 1; 01 Task 3 (the store actions are the tools).
+**Owner:** Anders. **Needs:** 01 only (`lib/engines.ts` is written in 01 Task 5; the parts file and practice mission exist from 01).
 
 ## Global Constraints
 See `00-index.md`.
@@ -16,7 +16,7 @@ See `00-index.md`.
 ### Task 0: Confirm the API (curl, ~20 min)
 
 - [ ] **Step 1:** With your key, call `POST https://api.x.ai/v1/chat/completions` with one simple tool (e.g. `get_time`) and a prompt that should use it. Record in `docs/xai-notes.md`: the text model id you'll use (→ `XAI_TEXT_MODEL`), whether `tool_calls` come back in OpenAI format, typical latency.
-- [ ] **Step 2:** Same file: the Grok Voice and Grok Imagine endpoints, request/response formats, latency, rate limits (05 and 09 depend on these). Check xAI's docs at kickoff; don't guess.
+- [ ] **Step 2:** Same file: the Grok Voice (text-to-speech), speech-to-text, and Grok Imagine endpoints, request/response formats, latency, rate limits (05 and 09 depend on these). Check xAI's docs at kickoff; don't guess.
 - [ ] **Step 3:** Commit `docs: xai api notes`.
 
 ### Task 1: Tools and dispatcher
@@ -30,18 +30,18 @@ See `00-index.md`.
 // TOOLS and HANDLERS MUST stay in sync (tested by A1 below).
 export const TOOLS: { type: "function"; function: { name: ToolName; description: string; parameters: object } }[];
 export type ToolName = "get_state" | "select_part" | "set_explode" | "fly_to" | "start_tour"
-                     | "start_replay" | "start_flight" | "set_engines_out" | "set_level" | "imagine";
+                     | "start_replay" | "start_mission" | "set_engines_out" | "set_level" | "imagine";
 export function runTool(name: string, args: unknown): Promise<ToolResult>;
 ```
 | Tool | Args (JSON schema) | Calls |
 |---|---|---|
-| `get_state` | none | returns `{ selectedId, explode, replay, flight, enginesOut, liftoffTW, verdict, partIds, missionIds }` (Task 6 adds `flightScore`) |
+| `get_state` | none | returns `{ selectedId, explode, replay, mission, rocketConnected, enginesOut, liftoffTW, verdict, level, partIds, missionIds }` (Task 6 adds `missionStars`) |
 | `select_part` | `part_id: string` (enum of part ids) | `selectPart`, then `flyTo` |
 | `set_explode` | `amount: number` 0..1 | `setExplode` |
 | `fly_to` | `target: string` (part id or `"home"`) | `flyTo` |
 | `start_tour` | none | `startTour` |
 | `start_replay` | `mission_id: string` (enum of `MISSIONS` keys) | `startReplay` |
-| `start_flight` | `mission_id: string` (enum of `MISSIONS` keys) | `startFlight` ("fly it yourself": the judge flies with the prop) |
+| `start_mission` | `mission_id: string` (enum of `MISSIONS` keys) | `startMission` (the guided mission flown with the phone rocket; if `rocketConnected` is false, Grok should first tell the visitor to scan the QR code) |
 | `set_engines_out` | `engines: integer[]` (0 = center, 1–8 = ring) | `setEnginesOut` |
 | `set_level` | `level: "kid" \| "curious" \| "engineer"` | `setLevel` (e.g. visitor says "explain it simpler" or "give me the details") |
 | `imagine` | `prompt: string`, `part_id: string` | `requestImagine` from 09 (until 09 lands: `{ ok: false, error: "imagine not available yet" }`) |
@@ -60,7 +60,8 @@ export function runTool(name: string, args: unknown): Promise<ToolResult>;
 ### Task 2: Server-side Grok client
 
 **Files:**
-- Create: `lib/grok.ts`, `lib/timeout.ts`, `lib/agent/types.ts`
+- Create: `lib/grok.ts`, `lib/timeout.ts`
+- Modify: `lib/agent/types.ts` (created in 01 Task 5; confirm the shape below)
 - Test: `lib/__tests__/timeout.test.ts`
 
 **Interfaces — Produces:**
@@ -105,7 +106,7 @@ Level blocks (exact text is yours; these are the rules):
 ### Task 4: Client loop + fallback
 
 **Files:**
-- Create: `lib/agent/client.ts`
+- Modify: `lib/agent/client.ts` (replace the 01 Task 5 placeholder body; same signature)
 - Test: `lib/__tests__/fallback.test.ts`
 
 **Interfaces — Produces:**
@@ -113,10 +114,10 @@ Level blocks (exact text is yours; these are the rules):
 // Each round is one Grok call; 4 covers "select + explode + fly + answer" with margin.
 // Arbitrary cap to bound latency and cost; raise only if real questions need more.
 export const MAX_TOOL_ROUNDS = 4;
-export function askAgent(text: string, history: ChatMessage[]): Promise<{ reply: string; history: ChatMessage[] }>;
+export function askAgent(text: string, history: ChatMessage[]): Promise<{ ok: boolean; reply: string; history: ChatMessage[] }>;  // replaces the 01 placeholder
 export function fallbackIntent(text: string): { tool: ToolName; args: object } | null;
 ```
-`askAgent`: POST `/api/agent`; for each `tool_calls` entry run `runTool` and append `{ role: "tool", tool_call_id, content: JSON.stringify(result) }`; repeat until a message has no tool calls or `MAX_TOOL_ROUNDS` is hit. On timeout or error: run `fallbackIntent(text)` if it matches and reply "I couldn't reach Grok, but here's the <part name>." (or "...so I started the launch."); otherwise "I couldn't reach Grok. Try again."
+`askAgent`: POST `/api/agent`; for each `tool_calls` entry run `runTool` and append `{ role: "tool", tool_call_id, content: JSON.stringify(result) }`; repeat until a message has no tool calls or `MAX_TOOL_ROUNDS` is hit. Returns `ok: true` when Grok answered. On timeout or error (`ok: false`): run `fallbackIntent(text)` if it matches and reply "I couldn't reach Grok, but here's the <part name>." (or "...so I started the launch."); otherwise "I couldn't reach Grok. Try again."
 `fallbackIntent` rules: `/launch|lift ?off/` → `start_replay` (first mission); `/tour/` → `start_tour`; a part name or id mentioned → `select_part`.
 
 - [ ] **Step 1: Failing tests:** `F1 "launch it"` → `start_replay`; `F2 "show me the grid fins"` → `select_part` `gridfins`; `F3 "what's the weather"` → `null`.
@@ -132,14 +133,15 @@ export function fallbackIntent(text: string): { tool: ToolName; args: object } |
 - [ ] **Step 2: Verify:** "show me what lands back on Earth" → legs and booster selected, reply explains landing. "what if two engines fail?" → `set_engines_out` with two engines, reply mentions T/W 1.10.
 - [ ] **Step 3:** Commit `feat: agent text box`.
 
-### Task 6 (Sat, after 07 Task 5): Grok knows how the judge flew
+### Task 6 (Sat): Grok celebrates and coaches
 
 **Files:**
 - Modify: `lib/agent/tools.ts`, `lib/agent/prompt.ts`
 - Test: `lib/__tests__/tools.test.ts`
 
-- [ ] **Step 1: Failing test** `A6 get_state includes the flight score`: register a fixture mission, `startFlight(id)`, record `liftoff 0` and `landing 480` → `runTool("get_state", {})` data has `flightScore.summary` containing "30 s early".
-- [ ] **Step 2:** In `get_state`, add `flightScore: scoreFlight(MISSIONS[flight.missionId], flight.achieved)` when `flight.missionId` is set, else `null`.
-- [ ] **Step 3:** Add to the system prompt: "When the judge finishes a flight, compare their times with the real booster using `flightScore`. Be encouraging and specific; only use the numbers it contains."
-- [ ] **Step 4:** `npm test` → pass. **Verify:** say "let me fly it" → Grok calls `start_flight` and tells the judge to lift the rocket.
-- [ ] **Step 5:** Commit `feat: agent comments on flights`.
+- [ ] **Step 1: Failing test** `A6 get_state includes the mission stars`: `endMission({ stars: 3, reasons: ["Feather-soft landing!"] })` → `runTool("get_state", {})` data has `missionStars.stars === 3`.
+- [ ] **Step 2:** In `get_state`, add `missionStars: mission.stars` (the store keeps it; Neel's 07 sets it when the mission ends, so this needs nothing from Neel's code).
+- [ ] **Step 3:** Add to the system prompt: "When the visitor finishes the guided mission, celebrate using `missionStars` and its reasons. Be warm and specific; only use numbers from the DATA."
+- [ ] **Step 4:** `npm test` → pass. **Verify:** say "let's fly" → Grok calls `start_mission` and tells the visitor to lift the rocket off the pad.
+- [ ] **Step 4b: Coaching.** Add to the system prompt: "A message starting with COACH: means a visitor is stuck at a checkpoint. Reply with ONE encouraging sentence of at most 12 words telling them how to move the rocket. No numbers, no tool calls." Verify: `askAgent("COACH: checkpoint=lean, target=a small tilt, tilt=70°, motion=0.2, still=0 ms, waited=16 s. Give the visitor ONE short kid-level hint.", [])` returns one short sentence with no digits.
+- [ ] **Step 5:** Commit `feat: agent celebrates missions`.

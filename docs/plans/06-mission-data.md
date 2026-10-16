@@ -6,7 +6,7 @@
 **Architecture:** A script pulls mission metadata from Launch Library 2 once and writes a skeleton; event times are filled by hand from the mission's published timeline. Data is committed, so the demo never depends on a live API.
 **Tech Stack:** Launch Library 2 API, tsx, vitest.
 **Spec:** planning doc §2 feature 2.
-**Owner:** B. **Needs:** 01.
+**Owner:** Anders. **Needs:** 01.
 
 ## Global Constraints
 See `00-index.md`. Launch Library 2 limits unauthenticated use to a small number of requests per hour: fetch once, save the raw response as the test fixture.
@@ -39,11 +39,11 @@ export function validateMission(m: Mission): string[];   // [] = valid
 - Modify: `data/missions/<id>.json`, `data/missions/index.ts`
 
 - [ ] **Step 1:** From the mission's published timeline, enter events with `t` in seconds after liftoff: at least `liftoff` (0), `maxq`, `meco`, `stage_sep`, `fairing_sep`, `landing`; add `boostback`, `entry_burn`, `landing_burn`, `seco` if listed. Set `source` to the timeline URL.
-- [ ] **Step 2:** Write one short `say` line per event (≤ 20 words). Only numbers that appear in this file or `falcon9.json` (e.g. booster flight number). Example: "Booster B10xx is on its 22nd flight. Main engine cutoff." (with real values).
+- [ ] **Step 2:** Write one short `say` line per event (≤ 20 words). Only numbers that appear in this file or `falcon9.json` (e.g. booster flight number). Write them **mission-control style, at kid level**, because during the guided mission they come out of the rocket in the visitor's hands. Examples (with real values): "Liftoff! We're entering the first phase of flight." · "Main engine cutoff. The first stage's engines are off." · "Booster B10xx is on its 22nd flight." 
 - [ ] **Step 3:** Register it in `data/missions/index.ts` (`MISSIONS[<id>] = <imported json>`).
 - [ ] **Step 4: Failing tests** for `validateMission`: `M3 real file valid` → `[]`; `M4 unsorted events` → error; `M5 first event not liftoff at 0` → error; `M6 unknown event id` → error. Implement, pass.
-- [ ] **Step 5:** Tell B's other half: rerun `scripts/cache-narration.ts` (05) for the new lines.
+- [ ] **Step 5:** Rerun `scripts/cache-narration.ts` (05) for the new lines.
 - [ ] **Step 6:** Commit `feat: <mission name> timeline`.
 
-### Task 3 (optional, cut first): second mission
+### Task 3 (optional; second on the cut list): second mission
 Repeat Tasks 1–2 for a landing-zone (RTLS) mission so the replay can show both landing types.

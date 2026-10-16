@@ -6,7 +6,7 @@
 **Architecture:** A react-three-fiber `<Canvas>` renders a `Rocket` component that prepares the GLB once (detach part nodes, record home positions, clone materials), then applies store state every frame. Pure math lives in `lib/explode.ts` so it can be tested without WebGL.
 **Tech Stack:** three, @react-three/fiber, @react-three/drei, zustand.
 **Spec:** planning doc §2 "MVP core" and §5 "Prototype lessons". The working prototype (`teardown-falcon9.html`) is the visual reference; port its behavior, don't paste it.
-**Owner:** A. **Needs:** 01, 02 (or B's rough `falcon9.json`).
+**Owner:** Neel. **Needs:** 01 only (the rough `falcon9.json` and the `speakLine` placeholder come from 01 Task 5).
 
 ## Global Constraints
 See `00-index.md`.
@@ -40,7 +40,7 @@ export function explodeOffset(e: { up: number; radial: number }, dir: [number, n
 
 **Files:**
 - Create: `lib/viewer/prepareModel.ts`, `components/viewer/Stage.tsx`, `components/viewer/Rocket.tsx`
-- Modify: `app/page.tsx` (render `<Stage />` full-screen), `app/layout.tsx` (fonts, black background)
+- Modify: `components/viewer/ViewerSlot.tsx` (render `<Stage />` full-screen; `app/page.tsx` stays frozen), `app/layout.tsx` (fonts, black background; Neel owns it)
 
 **Interfaces:**
 - Consumes: `PartsFile` (01), `radialDir` (Task 1).
@@ -58,8 +58,9 @@ export const DISPLAY_HEIGHT = 12;   // scene units for the whole vehicle
 4. Clone every mesh material and store its original `emissive` and `opacity` in `userData.base`.
 5. Scale the root so the vehicle is `DISPLAY_HEIGHT` tall and center it at the origin.
 
-- [ ] **Step 1:** Implement `prepareModel` and `Rocket` (loads `parts.glb` with drei `useGLTF`, calls `prepareModel` once in `useMemo`).
+- [ ] **Step 1:** Implement `prepareModel` and `Rocket` inside `ViewerSlot` (01 Task 5) (loads `parts.glb` with drei `useGLTF`, calls `prepareModel` once in `useMemo`).
 - [ ] **Step 2:** `Stage` = `<Canvas gl={{ preserveDrawingBuffer: true }} camera={{ fov: 35 }}>` with black background, a key light, a cool rim light, drei `<Environment preset="night" />`, a starfield (drei `<Stars />`), `<OrbitControls autoRotate autoRotateSpeed={0.8} enableDamping />`. (`preserveDrawingBuffer` is needed by 09's snapshot.)
+- [ ] **Step 2b:** Inside the canvas, `registerSnapshot(() => gl.domElement.toDataURL(\"image/jpeg\", 0.85))` on mount and `registerSnapshot(null)` on unmount, so Anders's Imagine (09) can grab the current view. Verify: `useScene.getState().snapshot()` returns a `data:image/jpeg` string.
 - [ ] **Step 3: Verify:** `npm run dev`, open Chrome. Expected: Falcon 9 renders upright and spins; console has **no** "missing node" warnings.
 - [ ] **Step 4:** Commit `feat: load and prepare falcon 9`.
 
@@ -92,10 +93,10 @@ export const DISPLAY_HEIGHT = 12;   // scene units for the whole vehicle
 ### Task 5: Camera rig and tour
 
 **Files:**
-- Create: `components/viewer/CameraRig.tsx`, `components/viewer/TourDirector.tsx`, `lib/voice/speak.ts` (stub; B replaces the body in 05)
+- Create: `components/viewer/CameraRig.tsx`, `components/viewer/TourDirector.tsx`
 
 **Interfaces:**
-- Produces: `speakLine(text: string): Promise<void>` in `lib/voice/speak.ts`. Stub body: browser `speechSynthesis`; resolves on `onend`, on `onerror`, or after `1500 + 55 * text.length` ms, whichever comes first. **B owns this file after 05.**
+- Consumes: `speakLine` (01 Task 5 placeholder; Anders's real version in 05 drops in without changes here).
 - Consumes: `flyTo`, `selectPart`, `nextTourStep`, `stopTour` from the store.
 
 Camera rules (from the prototype):

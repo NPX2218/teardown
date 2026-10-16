@@ -6,7 +6,7 @@
 **Architecture:** Pure thrust-to-weight math in `lib/engines.ts`. The nine Merlins are merged into two meshes in the GLB, so they can't be clicked individually; draw nine clickable markers over the engine bay instead.
 **Tech Stack:** react-three-fiber, vitest.
 **Spec:** planning doc §2 feature 3 and the engine-out table.
-**Owner:** A. **Needs:** 03.
+**Owner:** Neel. **Needs:** 03.
 
 ## Global Constraints
 See `00-index.md`.
@@ -15,31 +15,7 @@ See `00-index.md`.
 
 ### Task 1: Thrust-to-weight math
 
-**Files:**
-- Create: `lib/engines.ts`
-- Test: `lib/__tests__/engines.test.ts`
-
-**Interfaces — Produces:**
-```ts
-export const G0 = 9.80665;
-export function liftoffTW(running: number, thrustPerEngineKN: number, massKg: number): number;
-export function liftoffVerdict(tw: number): "yes" | "barely" | "no";
-export function runningCount(enginesOut: number[], total: number): number; // ignores duplicates and out-of-range
-```
-`liftoffTW = running * thrustPerEngineKN * 1000 / (massKg * G0)`; `running <= 0` → `0`.
-`liftoffVerdict`: `tw >= 1.2` → "yes"; `1.0 <= tw < 1.2` → "barely"; `tw < 1.0` → "no".
-```ts
-// 1.2: rough rule of thumb for a healthy liftoff margin, chosen so 8 engines (1.26) reads "yes"
-// and 7 (1.10) reads "barely", matching the planning doc's table. Not a SpaceX figure.
-```
-
-- [ ] **Step 1: Write failing tests** with Falcon 9 values (845 kN, 549,054 kg):
-  - `T1 nine engines`: `liftoffTW(9, 845, 549054)` toBeCloseTo `1.41`, 2.
-  - `T2 table rows`: 8 → 1.26 "yes"; 7 → 1.10 "barely"; 6 → 0.94 "no".
-  - `T3 all off`: `liftoffTW(0, 845, 549054) === 0` and is not `NaN`; verdict "no".
-  - `T4 duplicates ignored`: `runningCount([2, 2, 9, -1], 9) === 8`.
-- [ ] **Step 2:** fail → **Step 3:** implement → **Step 4:** pass.
-- [ ] **Step 5:** Commit `feat: liftoff thrust-to-weight`.
+Done in **01 Task 5** (`lib/engines.ts` and tests T1–T4: liftoff T/W 1.41 / 1.26 / 1.10 / 0.94, verdicts yes / barely / no, all engines off = 0, duplicates ignored). Both lanes use it from the first hour.
 
 ### Task 2: Engine markers on the model
 

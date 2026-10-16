@@ -3,7 +3,7 @@
 **Team:** 2 people, building in parallel
 **Event:** HackHarvard 2026, Oct 16–18, Harvard. Hacking starts Fri ~4:00 PM; Devpost closes **Sun 8:00 AM** (aim for 7:00).
 **Motto:** **Bringing rocket science down to Earth.**
-**One-liner:** Pick up a model rocket and say "launch it." Grok narrates a real Falcon 9 mission while the 3D model separates on the real timeline. Then ask "what if two engines fail?" and get a live answer.
+**One-liner:** Slide your phone into a model rocket and fly a real Falcon 9 mission: lift off, hold steady through max-Q, flip at separation, land gently, while Grok explains each moment and the rocket rumbles in your hands.
 
 ---
 
@@ -19,7 +19,7 @@
 **What it could become:** an interactive exhibit in a space museum or science center (or a launch company's visitor space): walk up, pick up the rocket, take it apart, fly the mission, leave understanding how a reusable rocket works. We're a student project and not affiliated with SpaceX; "exhibit" is the form factor we're designing for, not a partnership.
 
 **30-second pitch:**
-> "Millions watch Falcon 9 launches, but almost nobody understands what they're seeing. The data exists, scattered across spec sheets, webcast timelines and launch databases. Teardown brings rocket science down to Earth. Take the rocket apart, ask Grok anything in plain words, watch a real mission replay, then pick up the rocket and fly it yourself, scored against the real booster. It's built to work like a museum exhibit: simple enough for a kid, accurate enough for an engineer."
+> "Millions watch Falcon 9 launches, but almost nobody understands what they're seeing. The data exists, scattered across spec sheets, webcast timelines and launch databases. Teardown brings rocket science down to Earth. Take the rocket apart, ask Grok anything in plain words, watch a real mission replay, then slide your phone into the rocket and fly a guided mission: it rumbles at liftoff and clunks at separation. It's built to work like a museum exhibit: simple enough for a kid, accurate enough for an engineer."
 
 **Design principles (apply to every screen and every spoken line):**
 | Principle | What it means in practice |
@@ -38,16 +38,14 @@
 
 | Prize | Type | Requirement | How we meet it |
 |---|---|---|---|
-| **SpaceXAI: Make It Legendary** | Challenge (core) | Real space data; built with Cursor; uses Grok Imagine or Voice. Bonus for Grok Bot planning | Real NASA/Falcon 9 models, real specs, real launch timelines. Grok Voice agent + Grok Imagine. All code in Cursor |
-| **Hardware for Good** | Main track (core) | Sensors, Arduino/ESP32, devices | ESP32 + BNO055 motion sensor inside a rocket prop; knob = explode, button = launch |
-| Daytona | Challenge (dropped) | Sandboxes meaningful to the product | Dropped to fund the new features below |
+| **SpaceXAI: Make It Legendary** | Challenge (core) | Real space data; built with Cursor; uses Grok Imagine or Voice. Bonus for Grok Bot planning | Real Falcon 9 model and specs, a real mission timeline and booster history. Grok Voice agent + Grok Imagine. All code in Cursor |
+| **Hardware for Good** | Main track (core) | Sensors and devices | **Phone rocket:** a phone slides into a model rocket and becomes its motion sensor (accelerometer + orientation) and its speaker. **Organizers confirmed this counts.** |
+| **Save the Earth** (ASUS) | Main track (**backup**) | Tools for real environmental problems | **Emissions view** (plan 13): sourced CO₂, soot and water vapor at every stage of a real flight, compared with cars and flights, with honest context. Switch to this track if the phone rocket doesn't count for Hardware for Good. The ASUS content challenge then applies too |
+| Daytona | Challenge (dropped) | Sandboxes meaningful to the product | Dropped to fund the features below |
 | Chalk | Challenge (optional) | Data-driven agent, judged on evals | Only if time: eval that checks narration numbers against the parts data |
 
-**Other tracks, not a fit:** Reinvent Clinical Trials (Regeneron), Save the Earth (ASUS), Digital Trust, Nessie, Photon, Factory.
-
-**To confirm at the 3 PM opening ceremony:** can one project enter a main track plus several challenges?
-
-**ASUS content challenge:** only for teams on the Save the Earth track. We're not on it, so skip.
+**Other tracks, not a fit:** Reinvent Clinical Trials (Regeneron), Digital Trust, Nessie, Photon, Factory.
+**ASUS content challenge:** only for teams on the Save the Earth track; do it if we switch (13 Task 6).
 
 ---
 
@@ -59,15 +57,17 @@
 - **Click a part:** it glows, everything else fades, camera flies to it, card shows real specs
 - **Narrated tour** of 9 parts with captions
 
-### Added to the Friday deliverables
-| # | Feature | What it does | Real data / AI |
-|---|---|---|---|
-| 1 | **Grok voice agent controls the scene** | "Show me what lands back on Earth." Grok calls our functions (`explode`, `selectPart`, `flyTo`, `startReplay`, `setEnginesOut`) and the scene moves while it talks | Grok function calling + Grok Voice |
-| 2 | **Mission replay** | Pick a real Falcon 9 flight. Model animates the real timeline: liftoff → max-Q → MECO → stage separation → fairing separation → boostback → entry burn → landing. Shows booster serial and flight count | Public launch data (Launch Library 2) + the mission's published timeline |
-| 3 | **Engine-out simulator** | Click Merlins to switch them off. Live liftoff thrust-to-weight shows whether the vehicle can still lift off | Math on real specs (below) |
-| 4 | **Grok Imagine from the current view** | Screenshot the 3D view, Imagine shows that part in action ("this booster landing on a droneship at night") | Grok Imagine |
-| 5 | **Physical rocket** (Hardware track) | Twist the prop and the model follows; knob explodes; button starts "fly it yourself" | ESP32 + BNO055 |
-| 6 | **Fly it yourself** (Sat) | The judge flies the mission with the prop: **lift** = liftoff, **tip nose-down** = stage separation + boostback flip, **turn upright** = entry burn, **set it down still** = landing. The model animates their flight; a table compares their timing with the real booster's, and Grok comments ("You landed 30 s early compared with B10xx") | BNO055 motion data + real mission timeline + Grok |
+### Features
+| # | Feature | What it does | Real data / AI | Plan |
+|---|---|---|---|---|
+| 1 | **Grok voice agent controls the scene** | "Show me what lands back on Earth." Grok calls our functions and the scene moves while it talks. Kid / Curious / Engineer levels | Grok function calling + Grok Voice | 04, 05 |
+| 2 | **Hands-free mission replay** | "Launch it": a real Falcon 9 flight replays on its real timeline (stage separation, fairing, boostback, landing) with booster serial and flight count. Used as the idle exhibit loop and the no-phone backup | Launch Library 2 + the mission's published timeline | 06, 07 |
+| 3 | **Engine-out simulator** | Switch Merlins off; live liftoff thrust-to-weight says if it still lifts off | Math on real specs (below) | 08 |
+| 4 | **Grok Imagine** | "Show this in action": the part rendered in use, grounded in the current 3D view | Grok Imagine | 09 |
+| 5 | **Phone rocket** (Hardware track) | Scan a QR code, slide the phone into the model rocket. The 3D model turns with it; the rocket rumbles, clunks and plays launch music; it vibrates in your hands; **Grok talks from inside the rocket** like mission control ("Liftoff! We're entering the first phase of flight"). Optional: ask the rocket questions through the phone mic | Phone motion sensors + speaker + mic | 10, 11, 05 |
+| 6 | **Guided mission** (the main mode) | Fly a real mission with the rocket. The real timeline runs, but **pauses at each big moment** until you do the move: lift off → lean → hold steady through max-Q → flip at separation → turn upright → land gently. Stars at the end; Grok celebrates | Real mission timeline + motion sensors + Grok | 07, 11 |
+
+| 7 | **Emissions view** (backup track) | A switch from Rocket to Emissions: a running CO₂ counter climbs as the rocket flies (≈180 t by max-Q, ≈380 t by engine cutoff, ≈480 t by the end, all estimated), with car and flight comparisons, soot and water vapor, and a "where do these numbers come from?" panel. During the guided mission the rocket adds one emissions sentence per checkpoint | FAA environmental assessment (official CO₂ per engine-second), peer-reviewed soot studies, EPA car figures | 13 |
 
 **Engine-out numbers** (liftoff, from public specs: 845 kN per Merlin at sea level, 549,054 kg liftoff mass → 5,386 kN weight):
 
@@ -80,12 +80,24 @@
 
 This is a liftoff-only simplification. Real engine-out tolerance depends on flight phase; say so in the UI.
 
+### Guided mission checkpoints
+| # | Real moment | What the visitor does | Rocket plays |
+|---|---|---|---|
+| 1 | Liftoff | Lift it off the table | Countdown → rumble + launch music + vibration |
+| 2 | Leaning over (gravity turn) | Tilt it partway | Rumble |
+| 3 | Max-Q | Hold it still for 2 s | Heavier rumble, pulses |
+| 4 | Stage separation + boostback | Turn it upside down | Clunk, then a pop when the fairing separates |
+| 5 | Entry burn | Turn it upright | Burn sound |
+| 6 | Landing | Set it down gently | Thud, success chime |
+While a checkpoint waits, a **coach** compares the rocket's live tilt and motion with the target and the rocket gives hints ("Keep going, all the way upside down!", "Not that much, just a little lean"); a gauge on screen shows you vs the target; Grok coaches live after 15 s; after 30 s it offers "I'll do this part for you."
+Stars: ★ finished, ★ quick reactions, ★ soft landing (measured by the jolt at touchdown).
+
 ### Demo script (2 minutes)
-1. Falcon 9 spins on screen.
-2. Judge picks up the physical rocket and twists it. Screen follows.
-3. Judge says "launch it." Mission replay runs on a real flight's timeline with Grok narrating; stages separate, booster flies back and lands.
-4. **"Now you fly it."** Judge presses the button and lifts the rocket (liftoff), tips it nose-down (stages separate, booster flips), turns it upright, and sets it on the table (legs deploy, landing). The score table fills in and Grok compares their landing with the real booster's.
-5. Judge asks "what if two engines fail?" Grok switches off two Merlins, the simulator shows T/W 1.10, Grok explains.
+1. Falcon 9 spins on screen; the idle loop replays a real mission.
+2. Judge scans the QR code and slides their phone (or ours) into the rocket. The model turns as they turn it.
+3. Turn the explode slider / ask Grok "what's inside?": it comes apart, Grok explains a part in kid-friendly words.
+4. **"Let's fly."** Guided mission: the rocket itself counts down and calls each moment ("Liftoff! We're entering the first phase of flight"), rumbling and playing music: lean, hold steady through max-Q, flip at separation (clunk), turn upright, land gently. The rocket cheers; stars appear; Grok's full comment plays on the laptop.
+5. "What if two engines fail?" Grok switches off two Merlins; T/W 1.10, "barely"; Grok explains.
 6. "Show me this landing." Grok Imagine renders the booster landing from the current angle.
 
 ---
@@ -93,150 +105,40 @@ This is a liftoff-only simplification. Real engine-out tolerance depends on flig
 ## 3. Architecture
 
 ```text
- ┌──────────── Browser (Chrome) ─────────────┐        ┌──── Next.js API routes ─────┐
- │ 3D viewer (react-three-fiber + drei)      │        │ (xAI key lives here only)    │
- │  spin · explode · select · tour · replay  │──────▶ │ /api/agent   → Grok + tools  │
- │                                           │ ◀───── │ /api/voice   → Grok Voice    │
- │ Voice agent UI: push-to-talk, tool calls  │        │ /api/imagine → Grok Imagine  │
- │ Engine-out panel: live T/W math           │        │ /api/launch  → Launch Library│
- │ Web Serial ◀── USB ── ESP32 + BNO055      │        │                (cached)      │
- └───────────────────────────────────────────┘        └──────────────────────────────┘
-  Static data: public/models/falcon9.glb · data/parts/falcon9.json
-               data/missions/<id>.json (timeline) · public/audio cache
+ ┌──── Phone in the rocket ────┐   realtime   ┌──────── Laptop (Chrome, exhibit screen) ─────────┐     ┌── Next.js API routes ──┐
+ │ /rocket page (HTTPS)        │    relay     │ 3D viewer: explode · select · tour · replay      │     │ (xAI key lives here)   │
+ │ motion sensors → frames ────┼─────────────►│ gestures → guided mission → stars                │────►│ /api/agent → Grok      │
+ │ speaker: sounds + Grok ◄────┼──────────────│ sound + "say" commands · "listen" (mic, optional)│◄────│ /api/voice → Grok Voice│
+ └─────────────────────────────┘  (QR code    │ voice UI (push-to-talk) · engine panel · Imagine │     │ /api/imagine → Imagine │
+                                    pairing)  └──────────────────────────────────────────────────┘     └────────────────────────┘
+  Facts: data/parts/falcon9.json · data/missions/<id>.json   Assets: public/models · public/audio (Grok Voice cache) · public/sounds (CC0)
 ```
 
 | Layer | Choice | Why |
 |---|---|---|
-| App | Next.js + TypeScript | One repo; API keys stay server-side |
+| App | Next.js + TypeScript, deployed on Vercel | One repo for laptop screen, phone page and API; HTTPS for the phone's sensors |
 | 3D | react-three-fiber + drei | Orbit controls, GLTF loader, HTML labels built in |
-| State | zustand | Connects A's viewer with B's agent |
-| Agent | Grok with function calling | Grok decides which scene action to run; we execute it |
-| Hardware link | Web Serial API | Chrome reads the ESP32 over USB; no backend, no pairing |
-| Sensor | BNO055 | Outputs orientation directly; MPU6050 works with a fusion library |
-| Launch data | Launch Library 2 (cached) | Free public launch API; unauthenticated use is rate-limited, so cache one or two missions as JSON |
+| State | zustand | One store; its actions are Grok's tools |
+| Agent | Grok with function calling | Grok decides which scene action to run; the browser runs it |
+| Phone sensors | `DeviceOrientation` + `DeviceMotion` events | Work on Android Chrome and iPhone Safari, no app install |
+| Phone ↔ laptop | Hosted realtime pub/sub (picked in 11 Task 0) | Phone and laptop can't talk directly; ~20 frames/s each way is light |
+| Sound | Web Audio on the phone; CC0 / public-domain files | Instant playback, no licensing problems in the public video |
+| Launch data | Launch Library 2 (fetched once, committed) | Free public launch API; rate-limited, so never called live |
 
-### Shared contract (write together in the first 30 minutes)
-
-`data/parts/falcon9.json`
-```json
-{
-  "model": "falcon9",
-  "glb": "/models/falcon9.glb",
-  "groups": [{
-    "id": "merlins",
-    "nodes": ["Engine Rotator"],
-    "name": "Merlin 1D engines",
-    "role": "Nine first-stage engines",
-    "specs": { "thrust_sl_kN": 845, "count": 9, "propellant": "RP-1/LOX" },
-    "explode": { "up": -0.17, "radial": 0 },
-    "tourOrder": 8,
-    "source": "SpaceX Falcon 9 public specs"
-  }]
-}
-```
-
-`data/missions/<id>.json`
-```json
-{
-  "id": "example-mission",
-  "name": "Mission name from Launch Library 2",
-  "booster": { "serial": "B10xx", "flight": 0 },
-  "landing": "droneship | landing zone",
-  "events": [
-    { "t": 0,   "id": "liftoff",  "say": "Liftoff." },
-    { "t": 72,  "id": "maxq" },
-    { "t": 150, "id": "meco" },
-    { "t": 154, "id": "stage_sep" },
-    { "t": 200, "id": "fairing_sep" }
-  ]
-}
-```
-Event times above are placeholders. Fill them from the chosen mission's published timeline.
-
-`lib/store.ts`
-```ts
-{
-  model, selectedId, explode,            // viewer state
-  tour: { active, step },
-  replay: { missionId, t, playing },     // mission replay clock
-  enginesOut: number[],                  // indexes of switched-off Merlins
-  orientation,                           // from hardware
-  // actions = the agent's tools, one to one:
-  selectPart(id), setExplode(t), flyTo(id), startTour(),
-  startReplay(missionId), setEnginesOut(ids), imagine(prompt)
-}
-```
-**Rule:** the store's actions are exactly the tools Grok can call. A builds them, B wires Grok to them.
-
-### File ownership
-| Person | Owns |
-|---|---|
-| **A · 3D + Hardware** | `app/page.tsx`, `components/viewer/*`, `components/replay/*`, `components/engines/*`, `lib/serial.ts`, `firmware/` |
-| **B · AI + Data + Server** | `app/api/*`, `lib/grok.ts`, `components/voice/*`, `data/parts/*`, `data/missions/*`, `README.md` |
-| **Both** | `lib/types.ts`, `lib/store.ts`, `.cursor/rules/` (announce changes) |
+**Contracts, file ownership and task split:** these live in the stage plans, which are the source of truth. Start with `GUIDE.md`, then `plans/00-index.md` and `plans/01-setup-contract.md`.
 
 ---
 
-## 4. Task split
+## 4. Schedule
 
-### Shared
-- [ ] **S1** Create the Next.js + TS repo; both clone and open in Cursor
-- [ ] **S2** Write `lib/types.ts` + `lib/store.ts` together (contract above)
-- [ ] **S3** Add `.cursor/rules/` (overview, contract, ownership)
-- [ ] **S4** Plan in a Grok Bot thread; screenshot it (bonus)
-- [ ] **S5** Ask at the opening ceremony about entering a track + challenges
-- [ ] **S6** Sun: screenshot both Cursor usage pages for Oct 16–18
-- [ ] **S7** Sun: Devpost submission, all prizes we qualify for, by 7:00 AM
-
-### Person A: 3D + Hardware
-**Fri 4:30–9:00 PM: core viewer**
-- [ ] **A1** r3f canvas, lights, starfield; load Falcon 9 with auto-rotate
-- [ ] **A2** Group nodes per parts JSON (**match sanitized names**, see Prototype lessons)
-- [ ] **A3** Explode (vertical stages, radial legs/fairings); camera backs off 1.5× when exploded
-- [ ] **A4** Click select: glow, fade others, info card, camera fly-to
-- [ ] **A5** Store actions `selectPart`, `setExplode`, `flyTo`, `startTour` callable from anywhere
-
-**Fri 9:00 PM–2:00 AM: new features**
-- [ ] **A6** Replay engine: play a mission JSON on a clock; each event animates the model (stage sep, fairing sep, booster flip/return, legs deploy)
-- [ ] **A7** Replay HUD: mission name, T+ clock, event list, booster serial and flight count
-- [ ] **A8** Engine-out panel: click Merlins on/off, live T/W from the table above, "lifts off / doesn't" state
-- [ ] **A9** `getViewSnapshot()` returns a PNG of the canvas (for Imagine)
-
-**Sat: hardware + polish**
-- [ ] **A10** Firmware: ESP32 prints `qw,qx,qy,qz,knob,btn` at ~50 Hz
-- [ ] **A11** `lib/serial.ts`: Connect button, parse into store; orientation with a zero button; knob → explode; button → `startReplay`
-- [ ] **A12** Mount sensor in the rocket prop; mouse/keyboard fallback if unplugged
-- [ ] **A13** Sun: record the 2-minute demo video; hardware photos
-
-### Person B: AI + Data + Server
-**Fri 4:30–6:00 PM: unblock A**
-- [ ] **B1** xAI key in `.env.local` (gitignored)
-- [ ] **B2** curl-test Grok Voice, Grok Imagine, and Grok function calling; note latency and formats
-- [ ] **B3** Commit `falcon9.json` by 5:30 PM (copy groups from the prototype)
-
-**Fri 6:00 PM–2:00 AM: agent + data**
-- [ ] **B4** `/api/agent`: Grok with tool definitions mirroring the store actions; facts-only system prompt (parts JSON + mission JSON)
-- [ ] **B5** Client loop: run each tool call against the store, send results back, speak the final answer with Grok Voice
-- [ ] **B6** Push-to-talk UI and transcript
-- [ ] **B7** Pick 1–2 real missions; fetch from Launch Library 2 once; write `data/missions/*.json` with real event times and booster info
-- [ ] **B8** `/api/imagine`: takes A's snapshot + part context, returns an image; cache results for the demo
-- [ ] **B9** Pre-generate tour and replay narration audio as a fallback
-
-**Sat**
-- [ ] **B10** Agent prompt tuning: refuses to invent numbers; says "I don't have data on that"
-- [ ] **B11** Optional eval: every number in narration must appear in the JSON
-- [ ] **B12** SpaceXAI workshop 1:30 PM: ask how Cursor use is judged and about rate limits
-- [ ] **B13** Sun: README (architecture, Built with Cursor, Grok usage, CC-BY credit, data sources); Devpost text
-
-### Sync points
 | Time | Check |
 |---|---|
-| Fri 6:00 PM | Viewer loads B's parts JSON |
+| Fri 5:00 PM | 01 done: placeholders, practice data and page slots pushed; lanes split |
 | Fri 9:00 PM | Click → card with real specs; agent can call `selectPart` |
-| **Fri 2:00 AM** | **All five features demoable, rough** |
-| Sat 1:00 PM | Voice agent drives replay end to end |
-| Sat 6:00 PM | Physical rocket controls the screen; gestures detected |
-| Sat 9:00 PM | Judge flies a full mission with the prop and gets scored |
+| **Fri 2:00 AM** | Replay, engine-out, Imagine, voice demoable, rough; `/rocket` page reads motion over HTTPS |
+| Sat 1:00 PM | Voice agent drives the replay end to end; rocket shell built |
+| Sat 6:00 PM | Phone rocket paired by QR, turns the model, gestures detected |
+| Sat 9:00 PM | A visitor flies the full guided mission with sound and gets stars |
 | Sat 12:00 AM | Feature freeze |
 | Sun 7:00 AM | Submitted |
 
@@ -244,12 +146,12 @@ Event times above are placeholders. Fill them from the chosen mission's publishe
 1. Grok Imagine (#4)
 2. Second mission (keep one)
 3. Engine-out simulator (#3)
-4. Fly it yourself (#6) → the button starts the timed replay instead
-5. Live voice Q&A → keep the cached replay narration
+4. The coach's live Grok hints and the skip button → keep the written hints
+5. Live voice Q&A → keep the cached narration
 
-**Never cut:** explode, mission replay, hardware control.
+**Never cut:** explode, the guided mission with the phone rocket, rocket sounds.
 
-**Honest note:** five features by Friday 2 AM with two people is aggressive. The prototype took ~1 hour for the core viewer, so it's possible, but expect Saturday morning to absorb overflow.
+**Honest note:** this is a lot for two people. The prototype took ~1 hour for the core viewer, so it's possible, but expect Saturday morning to absorb Friday's overflow.
 
 ---
 
@@ -309,16 +211,19 @@ Matches spacex.com's look without copying it: black background, off-white text (
 | Risk | Fallback |
 |---|---|
 | Grok Voice slow live | Pre-generated narration audio |
-| Grok function calling unreliable | Keyword fallback: "launch" → `startReplay`, part names → `selectPart` |
+| Grok function calling unreliable | Keyword fallback: "launch" → `startReplay`, part names → `selectPart`; `M` / `Space` keys run the guided mission |
 | Grok Imagine rate limits | Generate before judging, cache |
 | Launch Library 2 rate limit | Fetch once, commit mission JSON |
-| No BNO055 | MPU6050 + fusion library |
-| Web Serial is Chrome-only | Demo in Chrome; mouse fallback |
+| Hackathon Wi-Fi blocks or drops the relay | Both devices on a phone hotspot; `Space` key completes checkpoints with no phone |
+| Phone locks or sleeps in the rocket | Screen wake lock; auto-lock off and Do Not Disturb on the demo phone |
+| iPhone asks for motion permission | The big "Tap to start" button requests it; a clear message if denied |
+| Phone rattles in the shell | Foam padding; rattles look like shakes |
+| Sound licensing | CC0 / public-domain only, credited; no copyrighted songs or webcast audio |
 | Pre-written code rule | Prototype is a reference only; rebuild after kickoff in Cursor |
 
 ## 8. Links
 - Prototype (private, share with teammate): https://claude.ai/artifact/FboohZL9DrPPJfZF4wvZF6
-- Shared task board (private, share with teammate): https://claude.ai/artifact/BoevsPTNqWMXiAsa3Prud8
+- Shared task board (private; out of date since the phone rocket change, so use `plans/` instead): https://claude.ai/artifact/BoevsPTNqWMXiAsa3Prud8
 - Event site: https://hhuh.io
 - Falcon 9 model: https://sketchfab.com/3d-models/falcon-9-spacex-394f7cf52d124bbd9db69f24d1ff2f08
 - NASA 3D models: https://github.com/nasa/NASA-3D-Resources

@@ -1,12 +1,12 @@
-# 07 · Mission Replay Implementation Plan
+# 07 · Mission Replay + Guided Mission Implementation Plan
 
 > **For agentic workers (Cursor Agent):** implement one task at a time, run the tests, stop for review. Steps use `- [ ]` checkboxes.
 
-**Goal:** "Launch it" replays a real Falcon 9 mission: the model goes through stage separation, fairing separation, booster flip and landing on that mission's real timeline, with narration at each event. In **"fly it yourself"** mode the judge flies the same mission with the prop and gets scored against the real booster.
-**Architecture:** The pose is a **pure function of mission time** (`poseAt(mission, t)`), so play, pause, seek and restart can never leave the scene inconsistent. A clock component advances `replay.t`; the rocket applies the pose each frame. Fly mode reuses all of it: the judge's gestures build a "your mission" with your event times, and `poseAt` animates that instead of the real one.
+**Goal:** Tasks 1–4: "launch it" replays a real Falcon 9 mission hands-free (stage separation, fairing, booster flip, landing) with narration; this becomes the idle exhibit loop and the no-phone backup. Tasks 5–7: the **guided mission**, the main mode: the same real timeline, but it pauses at each big moment until the visitor does the move with the phone rocket, which rumbles and plays sounds along the way.
+**Architecture:** The pose is a **pure function of mission time** (`poseAt(mission, t)`), so play, pause, seek and restart can never leave the scene inconsistent. A clock component advances `replay.t`; the rocket applies the pose each frame. The guided mission reuses all of it and only adds "pause the clock at checkpoints until the right move arrives".
 **Tech Stack:** react-three-fiber, zustand, vitest.
-**Spec:** planning doc §2 feature 2 "Mission replay".
-**Owner:** A. **Needs:** 03 (viewer), 06 (one mission JSON).
+**Spec:** planning doc §2 features 2 and 6.
+**Owner:** Neel. **Needs:** 01 and 03 only. Build against the `practice` mission from 01 Task 5 (Anders's real mission from 06 just appears in `MISSIONS`); `askAgent`, `speakLine` and `LINES` are 01 placeholders until Anders's real versions land. Tasks 5–8 also use Neel's own 11 Tasks 1, 2 and 4. Build order on Saturday: 11.1–11.4 → 07.5 → 07.6 → 07.7 → 11.5 → 07.8.
 
 ## Global Constraints
 See `00-index.md`.
@@ -59,16 +59,16 @@ Missing event → that value stays 0. `landing === "expended"` → `legsOut` sta
 **Files:**
 - Create: `components/replay/ReplayClock.tsx`
 
-**Interfaces:** Consumes `replay`, `setReplayTime`, `pauseReplay` (store), `MISSIONS` (06), `speakLine` (03/05).
+**Interfaces:** Consumes `replay`, `setReplayTime`, `pauseReplay` (store), `MISSIONS` (01 practice mission; 06 adds the real one), `speakLine` (01 placeholder).
 
-Put this constant in `lib/replay.ts` (11 Task 5 imports it for fly mode too):
+Put this constant in `lib/replay.ts` (the guided mission, Task 6, uses it too):
 ```ts
 // Real flights take ~8–9 min from liftoff to landing; the demo slot is 2 min.
-// 8× plays a 510 s landing in ~64 s, leaving time for Q&A. Fly mode uses the same scale,
-// so a judge's ~60 s flight maps onto the real ~8 min one. Arbitrary: tune on the day.
+// 8× plays a 510 s landing in ~64 s, leaving time for Q&A. The guided mission uses the same
+// scale between checkpoints. Arbitrary: tune on the day.
 export const REPLAY_SPEED = 8;
 ```
-- [ ] **Step 1:** In `useFrame`, when `replay.playing`, `setReplayTime(t + delta * REPLAY_SPEED)`.
+- [ ] **Step 1:** In `useFrame`, when `replay.playing` **and `mission.active` is false** (the guided mission has its own clock in Task 6), `setReplayTime(t + delta * REPLAY_SPEED)`.
 - [ ] **Step 2:** When `poseAt(...).lastEvent` changes id, call `speakLine(event.say)` (don't await; don't pause the clock). When `done`, `pauseReplay()`.
 - [ ] **Step 3: Verify:** in the browser console, `useScene.getState().startReplay("<your mission id>")`. Expected: T+ advances, each event's line is spoken once, playback stops at landing.
 - [ ] **Step 4:** Commit `feat: replay clock with event narration`.
@@ -102,72 +102,167 @@ Rules (in scene units, `D = DISPLAY_HEIGHT`):
 
 ---
 
-## Fly it yourself (Saturday, after 11 Task 4)
+## Guided mission: the main mode (Saturday, after 11 Task 4)
 
-The judge presses the button, then flies the mission with the prop: **lift** = liftoff, **tip nose-down** = stage separation + boostback flip, **turn upright** = entry burn, **set it down still** = landing. The app compares their timing to the real booster's.
+The visitor flies a real mission **with the phone rocket**. The replay clock runs the real timeline, but **pauses at each big moment** until the visitor does the matching move. Grok says what to do and why; the rocket in their hands rumbles, clunks and plays music.
 
-### Task 5: Flight rules and scoring
+| # | Checkpoint | Clock pauses at | Visitor's move (gesture) | Kid-level prompt (Grok speaks it) | Phone rocket plays |
+|---|---|---|---|---|---|
+| 1 | `liftoff` | T+0 | lift it off the table (`liftoff`) | "Ready? Lift the rocket off the pad!" | `countdown` while waiting → `liftoff_rumble` (loop) + `music_launch` + long vibration |
+| 2 | `lean` | `LEAN_AT * maxq.t` | tilt it partway (`lean`) | "Rockets lean over to go sideways fast enough to stay in space. Tilt it a little!" | rumble continues |
+| 3 | `maxq` | `maxq` | hold it still (`steady`) | "Hold it steady! The air is pushing hardest on the rocket right now." | `maxq_rumble` + short vibration pulses while waiting |
+| 4 | `flip` | `stage_sep` | turn it nose-down (`flip`) | "Separation! The booster lets go. Flip it around to fly home!" | stop rumble → `separation_clunk`; `fairing_pop` when the clock passes `fairing_sep` |
+| 5 | `upright` | `entry_burn` (or `landing_burn`) | turn it nose-up (`upright`) | "Turn it upright. The booster is falling back to Earth." | `entry_burn` |
+| 6 | `landing` | `landing` − 2 s | set it down gently (`landed`) | "Gently… set it down on the pad!" | `landing_thud` → `success` |
+
+A checkpoint whose event is missing from the mission JSON is skipped (e.g. an expended booster has no landing).
+
+### Task 5: Checkpoints and stars
 
 **Files:**
-- Modify: `lib/replay.ts`
-- Create: `lib/flight.ts`
-- Test: `lib/__tests__/flight.test.ts`
+- Create: `lib/mission.ts`
+- Test: `lib/__tests__/mission.test.ts`
 
 **Interfaces — Produces:**
 ```ts
-export function applyGesture(phase: FlightPhase, g: Gesture): { phase: FlightPhase; events: MissionEventId[] } | null;
-export function userMission(real: Mission, achieved: Partial<Record<MissionEventId, number>>): Mission;
-export interface ScoreRow { id: MissionEventId; label: string; yours: number | null; real: number; diff: number | null } // seconds; diff = yours - real
-export function scoreFlight(real: Mission, achieved: Partial<Record<MissionEventId, number>>): { rows: ScoreRow[]; summary: string };
+export interface Checkpoint {
+  id: CheckpointId; needs: Gesture; prompt: string;
+  at: (m: Mission) => number | null;                         // mission seconds the clock pauses at; null = skip
+  onWait: RocketMessage[]; onDone: RocketMessage[];          // sent to the phone rocket (11 sendToRocket)
+}
+export const CHECKPOINTS: Checkpoint[];                      // the six rows above, in order
+export function checkpointsFor(m: Mission): Checkpoint[];    // drops checkpoints whose `at` is null
+export function missionStars(results: { reactionMs: number }[], softness: number | null, total: number):
+  { stars: 0 | 1 | 2 | 3; reasons: string[] };
 ```
-`applyGesture` table (anything not listed → `null`, i.e. ignored; `shake` is handled by 11, not here):
-| Phase | Gesture | New phase | Events |
-|---|---|---|---|
-| `ready` | `liftoff` | `ascent` | `liftoff` |
-| `ascent` | `flip` | `boostback` | `stage_sep`, `boostback` |
-| `boostback` | `upright` | `descent` | `entry_burn` |
-| `descent` | `landed` | `landed` | `landing` |
-| `ascent` | `landed` | `landed` | `landing` (skipped the flip: no separation) |
-
-`userMission(real, achieved)`: same id, name, booster and landing as `real`; `events` = one event per `achieved` entry at the judge's time, using the real event's `say` text; plus `fairing_sep` at `achieved.stage_sep + (real fairing_sep − real stage_sep)` when both exist; sorted by `t`. So `poseAt(userMission(...), t)` animates the judge's flight with no new pose code.
-
-`scoreFlight` rows, in order: stage separation (`stage_sep`), entry burn (`entry_burn`), landing (`landing`). `summary`: if `landing` is missing, "No landing yet."; else "You landed <|diff|> s <early|late> compared with <booster serial>." (`diff` rounded to whole seconds; within ±10 s → "within 10 s of <serial>: a near-perfect flight.").
 ```ts
-// ±10 mission-seconds ≈ ±1.25 s of real hand time at REPLAY_SPEED 8; tight but achievable.
-// Arbitrary: pick from rehearsal so roughly 1 in 3 tries earns it.
-export const PERFECT_WINDOW_S = 10;
+// Public timelines don't list when the gravity turn starts, so the "lean" pause has no real time.
+// 0.3 × max-Q puts it early in the climb, which is where rockets pitch over. The prompt never states a time.
+export const LEAN_AT = 0.3;
+// Stars: ★ finished all checkpoints; ★ median reaction under QUICK_MS; ★ touchdown jolt under SOFT_JOLT.
+// Both thresholds are guesses; pick them from hallway tests so most kids get 2 stars and a careful landing gets 3.
+export const QUICK_MS = 4000;
+export const SOFT_JOLT = 3.0;   // m/s²
+```
+`reasons` are kid-level lines for the end screen: "You finished the mission!", "Super quick reactions!", "Feather-soft landing!".
+
+- [ ] **Step 1: Write failing tests** (fixture mission: maxq 72, stage_sep 154, fairing_sep 200, entry_burn 400, landing 510):
+  - `C1 order and moves`: `CHECKPOINTS.map(c => c.needs)` equals `["liftoff", "lean", "steady", "flip", "upright", "landed"]`.
+  - `C2 pause times`: `at()` gives `0`, `21.6`, `72`, `154`, `400`, `508`.
+  - `C3 missing events skipped`: mission without `entry_burn` or `landing_burn` → `checkpointsFor` has no `upright`; expended mission (no `landing`) → no `landing`.
+  - `C4 three stars`: 6 results at 2,000 ms, softness 1.5 → 3 stars.
+  - `C5 hard landing`: same reactions, softness 8 → 2 stars, reasons don't include the soft-landing line.
+  - `C6 unfinished`: 3 of 6 results → 0 stars.
+  - `C7 every prompt is kid-length`: every `prompt` sentence has ≤ 20 words and no numbers.
+- [ ] **Step 2:** fail → **Step 3:** implement → **Step 4:** pass.
+- [ ] **Step 5:** Commit `feat: guided mission checkpoints and stars`.
+
+### Task 6: Mission director
+
+**Files:**
+- Create: `components/replay/MissionDirector.tsx`
+- Modify: `components/viewer/Rocket.tsx`
+
+**Interfaces — Consumes:** store `mission`, `replay`, `waitAtCheckpoint`, `endMission` (01); `checkpointsFor`, `missionStars` (Task 5); `poseAt`, `REPLAY_SPEED` (Tasks 1–2); `sendToRocket` (11 Task 2); `getDetector` (11 Task 4); `speakLine`, `LINES`, `askAgent` (01 placeholders).
+
+- [ ] **Step 1: Clock.** Every frame while `mission.active` and not waiting: if the next checkpoint's `at <= replay.t` (true right after `startMission`, since liftoff is at 0), clamp `t` to it, call `waitAtCheckpoint(now)` and `getDetector().rearm()` (so a move the visitor is already holding counts). Otherwise, if `replay.playing`, advance `replay.t` by `delta * REPLAY_SPEED`.
+- [ ] **Step 2: Waiting.** On entering a wait: `speakLine(prompt, { via: "rocket" })`, send the checkpoint's `onWait` messages, show the prompt (Task 8). The visitor's move is handled in 11 Task 5, which calls `completeCheckpoint`; the coach (Task 7) helps if they get stuck.
+- [ ] **Step 3: Done.** When `mission.step` increases: send the previous checkpoint's `onDone` messages and speak the real event's `say` line with `via: "rocket"` (mission control talking from the rocket). While the clock runs, speak other events it passes (MECO, fairing separation, boostback) and send `fairing_pop` at `fairing_sep`.
+- [ ] **Step 4: Pose.** Use `poseAt(realMission, replay.t)` for stage separation, fairing and legs. **Skip `boosterFlip`/`boosterUpright` rotation** while the phone rocket is connected: the visitor's own flip already turns the model, and applying both would flip it twice.
+- [ ] **Step 5: Finish.** After the last checkpoint: `endMission(missionStars(...))` (so the store keeps the stars for Grok and the end screen), stop all phone sounds, play `success`, and the rocket cheers: `speakLine(LINES.touchdown, { via: "rocket" })`. Ask Grok for a comment: `askAgent("The visitor just flew the guided mission with the rocket. Call get_state and celebrate their missionStars in two spoken sentences at the current level.", [])` → if `ok`, `speakLine(reply, { via: "screen" })`; if not `ok`, speak the `reasons` lines on the screen.
+- [ ] **Step 6: Verify without the phone**, from the console: `startMission(id)` → waits at liftoff; call `completeCheckpoint(performance.now(), <current id>)` repeatedly (or press `Space`, 12) and check each pause, line and pose. Then with the phone rocket end to end.
+- [ ] **Step 7:** Commit `feat: guided mission director`.
+
+### Task 7: The coach
+
+While the mission waits at a checkpoint, the coach compares what the rocket is doing with what the checkpoint needs, and the rocket talks the visitor through it. Nobody should ever stand there confused.
+
+```text
+pause at checkpoint → rocket gives the prompt → every frame: compare live reading with the target
+  right move           → continue (11 Task 5)
+  close / wrong        → instant written hint from the rocket       ("Keep going, all the way upside down!")
+  nothing for 6 s      → simpler repeat + the picture pulses         ("Pick it up and lift it high!")
+  stuck at 15 s        → Grok coaches once, live, from the readings  (04 Task 6 Step 4b)
+  stuck at 30 s        → offer the way out: "Tap the screen and I'll do this part for you."
 ```
 
-- [ ] **Step 1: Write failing tests** (fixture: real stage_sep 154, fairing_sep 200, entry_burn 400, landing 510, booster "B10xx"):
-  - `F1 happy path phases`: `ready+liftoff → ascent`, `ascent+flip → boostback [stage_sep, boostback]`, `boostback+upright → descent`, `descent+landed → landed`.
-  - `F2 out-of-order gestures ignored`: `ready+flip → null`, `ready+landed → null`, `landed+liftoff → null`.
-  - `F3 skipped flip`: `ascent+landed → landed [landing]`.
-  - `F4 userMission derives fairing`: achieved `{ liftoff: 0, stage_sep: 120 }` → events include `fairing_sep` at `166`, sorted.
-  - `F5 score early`: achieved landing 480 → landing row `diff = -30`; summary contains "30 s early" and "B10xx".
-  - `F6 score perfect`: landing 515 → summary contains "near-perfect".
-  - `F7 no landing`: achieved `{ liftoff: 0 }` → summary "No landing yet.", rows have `yours: null`.
+**Files:**
+- Create: `lib/coach.ts`
+- Test: `lib/__tests__/coach.test.ts`
+- Modify: `components/replay/MissionDirector.tsx`
+
+**Interfaces:**
+- Consumes: `LiveReading` (11 Task 4) via `getDetector().reading()` (11 Task 4); `STEADY_ACCEL`, `STEADY_MS`, `LEAN_MIN`, `LEAN_MAX`, `FLIP_DEG`, `UPRIGHT_DEG` (11 Task 4); `speakLine`, `askAgent` (01 placeholders); store `mission`, `completeCheckpoint` (01).
+- Produces:
+```ts
+export interface Hint { id: string; text: string; level: "hint" | "repeat" | "grok" | "skip" }
+export const HINTS: Record<string, string>;   // every written line below; 05 Task 2 pre-records them all
+export interface CoachState { repeated: boolean; askedGrok: boolean; offeredSkip: boolean } // fresh per checkpoint
+export function coach(cp: CheckpointId, r: LiveReading, waitedMs: number, msSinceLastHint: number | null, st: CoachState): Hint | null;
+export function notYet(g: Gesture, cp: CheckpointId | null): Hint | null; // early move while the clock is running
+```
+```ts
+// A kid needs a moment to read the prompt and move; a hint at 2 s would talk over them.
+// Pacing guesses; tune from hallway tests (12 Task 3 Step 4).
+export const HINT_GAP_MS = 4000;     // at most one hint every 4 s, so it never nags
+export const REPEAT_AFTER_MS = 6000; // no progress → simpler repeat
+export const GROK_AFTER_MS = 15000;  // still stuck → one live Grok hint
+export const SKIP_AFTER_MS = 30000;  // offer "I'll do this part for you"
+```
+
+Written hints (kid level, no numbers; `id` = key in `HINTS`):
+| Checkpoint | Condition (from `LiveReading`) | Hint |
+|---|---|---|
+| `liftoff` | `tiltDeg > 30` (lying down) | `standUp`: "Stand the rocket up on the pad first!" |
+| `lean` | `tiltDeg < LEAN_MIN` | `leanMore`: "Tilt it a little more." |
+| `lean` | `tiltDeg > LEAN_MAX` | `leanLess`: "Whoa, not that much! Just a little lean." |
+| `maxq` | `motion ≥ STEADY_ACCEL` | `steadier`: "Steady… try to keep it really still." |
+| `maxq` | `stillMs ≥ STEADY_MS / 2` | `almost`: "Almost there… hold it!" |
+| `flip` | `60 ≤ tiltDeg ≤ FLIP_DEG` | `keepGoing`: "Keep going, all the way upside down!" |
+| `upright` | `tiltDeg > UPRIGHT_DEG` | `uprightMore`: "Turn it the rest of the way up." |
+| `landing` | `!nearlyStill` and upright | `bringDown`: "Bring it down to the pad, nice and gentle." |
+`notYet`: a `flip` before the `flip` checkpoint, or `landed` before `landing`, while the clock is running → `notYet`: "Not yet! Wait for my signal."
+
+Repeat hints (`level: "repeat"`), one per checkpoint: `liftRepeat` "Pick it up and lift it high!" · `leanRepeat` "Lean the rocket over a little, like it's turning." · `steadyRepeat` "Hold the rocket still, like a statue!" · `flipRepeat` "Turn the rocket upside down!" · `uprightRepeat` "Turn it back so the nose points up!" · `landRepeat` "Set the rocket down on the table, gently!"
+Skip hint (`level: "skip"`): `skip` "Tap the screen and I'll do this part for you."
+
+Rules, checked **in this order** (escalation comes first, so a kid stuck on one condition still gets help):
+1. `msSinceLastHint < HINT_GAP_MS` → `null`.
+2. `waitedMs ≥ SKIP_AFTER_MS` and skip not yet given → `skip`.
+3. `waitedMs ≥ GROK_AFTER_MS` and Grok not yet asked → `level: "grok"` (the director then asks Grok).
+4. `waitedMs ≥ REPEAT_AFTER_MS` and repeat not yet given → that checkpoint's repeat hint.
+5. The first matching condition row in the table above.
+6. Otherwise `null`.
+The "not yet given" flags reset at each new checkpoint (the director passes a fresh state).
+
+- [ ] **Step 1: Write failing tests**
+  - `K1 lying down at liftoff`: tilt 85°, waited 1 s → `standUp`.
+  - `K2 too much lean`: `lean`, tilt 70° → `leanLess`; tilt 8° → `leanMore`.
+  - `K3 no nagging`: valid hint but `msSinceLastHint = 2000` → `null`.
+  - `K4 halfway flip`: `flip`, tilt 95° → `keepGoing`.
+  - `K5 steady progress`: `maxq`, motion 0.2, still 1.2 s → `almost`.
+  - `K6 escalation`: `lean` with tilt 8° (matches `leanMore`) at 7 s → `leanRepeat`; at 16 s → `level: "grok"`; at 31 s → `skip`. (REGRESSION GUARD: a condition row must never block escalation.)
+  - `K7 not yet`: `notYet("flip", "lean")` → `notYet`; `notYet("flip", "flip")` → `null`.
+  - `K8 kid-length`: every `HINTS` line ≤ 12 words, no digits.
+  - `K9 every checkpoint has a repeat`: for each `CheckpointId`, a repeat hint exists in `HINTS`.
 - [ ] **Step 2:** fail → **Step 3:** implement → **Step 4:** pass.
-- [ ] **Step 5:** Commit `feat: flight rules and scoring`.
+- [ ] **Step 5: Director.** While waiting, call `coach(...)` on every frame with `getDetector().reading()`; speak hints `via: "rocket"`. On `level: "grok"`: `askAgent("COACH: checkpoint=<id>, target=<plain words>, tilt=<n>°, motion=<n>, still=<n> ms, waited=<n> s. Give the visitor ONE short kid-level hint.", [])` → if `ok`, `speakLine(reply, { via: "rocket" })`; if not `ok` (Grok unreachable, or still the placeholder), use the `repeat` hint instead. On `skip`: show a big "Do it for me" button on the screen; tapping it calls `completeCheckpoint(now, <current id>)`.
+- [ ] **Step 6:** `notYet` hints come from 11 Task 5 (moves that arrive while the clock runs).
+- [ ] **Step 7: Verify** with the real rocket: do each checkpoint wrong on purpose (too much lean, half flip, shaky max-Q) and check the right hint comes from the rocket within ~1 s, no more than one every 4 s.
+- [ ] **Step 8:** Commit `feat: mission coach`.
 
-### Task 6: Fly mode in the scene
-
-**Files:**
-- Modify: `components/replay/ReplayClock.tsx`, `components/viewer/Rocket.tsx`
-
-- [ ] **Step 1:** Clock: when `flight.active` and `startedAt` is set and phase isn't `landed`, `setReplayTime((performance.now() - startedAt) / 1000 * REPLAY_SPEED)`.
-- [ ] **Step 2:** Pose: when `flight.active` (or just finished), use `poseAt(userMission(real, flight.achieved), replay.t)`. **Skip `boosterFlip`/`boosterUpright` rotation in fly mode**: the prop's orientation already shows the flip, and applying both would flip the model twice. Keep `stageGap`, `fairingOpen`, `legsOut`.
-- [ ] **Step 3:** Narration: when a new id appears in `flight.achieved`, `speakLine(real event's say)`.
-- [ ] **Step 4:** On `landing`: `endFlight()` and ask the agent for a comment: `askAgent("The judge just flew the mission with the prop. Call get_state and comment on their flight score in two spoken sentences.", [])` → `speakLine(reply)`. On failure, speak `scoreFlight(...).summary` instead.
-- [ ] **Step 5: Verify** without hardware, from the console: `startFlight(id)`, then `recordFlightEvent("liftoff", 0, "ascent", performance.now())`, wait, `recordFlightEvent("stage_sep", 150, "boostback")`, ..., `recordFlightEvent("landing", 500, "landed")`. Expected: stages split, fairing falls away, legs deploy, Grok comments on the score.
-- [ ] **Step 6:** Commit `feat: fly mode animates the judge's flight`.
-
-### Task 7: Flight HUD
+### Task 8: Mission HUD
 
 **Files:**
-- Create: `components/replay/FlightHud.tsx`
+- Create: `components/replay/MissionHud.tsx`
 
-- [ ] **Step 1:** Step-by-step prompt that follows the phase: ready → "Lift the rocket to launch"; ascent → "Tip it nose-down to separate and flip"; boostback → "Turn it upright for the entry burn"; descent → "Set it down gently to land". Big, centered, uppercase.
-- [ ] **Step 2:** `T+ mm:ss` mission clock, and a two-column "You vs <booster serial>" table from `scoreFlight` that fills in row by row as events happen; diffs colored green within `PERFECT_WINDOW_S`, amber otherwise.
-- [ ] **Step 3:** After landing: the summary line, "Press the button to fly again".
-- [ ] **Step 4: Verify** with the prop end to end. Then rehearse it 5 times and tune 11's gesture thresholds until it never false-triggers and the prompts feel responsive.
-- [ ] **Step 5:** Commit `feat: flight HUD`.
+- [ ] **Step 1:** While waiting: the prompt in huge uppercase, plus a simple picture of how to hold the rocket (arrow up for lift, tilted rocket for lean, still rocket with "hold" for steady, upside-down rocket for flip, upright rocket for entry burn, rocket on a pad for landing).
+- [ ] **Step 2:** **You vs target gauge** while waiting: an arc with the checkpoint's green target zone (e.g. 15–50° for lean, past 120° for flip) and a needle at the live `tiltDeg`; for max-Q, a **steady meter** that fills as `stillMs` approaches `STEADY_MS`. Kids should see "I need to go further" without reading.
+- [ ] **Step 2b:** Six progress dots (done / current / to come), the `T+ mm:ss` clock, and the booster line ("Booster B10xx · flight N" from the mission JSON). The latest coach hint appears under the prompt as a caption.
+- [ ] **Step 3:** End screen: big stars (★★☆), the `reasons` lines, "Shake the rocket or tap to fly again". Stays until exhibit-mode idle reset (12).
+- [ ] **Step 4:** Start button "Fly the mission" (also started by voice: "let's fly", via 04's `start_mission`).
+- [ ] **Step 5: Verify** with the real rocket five times, including a hallway tester who's never seen it. Tune 11's gesture thresholds and Task 5's star thresholds until nobody gets stuck on a prompt.
+- [ ] **Step 6:** Commit `feat: mission HUD`.
+
+### Task 9 (optional, cut first): Challenge mode
+Same moves, no pauses or prompts: the clock just runs, and stars come from how close each move is to the real event time. Only if everything else is done.
