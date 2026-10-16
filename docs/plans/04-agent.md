@@ -30,17 +30,18 @@ See `00-index.md`.
 // TOOLS and HANDLERS MUST stay in sync (tested by A1 below).
 export const TOOLS: { type: "function"; function: { name: ToolName; description: string; parameters: object } }[];
 export type ToolName = "get_state" | "select_part" | "set_explode" | "fly_to" | "start_tour"
-                     | "start_replay" | "set_engines_out" | "imagine";
+                     | "start_replay" | "start_flight" | "set_engines_out" | "imagine";
 export function runTool(name: string, args: unknown): Promise<ToolResult>;
 ```
 | Tool | Args (JSON schema) | Calls |
 |---|---|---|
-| `get_state` | none | returns `{ selectedId, explode, replay, enginesOut, liftoffTW, verdict, partIds, missionIds }` |
+| `get_state` | none | returns `{ selectedId, explode, replay, flight, enginesOut, liftoffTW, verdict, partIds, missionIds }` (Task 6 adds `flightScore`) |
 | `select_part` | `part_id: string` (enum of part ids) | `selectPart`, then `flyTo` |
 | `set_explode` | `amount: number` 0..1 | `setExplode` |
 | `fly_to` | `target: string` (part id or `"home"`) | `flyTo` |
 | `start_tour` | none | `startTour` |
 | `start_replay` | `mission_id: string` (enum of `MISSIONS` keys) | `startReplay` |
+| `start_flight` | `mission_id: string` (enum of `MISSIONS` keys) | `startFlight` ("fly it yourself": the judge flies with the prop) |
 | `set_engines_out` | `engines: integer[]` (0 = center, 1–8 = ring) | `setEnginesOut` |
 | `imagine` | `prompt: string`, `part_id: string` | `requestImagine` from 09 (until 09 lands: `{ ok: false, error: "imagine not available yet" }`) |
 
@@ -122,3 +123,15 @@ export function fallbackIntent(text: string): { tool: ToolName; args: object } |
 - [ ] **Step 1:** Input + Send → `askAgent` → show the reply and a small log of tool calls ("→ select_part legs").
 - [ ] **Step 2: Verify:** "show me what lands back on Earth" → legs and booster selected, reply explains landing. "what if two engines fail?" → `set_engines_out` with two engines, reply mentions T/W 1.10.
 - [ ] **Step 3:** Commit `feat: agent text box`.
+
+### Task 6 (Sat, after 07 Task 5): Grok knows how the judge flew
+
+**Files:**
+- Modify: `lib/agent/tools.ts`, `lib/agent/prompt.ts`
+- Test: `lib/__tests__/tools.test.ts`
+
+- [ ] **Step 1: Failing test** `A6 get_state includes the flight score`: register a fixture mission, `startFlight(id)`, record `liftoff 0` and `landing 480` → `runTool("get_state", {})` data has `flightScore.summary` containing "30 s early".
+- [ ] **Step 2:** In `get_state`, add `flightScore: scoreFlight(MISSIONS[flight.missionId], flight.achieved)` when `flight.missionId` is set, else `null`.
+- [ ] **Step 3:** Add to the system prompt: "When the judge finishes a flight, compare their times with the real booster using `flightScore`. Be encouraging and specific; only use the numbers it contains."
+- [ ] **Step 4:** `npm test` → pass. **Verify:** say "let me fly it" → Grok calls `start_flight` and tells the judge to lift the rocket.
+- [ ] **Step 5:** Commit `feat: agent comments on flights`.

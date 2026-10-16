@@ -17,21 +17,22 @@ Put this folder in the repo at `docs/plans/`. Each file is one stage. Build them
 | 04 | [Grok client + agent](04-agent.md) | B | 01, 02, 08 Task 1 | "Select the landing legs" by text moves the scene | Fri 9:00 PM |
 | 05 | [Voice](05-voice.md) | B | 04 | Push-to-talk question gets a spoken answer | Fri 11:00 PM |
 | 06 | [Mission data](06-mission-data.md) | B | 01 | One real mission JSON committed | Fri 11:00 PM |
-| 07 | [Mission replay](07-replay.md) | A | 03, 06 | "Launch" replays the mission on its timeline | Fri 2:00 AM |
+| 07 | [Mission replay](07-replay.md) Tasks 1–4 | A | 03, 06 | "Launch" replays the mission on its timeline | Fri 2:00 AM |
+| 07 | [Fly it yourself](07-replay.md#fly-it-yourself-saturday-after-11-task-4) Tasks 5–7 | A | 07.1–4, 11.4 | Judge flies the mission with the prop and gets scored | Sat 9:00 PM |
 | 08 | [Engine-out simulator](08-engine-out.md) | A | 03 | Toggle Merlins, live T/W | Fri 2:00 AM |
 | 09 | [Grok Imagine](09-imagine.md) | A + B | 03, 04 | "Show this in action" returns an image | Fri 2:00 AM |
-| 10 | [Hardware firmware](10-hardware.md) | A | — | ESP32 prints frames over USB | Sat 3:30 PM |
-| 11 | [Web Serial](11-web-serial.md) | A | 03, 10 | Twisting the prop rotates the model | Sat 9:00 PM |
+| 10 | [Hardware firmware](10-hardware.md) | A | — | ESP32 prints orientation + motion over USB | Sat 1:00 PM |
+| 11 | [Web Serial + gestures](11-web-serial.md) | A | 03, 10 | Prop rotates the model; lift / flip / upright / land are detected | Sat 6:00 PM |
 | 12 | [Demo + submission](12-demo-submission.md) | Both | all | Devpost submitted | Sun 7:00 AM |
 
 ```text
 01 ─┬─ 02 ─┬─ 03 ─┬─ 07 (needs 06)
     │      │      ├─ 08
     │      │      ├─ 09 (needs 04)
-    │      │      └─ 11 (needs 10)
+    │      │      └─ 11 (needs 10) ── 07 fly mode (Tasks 5–7) ── 04 Task 6
     │      └─ 04 ── 05
     └─ 06
-10 (independent, any time)
+10 (independent, any time; start it Friday if the hardware is in hand)
 12 last
 ```
 
@@ -58,3 +59,4 @@ Inputs no single task's happy path exercises. Each line has a test in the owning
 3. **Grok is slow or down** → after 8 s the UI stops waiting and plays the cached line or says it couldn't reach Grok. Test in 04, Task 2.
 4. **Seeking, restarting or stopping a replay mid-flight** → scene state is a pure function of mission time, so any `t` gives the same pose. Tests in 07, Task 1.
 5. **All engines off, or the same engine toggled twice** → T/W is 0 (never `NaN`), duplicates are ignored. Tests in 08, Task 1.
+6. **Accidental gestures** (bumping the table, lifting the prop while lying flat, twisting it to look around, gestures in the wrong order) → nothing launches or lands. Tests in 11 Task 4 (G3, G4, G6, G8) and 07 Task 5 (F2), and 11 Task 5 ignores gestures outside fly mode.

@@ -72,7 +72,18 @@ export interface Mission {
 }
 
 export type Quat = [number, number, number, number]; // w, x, y, z
-export interface HardwareFrame { q: Quat; knob: number; button: boolean } // knob 0..1
+export type Vec3 = [number, number, number];
+export interface HardwareFrame {
+  q: Quat;        // orientation
+  lin: Vec3;      // linear acceleration, gravity removed, m/s², sensor frame
+  grav: Vec3;     // gravity vector, m/s², sensor frame (points toward the ground)
+  knob: number;   // 0..1
+  button: boolean;
+}
+
+// "Fly it yourself": gestures the judge makes with the prop (detected in 11, scored in 07)
+export type Gesture = "liftoff" | "flip" | "upright" | "landed" | "shake";
+export type FlightPhase = "ready" | "ascent" | "boostback" | "descent" | "landed";
 
 export interface ToolResult { ok: boolean; error?: string; data?: unknown }
 ```
@@ -98,6 +109,11 @@ export interface SceneState {
   replay: { missionId: string | null; t: number; playing: boolean };
   enginesOut: number[];                              // engine indexes 0..8, sorted, unique
   orientation: Quat | null;                          // from hardware; null = mouse control
+  flight: {                                          // "fly it yourself" mode
+    active: boolean; missionId: string | null; phase: FlightPhase;
+    startedAt: number | null;                        // performance.now() at the liftoff gesture
+    achieved: Partial<Record<MissionEventId, number>>; // event id -> mission seconds when the judge did it
+  };
   imageUrl: string | null;                           // latest Grok Imagine result
   snapshot: (() => string) | null;                   // registered by the viewer; returns a PNG data URL
 
@@ -113,6 +129,9 @@ export interface SceneState {
   setReplayTime(t: number): void;
   setEnginesOut(idx: number[]): ToolResult;
   setOrientation(q: Quat | null): void;
+  startFlight(missionId: string): ToolResult;
+  recordFlightEvent(id: MissionEventId, missionSeconds: number, phase: FlightPhase, startedAt?: number): void;
+  endFlight(): void;
   setImageUrl(url: string | null): void;
   registerSnapshot(fn: (() => string) | null): void;
 }
@@ -126,6 +145,9 @@ Validation rules (the store is the safety net for Grok's tool calls):
 - `startReplay(id)`: id not a key of `MISSIONS` → `{ ok: false, error: "unknown mission: <id>" }`. Otherwise sets `replay = { missionId: id, t: 0, playing: true }`, `explode = 0`, stops any tour.
 - `setEnginesOut(idx)`: drop anything not an integer 0..8, dedupe, sort; always `ok: true` with `data: { enginesOut }`.
 - `startTour()`: sets `explode = 1`, `tour = { active: true, step: 0 }`, stops any replay.
+- `startFlight(id)`: same mission check as `startReplay`. Sets `flight = { active: true, missionId: id, phase: "ready", startedAt: null, achieved: {} }`, `explode = 0`, stops tour and replay. Recording and scoring happen in 07 and 11.
+- `recordFlightEvent(id, s, phase, startedAt?)`: ignored unless `flight.active`; records `achieved[id] = s` only the first time; sets `phase`; sets `startedAt` if given.
+- `endFlight()`: `flight.active = false` (keeps `achieved` so the score can still be shown).
 
 - [ ] **Step 1: Write the failing tests** in `store.test.ts` (reset the store in `beforeEach` with `useScene.setState(initial, true)` and `setParts` a 2-group fixture with ids `"legs"` and `"merlins"`):
   - `S1 selectPart rejects unknown id`: `selectPart("wings")` → `{ ok: false, error: "unknown part: wings" }`, `selectedId` stays `null`.
@@ -133,7 +155,9 @@ Validation rules (the store is the safety net for Grok's tool calls):
   - `S3 setEnginesOut cleans input`: `setEnginesOut([3, 3, 12, -1, 1.5, 0])` → `enginesOut` equals `[0, 3]`.
   - `S4 startReplay rejects unknown mission`: `startReplay("not-a-mission")` → `{ ok: false, error: "unknown mission: not-a-mission" }`.
   - `S5 startTour stops replay`: set `replay.playing = true`, call `startTour()`, expect `replay.playing === false` and `explode === 1`.
-- [ ] **Step 2:** `npm test`. Expected: 5 failing.
+  - `S6 flight records each event once`: with a registered fixture mission, `startFlight(id)`; `recordFlightEvent("stage_sep", 150, "boostback")` then `recordFlightEvent("stage_sep", 300, "boostback")` → `achieved.stage_sep === 150`.
+  - `S7 no recording when inactive`: without `startFlight`, `recordFlightEvent("liftoff", 0, "ascent")` leaves `achieved` empty.
+- [ ] **Step 2:** `npm test`. Expected: 7 failing.
 - [ ] **Step 3:** Create `data/missions/index.ts` (empty `MISSIONS`), then implement `lib/store.ts` with `create<SceneState>()`.
 - [ ] **Step 4:** `npm test`. Expected: all pass.
 - [ ] **Step 5:** Commit `feat: scene store with validated actions`.

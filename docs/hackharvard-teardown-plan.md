@@ -38,7 +38,8 @@
 | 2 | **Mission replay** | Pick a real Falcon 9 flight. Model animates the real timeline: liftoff → max-Q → MECO → stage separation → fairing separation → boostback → entry burn → landing. Shows booster serial and flight count | Public launch data (Launch Library 2) + the mission's published timeline |
 | 3 | **Engine-out simulator** | Click Merlins to switch them off. Live liftoff thrust-to-weight shows whether the vehicle can still lift off | Math on real specs (below) |
 | 4 | **Grok Imagine from the current view** | Screenshot the 3D view, Imagine shows that part in action ("this booster landing on a droneship at night") | Grok Imagine |
-| 5 | **Physical rocket** (Hardware track) | Twist the prop and the model follows; knob explodes; button launches the replay | ESP32 + BNO055 |
+| 5 | **Physical rocket** (Hardware track) | Twist the prop and the model follows; knob explodes; button starts "fly it yourself" | ESP32 + BNO055 |
+| 6 | **Fly it yourself** (Sat) | The judge flies the mission with the prop: **lift** = liftoff, **tip nose-down** = stage separation + boostback flip, **turn upright** = entry burn, **set it down still** = landing. The model animates their flight; a table compares their timing with the real booster's, and Grok comments ("You landed 30 s early compared with B10xx") | BNO055 motion data + real mission timeline + Grok |
 
 **Engine-out numbers** (liftoff, from public specs: 845 kN per Merlin at sea level, 549,054 kg liftoff mass → 5,386 kN weight):
 
@@ -55,8 +56,9 @@ This is a liftoff-only simplification. Real engine-out tolerance depends on flig
 1. Falcon 9 spins on screen.
 2. Judge picks up the physical rocket and twists it. Screen follows.
 3. Judge says "launch it." Mission replay runs on a real flight's timeline with Grok narrating; stages separate, booster flies back and lands.
-4. Judge asks "what if two engines fail?" Grok switches off two Merlins, the simulator shows T/W 1.10, Grok explains.
-5. "Show me this landing." Grok Imagine renders the booster landing from the current angle.
+4. **"Now you fly it."** Judge presses the button and lifts the rocket (liftoff), tips it nose-down (stages separate, booster flips), turns it upright, and sets it on the table (legs deploy, landing). The score table fills in and Grok compares their landing with the real booster's.
+5. Judge asks "what if two engines fail?" Grok switches off two Merlins, the simulator shows T/W 1.10, Grok explains.
+6. "Show me this landing." Grok Imagine renders the booster landing from the current angle.
 
 ---
 
@@ -205,7 +207,8 @@ Event times above are placeholders. Fill them from the chosen mission's publishe
 | Fri 9:00 PM | Click → card with real specs; agent can call `selectPart` |
 | **Fri 2:00 AM** | **All five features demoable, rough** |
 | Sat 1:00 PM | Voice agent drives replay end to end |
-| Sat 9:00 PM | Physical rocket controls the screen |
+| Sat 6:00 PM | Physical rocket controls the screen; gestures detected |
+| Sat 9:00 PM | Judge flies a full mission with the prop and gets scored |
 | Sat 12:00 AM | Feature freeze |
 | Sun 7:00 AM | Submitted |
 
@@ -213,7 +216,8 @@ Event times above are placeholders. Fill them from the chosen mission's publishe
 1. Grok Imagine (#4)
 2. Second mission (keep one)
 3. Engine-out simulator (#3)
-4. Live voice Q&A → keep the cached replay narration
+4. Fly it yourself (#6) → the button starts the timed replay instead
+5. Live voice Q&A → keep the cached replay narration
 
 **Never cut:** explode, mission replay, hardware control.
 
