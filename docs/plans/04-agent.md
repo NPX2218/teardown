@@ -30,7 +30,7 @@ See `00-index.md`.
 // TOOLS and HANDLERS MUST stay in sync (tested by A1 below).
 export const TOOLS: { type: "function"; function: { name: ToolName; description: string; parameters: object } }[];
 export type ToolName = "get_state" | "select_part" | "set_explode" | "fly_to" | "start_tour"
-                     | "start_replay" | "start_flight" | "set_engines_out" | "imagine";
+                     | "start_replay" | "start_flight" | "set_engines_out" | "set_level" | "imagine";
 export function runTool(name: string, args: unknown): Promise<ToolResult>;
 ```
 | Tool | Args (JSON schema) | Calls |
@@ -43,6 +43,7 @@ export function runTool(name: string, args: unknown): Promise<ToolResult>;
 | `start_replay` | `mission_id: string` (enum of `MISSIONS` keys) | `startReplay` |
 | `start_flight` | `mission_id: string` (enum of `MISSIONS` keys) | `startFlight` ("fly it yourself": the judge flies with the prop) |
 | `set_engines_out` | `engines: integer[]` (0 = center, 1–8 = ring) | `setEnginesOut` |
+| `set_level` | `level: "kid" \| "curious" \| "engineer"` | `setLevel` (e.g. visitor says "explain it simpler" or "give me the details") |
 | `imagine` | `prompt: string`, `part_id: string` | `requestImagine` from 09 (until 09 lands: `{ ok: false, error: "imagine not available yet" }`) |
 
 `runTool` never throws: unknown tool, unparseable args, or a wrong type (e.g. `amount: "0.5"`) → `{ ok: false, error }`. No type coercion.
@@ -86,11 +87,18 @@ export function grokChat(messages: ChatMessage[], tools?: typeof TOOLS): Promise
 - Create: `lib/agent/prompt.ts`, `app/api/agent/route.ts`
 - Test: `lib/__tests__/prompt.test.ts`
 
-**Interfaces — Produces:** `buildSystemPrompt(parts: PartsFile, missions: Record<string, Mission>): string`.
-Prompt contents: you are the narrator and operator of a 3D Falcon 9 teardown; use tools to show things while you explain; answer in 1–3 spoken sentences; **never state a number that is not in the DATA below; if the data doesn't cover it, say so**; then the DATA: the parts JSON and each mission's name, booster, landing and events.
+**Interfaces — Produces:** `buildSystemPrompt(parts: PartsFile, missions: Record<string, Mission>, level: ExplainLevel): string`.
+Prompt contents: you are the guide of a museum exhibit whose motto is "bringing rocket science down to Earth", and you operate a 3D Falcon 9 teardown; use tools to show things while you explain; answer in 1–3 spoken sentences; **never state a number that is not in the DATA below; if the data doesn't cover it, say so**; explain jargon with the GLOSSARY; then the level block, then the DATA (parts JSON, glossary, each mission's name, booster, landing and events).
 
-- [ ] **Step 1: Failing tests:** `P1` prompt contains every part id and the string `never state a number that is not in the DATA`; `P2` prompt contains each mission's name.
-- [ ] **Step 2:** fail → **Step 3:** implement. Route: `POST { messages }` → prepend the system prompt → `grokChat(messages, TOOLS)` → return the assistant message as JSON. On error return `502 { error }`. → **Step 4:** pass.
+Level blocks (exact text is yours; these are the rules):
+| Level | Rules |
+|---|---|
+| `kid` (default) | Talk to a curious 10-year-old. Short sentences, everyday words, one idea at a time, explain every technical word. Warm and excited, never babyish. |
+| `curious` | Talk to an interested adult with no engineering background. Use correct terms, explained once. |
+| `engineer` | Talk to an engineer. Use precise terms and all relevant numbers from the DATA. Still only facts from the DATA. |
+
+- [ ] **Step 1: Failing tests:** `P1` prompt contains every part id and the string `never state a number that is not in the DATA`; `P2` prompt contains each mission's name; `P3` `kid` and `engineer` prompts differ, and the `kid` prompt contains `10-year-old`; `P4` prompt contains every glossary term.
+- [ ] **Step 2:** fail → **Step 3:** implement. Route: `POST { messages, level }` (missing or unknown level → `"kid"`) → prepend the system prompt → `grokChat(messages, TOOLS)` → return the assistant message as JSON. On error return `502 { error }`. The client sends the store's `level`. → **Step 4:** pass.
 - [ ] **Step 5: Verify:** `curl -X POST localhost:3000/api/agent -d '{"messages":[{"role":"user","content":"show me the landing legs"}]}'` returns a `select_part` tool call with `part_id: "legs"`.
 - [ ] **Step 6:** Commit `feat: agent route`.
 

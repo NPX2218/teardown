@@ -114,8 +114,10 @@ Camera rules (from the prototype):
 **Files:**
 - Create: `components/ui/Header.tsx`, `components/ui/Footer.tsx`, `app/globals.css` tokens
 
-- [ ] **Step 1:** Header: "TEARDOWN / prototype" brand line, huge "FALCON 9", subtitle, four stats from `parts.vehicle` (height, diameter, mass, payload to LEO). Hide stats under 720 px.
+- [ ] **Step 1:** Header: "TEARDOWN" brand line, huge "FALCON 9", the motto **"Bringing rocket science down to Earth"** as the subtitle, four stats from `parts.vehicle` (height, diameter, mass, payload to LEO). Hide stats under 720 px.
 - [ ] **Step 2:** Footer credit: model by Stanley Creative (CC BY 4.0, linked), "Specs from public SpaceX vehicle pages. Student project, not affiliated with SpaceX."
-- [ ] **Step 3:** Buttons: transparent with 2 px `#F0F0FA` border, uppercase, invert on hover. Visible focus ring in `#FFB547`.
-- [ ] **Step 4: Verify** at 375 px wide: no horizontal scroll, card becomes a bottom sheet.
-- [ ] **Step 5:** Commit `feat: page chrome`.
+- [ ] **Step 3:** Buttons: transparent with 2 px `#F0F0FA` border, uppercase, invert on hover, **at least 48 × 48 px** (kids' fingers, touchscreens). Visible focus ring in `#FFB547`.
+- [ ] **Step 4:** Level switch: three buttons **Kid · Curious · Engineer** (default Kid) bound to `setLevel`. The card's text doesn't change by level; Grok's answers do.
+- [ ] **Step 5:** Glossary taps: in `PartCard`, any glossary term in `role` is underlined; tapping it shows its one-line definition from `parts.glossary` in a small popover.
+- [ ] **Step 6: Verify** at 375 px wide: no horizontal scroll, card becomes a bottom sheet, every button is easy to hit with a thumb.
+- [ ] **Step 7:** Commit `feat: page chrome, levels, glossary`.

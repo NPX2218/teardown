@@ -2,7 +2,35 @@
 
 **Team:** 2 people, building in parallel
 **Event:** HackHarvard 2026, Oct 16–18, Harvard. Hacking starts Fri ~4:00 PM; Devpost closes **Sun 8:00 AM** (aim for 7:00).
+**Motto:** **Bringing rocket science down to Earth.**
 **One-liner:** Pick up a model rocket and say "launch it." Grok narrates a real Falcon 9 mission while the 3D model separates on the real timeline. Then ask "what if two engines fail?" and get a live answer.
+
+---
+
+## 0. Why we're building it
+
+**The problem:** Rockets are one of the most-watched technologies in the world and one of the least understood.
+- The data is public but scattered: specs in PDFs, mission timelines in webcast timestamps, booster histories in launch databases.
+- People watch launches without understanding what they're seeing. "Stage separation" and "boostback" mean nothing until you've seen them happen.
+- Learning it is passive. Diagrams and videos show a rocket; nothing lets a kid take one apart, ask it questions, or fly it.
+
+**Who it's for:** anyone, **down to a young kid**. If a 10-year-old can't follow it, we rewrite it.
+
+**What it could become:** an interactive exhibit in a space museum or science center (or a launch company's visitor space): walk up, pick up the rocket, take it apart, fly the mission, leave understanding how a reusable rocket works. We're a student project and not affiliated with SpaceX; "exhibit" is the form factor we're designing for, not a partnership.
+
+**30-second pitch:**
+> "Millions watch Falcon 9 launches, but almost nobody understands what they're seeing. The data exists, scattered across spec sheets, webcast timelines and launch databases. Teardown brings rocket science down to Earth. Take the rocket apart, ask Grok anything in plain words, watch a real mission replay, then pick up the rocket and fly it yourself, scored against the real booster. It's built to work like a museum exhibit: simple enough for a kid, accurate enough for an engineer."
+
+**Design principles (apply to every screen and every spoken line):**
+| Principle | What it means in practice |
+|---|---|
+| Kid-first words | Short sentences, everyday words. Any jargon is explained right away: "max-Q, the moment the air pushes hardest on the rocket". |
+| Real, never made up | Numbers come only from our data files. Simpler words, same facts. |
+| Hands before screens | The physical rocket is the main way in. Mouse and touch are backups. |
+| No dead ends | Every screen has one obvious next thing to do. Idle → the exhibit invites you back. |
+| Three levels | Kid (default), Curious, Engineer. Same facts, more depth as you go up. |
+
+**Evidence to collect this weekend:** have 3–5 people (ideally including someone with no space background) try it. Note what they could explain afterwards and how long it took. Don't quote made-up statistics in the pitch.
 
 ---
 

@@ -42,7 +42,9 @@ Every task in every plan includes these.
 
 - **Stack:** Next.js (App Router) + TypeScript (strict), `three`, `@react-three/fiber`, `@react-three/drei`, `zustand`, `vitest`. Install at kickoff with current stable versions.
 - **Secrets:** `XAI_API_KEY` lives in `.env.local`, read only in `app/api/*` route handlers. Never `NEXT_PUBLIC_*`, never sent to the browser, never committed.
-- **Facts:** every number the app shows or Grok says comes from `data/parts/*.json` or `data/missions/*.json`. Grok's system prompt forbids inventing numbers.
+- **Motto and audience:** "Bringing rocket science down to Earth." Every word on screen and every spoken line must make sense to a **10-year-old**: short sentences, everyday words, and any jargon explained in the same sentence ("max-Q, the moment the air pushes hardest on the rocket"). The Engineer level adds depth; it never replaces the plain version.
+- **Facts:** every number the app shows or Grok says comes from `data/parts/*.json` or `data/missions/*.json`. Grok's system prompt forbids inventing numbers. Simpler words, same facts: no made-up comparisons with numbers in them.
+- **Exhibit-ready:** the app must work as a walk-up museum exhibit: touch targets at least 48 px, no step that needs a keyboard, and an idle screen that invites the next visitor (12 Task 1).
 - **Model:** `public/models/falcon9.glb` is "Falcon 9 - SpaceX" by Stanley Creative, CC BY 4.0. Credit it in the UI footer and README.
 - **Branding:** look follows spacex.com (black `#000`, text `#F0F0FA`, highlight `#FFB547`, uppercase condensed type: Barlow Semi Condensed for display, Barlow for body). **No SpaceX logo or wordmark.** App name is "Teardown". Footer says "Student project, not affiliated with SpaceX."
 - **Browser:** Chrome only (Web Serial). Mouse and keyboard must still work with no hardware.

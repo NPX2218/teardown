@@ -55,7 +55,10 @@ export interface PartsFile {
   vehicle: { heightM: number; diameterM: number; liftoffMassKg: number; payloadLeoKg: number;
              merlinThrustSlKN: number; merlinCount: number };
   groups: PartGroup[];
+  glossary: Record<string, string>;  // jargon → one plain sentence a 10-year-old understands
 }
+
+export type ExplainLevel = "kid" | "curious" | "engineer";   // "kid" is the default
 
 export type MissionEventId =
   | "liftoff" | "maxq" | "meco" | "stage_sep" | "ses1" | "fairing_sep"
@@ -114,6 +117,7 @@ export interface SceneState {
     startedAt: number | null;                        // performance.now() at the liftoff gesture
     achieved: Partial<Record<MissionEventId, number>>; // event id -> mission seconds when the judge did it
   };
+  level: ExplainLevel;                               // how Grok explains things; default "kid"
   imageUrl: string | null;                           // latest Grok Imagine result
   snapshot: (() => string) | null;                   // registered by the viewer; returns a PNG data URL
 
@@ -132,6 +136,7 @@ export interface SceneState {
   startFlight(missionId: string): ToolResult;
   recordFlightEvent(id: MissionEventId, missionSeconds: number, phase: FlightPhase, startedAt?: number): void;
   endFlight(): void;
+  setLevel(level: ExplainLevel): ToolResult;         // unknown level → { ok: false, error: "unknown level: <x>" }
   setImageUrl(url: string | null): void;
   registerSnapshot(fn: (() => string) | null): void;
 }
