@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import * as THREE from "three";
 import { EnginePowerSlider } from "@/components/viewer/EnginePowerSlider";
-import { disposeExplorePlumeResources, explorePlumeScale, PLUME_LENGTH } from "@/lib/viewer/engine-plume";
+import { disposeExplorePlumeResources, explorePlumeScale, PLUME_LENGTH, scalePlumeToMetres } from "@/lib/viewer/engine-plume";
 import { applyEngineTone, ENGINE_RAMP_S, engineTone } from "@/lib/rocket/engine-rumble";
 import { engineBroadcast, enginePercent, enginePowerFromPercent } from "@/lib/rocket/engine-power";
 import { decodeMessage } from "@/lib/rocket/protocol";
@@ -108,6 +108,11 @@ describe("engine power", () => {
     expect(still.brightness).toBe(1);
     expect(still.flicker).toBe(0);
     expect(explorePlumeScale(Number.NaN, false).length).toBe(0);
+    const metres = scalePlumeToMetres(full, 2);
+    expect(metres.length).toBe(full.length * 2);
+    expect(metres.radius).toBe(full.radius * 2);
+    expect(metres.brightness).toBe(full.brightness);
+    expect(scalePlumeToMetres(full, Number.NaN).length).toBe(full.length);
   });
 
   it("releases the explore plume cone and both materials", () => {

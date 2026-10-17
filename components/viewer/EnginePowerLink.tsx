@@ -1,30 +1,39 @@
 "use client";
-// Pushes explore engine power to the paired phone. The laptop never plays this rumble.
+// One publisher for the paired phone. Explore slider and flight throttle share it.
+// The laptop never plays this rumble. The phone graph ramps between values.
 import { useEffect } from "react";
 import { useAppMode } from "@/lib/flight/app-mode";
-import { engineBroadcast } from "@/lib/rocket/engine-power";
+import {
+  bindEngineFeedback,
+  publishEngineFeedback,
+  readEngineFeedback,
+  releaseEngineFeedback,
+} from "@/lib/rocket/engine-feedback";
 import { sendToRocket } from "@/lib/rocket/commands";
 import { useScene } from "@/lib/store";
+import { useExhibit } from "@/lib/viewer/exhibit";
 
 export function EnginePowerLink() {
   useEffect(() => {
     let key = "";
     const push = () => {
-      const scene = useScene.getState();
-      const next = engineBroadcast({
-        power: scene.enginePower,
-        connected: scene.rocket.connected,
-        exploring: useAppMode.getState().mode === "explore",
-      }, key);
+      const next = publishEngineFeedback(readEngineFeedback(), key);
       key = next.key;
       if (next.message) sendToRocket(next.message);
     };
-    push();
-    const unsubScene = useScene.subscribe(push);
-    const unsubMode = useAppMode.subscribe(push);
+    const stop = bindEngineFeedback({
+      subscribeScene: (listener) => useScene.subscribe(listener),
+      subscribeMode: (listener) => useAppMode.subscribe(listener),
+      subscribeExhibit: (listener) => useExhibit.subscribe(listener),
+      subscribeVisibility: (listener) => {
+        document.addEventListener("visibilitychange", listener);
+        return () => document.removeEventListener("visibilitychange", listener);
+      },
+    }, push);
     return () => {
-      unsubScene();
-      unsubMode();
+      stop();
+      const released = releaseEngineFeedback(useScene.getState().rocket.connected, key);
+      if (released.message) sendToRocket(released.message);
     };
   }, []);
   return null;

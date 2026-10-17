@@ -29,7 +29,10 @@ const _color = new THREE.Color();
  * cream trail that stays behind the bells. A white contrail grows
  * behind the vehicle as it climbs. Wide and faint only in vacuum.
  */
-export function EnginePlume({ throttle, altitudeKm, reducedMotion }: EnginePlumeProps & MotionOverride) {
+export function EnginePlume({ throttle, altitudeKm, reducedMotion, liveThrottle }: EnginePlumeProps & MotionOverride & {
+  /** Flight feedback writes this every frame. Omit it to keep the throttle prop. */
+  liveThrottle?: { readonly current: number };
+}) {
   const reduced = useFxReduced(reducedMotion);
   const budget = fxBudget(reduced);
   const throttleRef = useRef(throttle);
@@ -179,7 +182,8 @@ export function EnginePlume({ throttle, altitudeKm, reducedMotion }: EnginePlume
   }, [cone, contrailGeo, contrailMat, coreMat, envelopeMat, smokeGeo, smokeMat, sparkGeo, sparkMat]);
 
   useFrame(({ clock }) => {
-    const profile = plumeProfile(throttleRef.current, altitudeRef.current);
+    const commanded = liveThrottle ? liveThrottle.current : throttleRef.current;
+    const profile = plumeProfile(commanded, altitudeRef.current);
     const time = clock.elapsedTime;
     const flicker = budget.flicker ? 1 : 0;
     plumeUniforms.uTime.value = time;
