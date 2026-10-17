@@ -1,8 +1,8 @@
-// app/layout.tsx
 import type { ReactNode } from "react";
 import type { Metadata, Viewport } from "next";
 import { Barlow, Barlow_Semi_Condensed, Roboto_Mono } from "next/font/google";
 import { MotionProvider } from "@/components/ui/MotionProvider";
+import { Footer } from "@/components/ui/Footer";
 import "./globals.css";
 
 const display = Barlow_Semi_Condensed({
@@ -42,14 +42,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <MotionProvider>
           {children}
-          <footer className="legal">
-            <span>Made by Neel Bansal and Anders Haroldson</span>
-            <span>Student project. Not affiliated with SpaceX or xAI.</span>
-            <span>
-              Model: &ldquo;Falcon 9 - SpaceX&rdquo; by Stanley Creative,{" "}
-              <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>
-            </span>
-          </footer>
+          <Footer />
         </MotionProvider>
       </body>
     </html>
