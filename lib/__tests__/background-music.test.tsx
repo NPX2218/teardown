@@ -158,10 +158,10 @@ describe("background music route and gesture", () => {
     })).resolves.toBe(BACKGROUND_MUSIC_FALLBACK_SRC);
 
     const gitignore = readFileSync(join(process.cwd(), ".gitignore"), "utf8");
-    expect(gitignore).toContain("public/audio/background.mp3");
+    expect(gitignore).not.toContain("public/audio/background.mp3");
+    expect(existsSync(join(process.cwd(), "public/audio/background.mp3"))).toBe(true);
     expect(existsSync(join(process.cwd(), "public/audio/background-placeholder.mp3"))).toBe(true);
-    const ignored = execFileSync("git", ["check-ignore", "public/audio/background.mp3"], { encoding: "utf8" }).trim();
-    expect(ignored).toBe("public/audio/background.mp3");
+    expect(() => execFileSync("git", ["check-ignore", "public/audio/background.mp3"], { encoding: "utf8" })).toThrow();
   });
 
   it("stays silent until the first gesture, then fades toward music times master", () => {

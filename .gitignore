@@ -41,7 +41,3 @@ next-env.d.ts
 # app/api parked only while PAGES_EXPORT=1 next build is running
 /.pages-api-parked
 /.pages-api-parked-owner
-
-# Local background track. Drop an MP3 here; it is never committed.
-# Missing file: the player uses public/audio/background-placeholder.mp3.
-public/audio/background.mp3

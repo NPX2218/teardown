@@ -6,7 +6,7 @@ Background music is separate from that cache and from the phone engine sounds.
 
 | File | Source | Licence | Note |
 |---|---|---|---|
-| background-placeholder.mp3 | `scripts/make-background-music.sh` in this repo | CC0 1.0 — original sine-tone synthesis, no third-party recording | 60 s pad, mono, 48 kbps. Plays when `background.mp3` is missing. |
-| background.mp3 | Your local file | Yours to confirm | Gitignored. Drop a track you have the rights to play at this path. Never commit it. |
+| background.mp3 | Mokka - No Copyright Music, supplied for this project | No Copyright Music | First 2:00 of the 4:00 track, 128 kbps MP3, 3 s fade at the end. |
+| background-placeholder.mp3 | `scripts/make-background-music.sh` in this repo | CC0 1.0 — original sine-tone synthesis | 60 s pad. Plays only when `background.mp3` is missing. |
 
-Steps: [docs/background-music.md](../../docs/background-music.md).
+Credit line: Music: Mokka - No Copyright Music.

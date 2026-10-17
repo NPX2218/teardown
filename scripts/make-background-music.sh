@@ -1,7 +1,7 @@
 #!/bin/sh
 # Rebuild the original laptop music placeholder.
-# Sine tones only. No downloaded audio.
-# A local track belongs at public/audio/background.mp3, which is gitignored.
+# Sine tones only. The shipped track is public/audio/background.mp3 (Mokka).
+# This file plays only when that track is missing.
 set -eu
 cd "$(dirname "$0")/.."
 out="public/audio/background-placeholder.mp3"

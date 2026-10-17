@@ -55,6 +55,9 @@ describe("settings sheet", () => {
     expect(html).toContain("40%");
     expect(html).toContain('aria-valuetext="40 percent"');
     expect(html).toContain('type="range"');
+    const creditAt = html.indexOf("Music: Mokka - No Copyright Music");
+    expect(creditAt).toBeGreaterThan(musicAt);
+    expect(html.slice(creditAt - 40, creditAt)).toContain("small");
   });
 
   it("is a nav control that can open the sheet", () => {

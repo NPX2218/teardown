@@ -126,6 +126,7 @@ export function SettingsSheet({
           />
           <output htmlFor={musicId} className="range__value">{music}%</output>
         </div>
+        <p className="small">{SETTINGS_COPY.musicCredit}</p>
       </section>
 
       <section className={styles.block} aria-labelledby="settings-vibration">
