@@ -4,14 +4,14 @@
 
 Put this folder in the repo at `docs/plans/`. Each file is one stage. Build them in order within your lane; the `Needs` column says what must be merged first.
 
-**How to run a plan in Cursor:** open the plan, then tell Agent: *"Read docs/specs/README.md, docs/plans/00-index.md and docs/specs/NN-name.spec.md. Implement Task 1 only. Run the tests. Stop."* Review the diff, commit, then ask for the next task. One task per agent run keeps diffs small and reviewable.
+**Autonomous lane builds:** use the two prompts and ownership rules in [Autonomous build lanes](AUTONOMOUS-BUILD.md). Agents test, review and commit each coherent task, then continue to the next ready task. Neel owns the initial shared-contract/integration gate; Anders prepares sources/data in parallel. For a deliberately supervised single-task run, request “Task N only; run checks and stop” explicitly.
 
 **Implementation entry point:** [Spec index](../specs/README.md). The planning doc describes intent; `specs/01-setup-contract.spec.md` owns shared contracts, `specs/00-theme.spec.md` owns visual tokens, and the corresponding stage spec owns executable steps. Where a plan differs, follow the reviewed spec and its Plan deltas.
 **Visual reference:** `mvp/index.html` is the saved local prototype, not the final design. The next builder must follow the revised [00 theme](../specs/00-theme.spec.md) and clean SpaceX/xAI composition rather than copying its generic layout.
 
 ## Stages
 
-After 01 (built together), **each lane depends only on 01 and its own earlier stages.** Nothing in Neel's lane waits for Anders, and nothing in Anders's lane waits for Neel.
+After the shared 01 contract gate, lanes develop in parallel against typed seams/fixtures. Real replay data and integrated emissions still have cross-lane acceptance dependencies; independent implementation can continue, but final integration must wait for the actual providers. See the exact [07 task allocation](AUTONOMOUS-BUILD.md#task-allocation-inside-07).
 
 | # | Plan | Owner | Needs | Done when | Target |
 |---|---|---|---|---|---|
@@ -47,16 +47,18 @@ After 01 (built together), **each lane depends only on 01 and its own earlier st
 1. **01 Task 5 creates every cross-lane piece as a placeholder** with its final signature: `speakLine`, `askAgent`, `LINES`, `sendToRocket`/`onRocketMessage`/`isRocketConnected`, `lib/engines.ts` (real), a rough parts file, a `practice` mission, an empty emissions file, the sounds folder, and the page slots.
 2. **You only edit your own files** (table below). The real version of a placeholder replaces its body in the same file; the signature doesn't change.
 3. **The store is the only meeting point.** Anders's code reads what Neel's code writes to the store (e.g. `flight.readout`, `flight.outcome`) and calls store actions; Neel's code does the same. Neither imports the other's components.
-4. **Merging never breaks anything**: when a real version lands, things just get better (Grok's voice instead of the browser's, the real mission next to the practice one, real sounds instead of silence).
+4. **Integration is verified:** replacing a fixture/provider requires contract checks and real behavior acceptance. A matching signature alone is not proof that a merge is safe.
 5. **Sync points are for demos, not handoffs.** Merge to `main` at 9 PM, 2 AM, 1 PM and 6 PM to see the halves together.
 
 ## File ownership
 
 | Owner | Files |
 |---|---|
-| **Neel · 3D + rocket** | `app/rocket/*`, `components/viewer/*` (incl. `ViewerSlot`), `components/replay/*` (incl. `MissionSlot`), `components/engines/*`, `components/ui/*` (incl. `PairSlot`), `lib/explode.ts`, `lib/viewer/*`, `lib/replay.ts`, `lib/flight.helpers.ts`, `components/flight/*`, `lib/gestures.ts`, `lib/rocket/*` |
+| **Neel · 3D + rocket** | `app/rocket/*`, `components/viewer/*` (incl. `ViewerSlot`), `components/replay/*` (incl. `MissionSlot`), `components/ui/*` (incl. `PairSlot`), `lib/explode.ts`, `lib/viewer/*`, `lib/replay.ts`, `lib/flight.helpers.ts`, `components/flight/*`, `lib/gestures.ts`, `lib/rocket/*` |
 | **Anders · AI + data + server** | `app/api/*`, `lib/grok.ts`, `lib/timeout.ts`, `lib/agent/*`, `lib/voice/*`, `lib/imagine/*`, `lib/parts.ts`, `lib/missions.ts`, `lib/emissions*.ts`, `components/voice/*` (incl. `VoiceSlot`), `components/imagine/*`, `components/emissions/*`, `data/*`, `scripts/*`, `public/audio/*`, `public/sounds/*`, `public/imagine/*`, `README.md` |
-| **Both** (announce changes first) | `lib/types.ts`, `lib/store.ts`, `lib/engines.ts`, `app/page.tsx` (frozen after 01), `.cursor/rules/` |
+| **Shared · Neel integration owner** | `lib/types.ts`, `lib/store.ts`, `lib/engines.ts`, `app/page.tsx` (frozen after 01), `.cursor/rules/` |
+
+Shared files have one active writer: Neel as integration owner. Anders submits interface requirements and reviews deltas; do not edit these files concurrently.
 
 Also: Neel owns `app/layout.tsx` and `app/globals.css` (fonts and style tokens; Anders uses the tokens). Each person owns the tests for their own files in `lib/__tests__/` and their own notes (`docs/xai-notes.md` Anders, `docs/realtime-notes.md` Neel).
 
@@ -82,7 +84,7 @@ Every task in every plan includes these.
 Inputs no single task's happy path exercises. Each line has a test in the owning plan.
 
 1. **Grok calls a tool with a bad argument** (unknown part id, explode 7, missing mission) → the tool returns `{ ok: false, error }` to Grok and the scene does nothing. Test in 04, Task 1.
-2. **Bad or missing rocket data** (junk messages, `NaN`, uncalibrated sensors, the phone locking, Wi-Fi dropping mid-demo) → bad frames are dropped; after 2 s without frames the laptop shows the QR again and keeps running on touch and mouse. Tests in 11 Task 1; behavior in 11 Task 2.
+2. **Bad or missing rocket data** (junk messages, `NaN`, uncalibrated sensors, the phone locking, Wi-Fi dropping mid-demo) → bad frames are dropped; after 2 s without frames the laptop shows the QR again; if phone-controlled flight was active, it pauses until explicit local handoff or reconnect/resume. Tests in 11 Task 1; behavior in 11 Task 2.
 3. **Grok is slow or down** → after the bounded request deadline (8 s upstream; at most 15 s for the complete tool loop) the UI stops waiting and plays the cached line or says it couldn't reach Grok. Test in 04, Task 2.
 4. **Seeking, restarting or stopping a replay mid-flight** → scene state is a pure function of mission time, so any `t` gives the same pose. Tests in 07, Task 1.
 5. **Fuel depletion, staging and bad turns** → finite state, mass/flow conservation and computed failure; no automatic orbit award. Stage 08 sandbox is excluded. Tests F1–F24 in 07.

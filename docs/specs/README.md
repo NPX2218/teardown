@@ -1,5 +1,7 @@
 # Teardown implementation specs
 
+For separate unattended lane builds, use [Autonomous build lanes](../plans/AUTONOMOUS-BUILD.md), including the initial shared-contract gate and one-writer rule.
+
 Use these specs to build the app. The [project guide](../GUIDE.md) explains the product; the [build plan index](../plans/00-index.md) assigns owners and milestones.
 
 **Precedence:** the user's project instructions apply first. The 2026-10-17 scope and migration in [07](07-replay.spec.md) supersede the old checkpoint/coach/stars flow and affected tool/input/lifecycle examples. Current revision notices in each stage override their historical snippets. For unrelated shared contracts, [01](01-setup-contract.spec.md) defines shared types, store actions and seams; [00](00-theme.spec.md) defines design tokens and accessibility rules. Each stage spec defines its implementation and records deliberate changes from its older plan. When code examples and a plan disagree, use the reviewed spec. A local integration change must update both affected specs and their tests.
