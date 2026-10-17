@@ -20,6 +20,7 @@ import type { FlightScenario } from "@/lib/types";
 import { cameraNudge } from "./cameraNudge";
 import { drawEarthMap } from "./earthMap";
 import { FlightController } from "./FlightController";
+import { GuidanceMarks } from "./GuidanceMarks";
 import styles from "./flight.module.css";
 
 const scratch = {
@@ -299,6 +300,7 @@ export function FlightScene() {
         <Stars radius={90} depth={30} count={400} factor={2} saturation={0} fade speed={0} />
         <Earth />
         <SceneBodies />
+        <GuidanceMarks />
         <ReleaseFlightGpu />
         <CameraRig />
         <FlightController />

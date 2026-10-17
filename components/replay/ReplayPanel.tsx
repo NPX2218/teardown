@@ -2,7 +2,8 @@
 import { MISSIONS } from "@/data/missions/index";
 import { useAppMode } from "@/lib/flight/app-mode";
 import { formatClock } from "@/lib/flight/format";
-import { replayDuration, replayPose } from "@/lib/replay";
+import { historicalMissions } from "@/lib/flight/mission-select";
+import { replayDataCaption, replayDuration, replayPose, referenceTrajectoryNote } from "@/lib/replay";
 import { useScene } from "@/lib/store";
 import type { Mission } from "@/lib/types";
 import { EmissionsPlacement } from "@/components/flight/EmissionsPlacement";
@@ -54,13 +55,13 @@ export function ReplayPanel() {
               {isSample(item) ? "Practice sample" : item.name}
             </button>
           ))}
-          <button type="button" className="btn" disabled>Sentinel-6</button>
+          {historicalMissions(MISSIONS).length === 0 && (
+            <button type="button" className="btn" disabled>Sentinel-6</button>
+          )}
         </div>
-        <p className={styles.note}>
-          {!mission || isSample(mission)
-            ? "Practice sample · illustrated motion · not a real flight. The Sentinel-6 record is not loaded yet."
-            : pose?.label}
-        </p>
+        <p className={styles.note}>{mission ? replayDataCaption(mission) : "Data: Practice sample"}</p>
+        {mission && referenceTrajectoryNote(mission) && <p className={styles.note}>{referenceTrajectoryNote(mission)}</p>}
+        {pose && <p className={styles.note}>{pose.label}</p>}
         {mission && pose && (
           <>
             <p className="hud__v hud__v--clock" aria-label="Mission clock">{formatClock(replay.t)} / {formatClock(duration)}</p>

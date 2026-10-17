@@ -8,8 +8,18 @@ import styles from "./flight.module.css";
 
 export function FlightResult() {
   const outcome = useScene((s) => s.flight.outcome);
+  const accuracy = useScene((s) => s.accuracy);
+  const failureReason = useScene((s) => s.failureReason);
   if (!outcome) return null;
-  const title = outcome.kind === "orbit" ? "You are in orbit." : outcome.kind === "crashed" ? "The flight ended." : "The flight stopped.";
+  const title = outcome.reason === "Mission complete."
+    ? "Mission complete."
+    : outcome.reason === "Mission failed: off nominal"
+      ? "Mission failed: off nominal"
+      : outcome.kind === "orbit"
+        ? "You are in orbit."
+        : outcome.kind === "crashed"
+          ? "The flight ended."
+          : "The flight stopped.";
   const retry = () => {
     clearHeldAxes();
     useScene.getState().retryFlight();
@@ -27,6 +37,12 @@ export function FlightResult() {
       <p className="hud__k">{outcome.kind}</p>
       <h2>{title}</h2>
       <p>{outcome.reason}</p>
+      {failureReason && failureReason !== outcome.reason && <p>{failureReason}</p>}
+      {accuracy && (
+        <p className={styles.note}>
+          Inside the corridor {Math.round(accuracy.insideFraction * 100)}% of the time. RMS {accuracy.rms.toFixed(2)}.
+        </p>
+      )}
       <p className={styles.note}>
         Height {formatKm(outcome.readout.altitudeM)} · sideways {formatSpeed(outcome.readout.tangentialSpeedMps)}
       </p>
