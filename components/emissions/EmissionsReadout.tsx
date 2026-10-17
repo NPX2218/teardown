@@ -1,8 +1,7 @@
-/// <reference path="./css.d.ts" />
 "use client";
 // Compact estimated-CO₂ readout for historical replay and Your mission.
 // It reads a view already computed from the 07 fuel ledger. It has no clock of its own.
-import type { EmissionsFile } from "@/lib/emissions-data";
+import type { EmissionsFile } from "@/lib/types";
 import type { EmissionsView } from "@/lib/emissions";
 import { carComparisonLine, formatEmissionsReadout } from "@/lib/emissions-format";
 import styles from "./emissions.module.css";

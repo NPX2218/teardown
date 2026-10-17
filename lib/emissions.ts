@@ -1,8 +1,7 @@
 // lib/emissions.ts — estimated direct-combustion CO₂ from a consumed RP-1 ledger.
 // Owner: Anders. Pure: no clock, no store, no second fuel integrator.
 //
-// 07 readout seam (contract delta for Neel, lib/types.ts):
-// FlightTelemetry should publish FlightFuelReadout. This module only reads it.
+// FlightTelemetry publishes FlightFuelReadout. This module only reads it.
 // Interactive runs pass simulated consumed RP-1 kilograms. Historical replay
 // passes its own declared model ledger. The two are never added together.
 // There is no emissions lens, checkpoint line, or star end card.
@@ -13,49 +12,12 @@ import {
   type EmissionsFile,
   type EmissionType,
 } from "@/lib/emissions-data";
+import type { ConsumedRp1Kg, EmissionsFlightScope, FlightFuelReadout } from "@/lib/types";
+
+export type { ConsumedRp1Kg, EmissionsFlightScope, FlightFuelReadout } from "@/lib/types";
 
 export const KG_PER_TONNE = 1000;
 const MASS_EPS_KG = 1e-6;
-
-export type EmissionsFlightScope = "interactive" | "historical";
-
-/** Kilograms of RP-1 only. Stage 1 is the booster. Stage 2 is the upper stage. */
-export interface ConsumedRp1Kg {
-  1: number;
-  2: number;
-}
-
-/**
- * Snapshot from 07's FlightTelemetry adapter.
- * `consumedRp1Kg` is cumulative RP-1 already burned. Null means the ledger is missing.
- * Mixed LOX+RP-1 must arrive in `mixedPropellantKg`, never inside `consumedRp1Kg`.
- */
-export interface FlightFuelReadout {
-  runId: string;
-  scope: EmissionsFlightScope;
-  /** Simulated or model time in seconds. Display only. It does not burn fuel. */
-  tSeconds: number;
-  /** Terminal outcome. Later snapshots for this same run are ignored. */
-  frozen: boolean;
-  consumedRp1Kg: ConsumedRp1Kg | null;
-  /** Total LOX+RP-1 kilograms, only when the simulator has not split out RP-1. */
-  mixedPropellantKg?: ConsumedRp1Kg | null;
-  /**
-   * Oxidizer ÷ fuel. When omitted, a mixed ledger uses the sourced file ratio.
-   * Ignored for an RP-1 ledger.
-   */
-  oxidizerToFuel?: number;
-  /** Fuel still available, if the simulator reports it. Consumed mass above this is rejected. */
-  availableRp1Kg?: ConsumedRp1Kg | null;
-  /**
-   * Per-engine RP-1 kilograms. The stage total already includes every engine.
-   * A matching breakdown is accepted once. A mismatch is rejected. It is never multiplied again.
-   */
-  rp1KgByEngine?: ReadonlyArray<{ stage: 1 | 2; rp1Kg: number }>;
-  /** Historical model note. Required for visitors to see that a replay is not measured fuel. */
-  assumption?: string;
-  sourceNote?: string;
-}
 
 export interface HistoricalFuelLedger {
   id: string;

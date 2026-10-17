@@ -1,7 +1,7 @@
 // lib/emissions-format.ts — kid-facing copy for the embedded readout. Owner: Anders.
 // Numbers come from the estimate and the emissions file. No second calculation.
 
-import type { EmissionsFile, EmissionValue } from "@/lib/emissions-data";
+import type { EmissionValue, EmissionsFile } from "@/lib/types";
 import { num, text } from "@/lib/emissions-data";
 import type { EmissionsView } from "@/lib/emissions";
 
