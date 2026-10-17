@@ -32,7 +32,7 @@ Docs read:
 - Session: client sends `{ type: "session.update", session: { voice, instructions, turn_detection, audio } }`. Default voice in the docs is `eve`. Default audio is `audio/pcm` at 24000 Hz, both directions. JSON transport sends output audio as base64 on `response.output_audio.delta` (alias `response.audio.delta` on the overview).
 - Speak a known line: `conversation.item.create` with `input_text`, then `response.create`. Audio deltas follow until `response.done`.
 - Listen: set `turn_detection` to `null` for push-to-talk, append PCM with `input_audio_buffer.append`, then `input_audio_buffer.commit`. User transcript events `conversation.item.input_audio_transcription.updated` / `.completed` are emitted only when `audio.input.transcription.model` is `"grok-transcribe"`. `updated` is cumulative, not a delta.
-- Function calls on the voice socket (`response.function_call_arguments.done`) are **not** used for exhibit tools. Scene tools stay on the text agent so a voice turn cannot steer, launch, or award a flight.
+- Function calls on the mascot Voice socket: `session.update` registers only `start_tour` and `set_level`. On `response.function_call_arguments.done` the client runs the tool, sends `conversation.item.create` with `function_call_output`, then one `response.create`. Flight tools such as `start_mission` stay off this socket, so a voice turn cannot launch, steer, or award a flight. The push-to-talk listen session still registers no tools.
 - Latency, rate limits, price: **not measured**. No key.
 
 ## Text to speech (05 narration files)
@@ -63,7 +63,7 @@ Checked against the image generation docs on 2026-10-17. This was a docs pass, n
 - Reply shape: `{ data: [{ url }] }` or `{ data: [{ b64_json }] }`. A `url` must be `https`. A `b64_json` value becomes a JPEG data URL. Anything else is a 502, and the route does not invent a picture.
 - Edits are `POST https://api.x.ai/v1/images/edits` with `image: { url, type: "image_url" }`. `IMAGE_INPUT_SUPPORTED` stays false, so the part card sends the grounded text prompt only.
 - The mission patch uses the same generation call, then stores the bytes and returns `/api/imagine/patch/<id>`.
-- The agent `imagine` tool starts that same part-card request. The voice listen session does not register it.
+- The agent `imagine` tool starts that same part-card request. The mascot Voice socket registers `start_tour` and `set_level` only, so this tool stays on the text agent.
 - Latency, rate limits, price: **not measured** here. The docs list image pricing separately.
 
 ## Fallback when the provider is down

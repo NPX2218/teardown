@@ -1,6 +1,7 @@
 // lib/voice/realtime.ts — Grok speech-to-speech protocol (05). Owner: Anders.
 // Browser clients use an ephemeral token. The API key never appears in this module.
-// Scene tools are not registered on the voice session: the text agent owns them.
+// The listen session registers no tools. The mascot guide session (realtime-guide.ts)
+// registers start_tour and set_level only.
 
 export const REALTIME_MODEL = "grok-voice-latest";
 export const REALTIME_WS_URL = "wss://api.x.ai/v1/realtime";
