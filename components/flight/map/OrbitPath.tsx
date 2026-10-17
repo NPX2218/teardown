@@ -1,38 +1,41 @@
 "use client";
-// Stand-in coast line until neel/19c-orbit-map replaces this file.
-import { useEffect, useMemo } from "react";
-import * as THREE from "three";
-import type { OrbitPathProps } from "@/lib/flight/scene-types";
-import { FLIGHT_SCENE } from "@/lib/viewer/colors";
 
-export function OrbitPath({ state }: OrbitPathProps) {
-  const line = useMemo(() => {
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(0), 3));
-    return new THREE.Line(geometry, new THREE.LineBasicMaterial({ color: FLIGHT_SCENE.path }));
-  }, []);
+import { useLayoutEffect } from "react";
+import { useThree } from "@react-three/fiber";
+import { Marker } from "./Marker";
+import { PathLine } from "./PathLine";
+import type { OrbitPathProps } from "./types";
+import { useOrbitMap } from "./useOrbitMap";
 
-  useEffect(() => () => {
-    line.geometry.dispose();
-    (line.material as THREE.Material).dispose();
-  }, [line]);
+/**
+ * Flown path (solid) and predicted coast (dashed), in Earth radii.
+ * An empty `state.points` draws no coast. Apoapsis, periapsis, and the
+ * impact point are marked only when the state actually carries them.
+ */
+export function OrbitPath({ state, trail }: OrbitPathProps) {
+  const snap = useOrbitMap(state, trail);
+  return (
+    <group name="orbit-path">
+      <MarkReady />
+      <PathLine points={snap.groundPredicted} dashed opacity={0.3} renderOrder={1} zLift={0} />
+      <PathLine points={snap.groundFlown} opacity={0.3} renderOrder={2} zLift={0.0004} />
+      <PathLine points={snap.predicted} dashed opacity={0.6} renderOrder={3} zLift={0.001} />
+      <PathLine points={snap.flown} opacity={0.6} renderOrder={4} zLift={0.0016} />
+      {snap.apoapsis && snap.apoLabel ? (
+        <Marker position={snap.apoapsis} label={snap.apoLabel} tone="split" />
+      ) : null}
+      {snap.periapsis && snap.periLabel ? (
+        <Marker position={snap.periapsis} label={snap.periLabel} tone="split" />
+      ) : null}
+      {snap.impact ? <Marker position={snap.impact} label="Impact" tone="primary" /> : null}
+    </group>
+  );
+}
 
-  useEffect(() => {
-    const geometry = line.geometry;
-    const count = state.points.length;
-    const data = new Float32Array(Math.max(count, 1) * 3);
-    state.points.forEach((point, index) => {
-      data[index * 3] = point[0];
-      data[index * 3 + 1] = point[1];
-      data[index * 3 + 2] = point[2];
-    });
-    geometry.setAttribute("position", new THREE.BufferAttribute(data, 3));
-    geometry.setDrawRange(0, count);
-    geometry.computeBoundingSphere();
-    const material = line.material as THREE.LineBasicMaterial;
-    material.color.set(state.hitsEarth || !state.closed ? FLIGHT_SCENE.pathHit : FLIGHT_SCENE.path);
-    line.visible = count >= 2;
-  }, [line, state]);
-
-  return <primitive object={line} />;
+function MarkReady() {
+  const gl = useThree((s) => s.gl);
+  useLayoutEffect(() => {
+    gl.domElement.dataset.orbitReady = "true";
+  }, [gl]);
+  return null;
 }
