@@ -146,7 +146,9 @@ describe("atmosphere", () => {
     const ground = groundFragmentShader();
     expect(sky).toContain("logdepthbuf_fragment");
     expect(sky).toContain("0.005500");
+    expect(sky).toContain("hitsPlanet");
     expect(ground).toContain("logdepthbuf_fragment");
+    expect(ground).toContain("coverage");
     expect(structureVertexShader).toContain("USE_INSTANCING");
     const site = read("components/flight/env/LaunchSite.tsx");
     expect(site).toContain("launchCloudIntensity");
