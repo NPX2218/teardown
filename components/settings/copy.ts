@@ -7,6 +7,8 @@ export const SETTINGS_COPY = {
   engineBody: "The phone inside the rocket hums when the engines are on.",
   masterTitle: "Master sound",
   masterBody: "This makes every sound quieter or louder. 0 is silent. 100 is as loud as it goes.",
+  musicTitle: "Music",
+  musicBody: "Soft music on this computer. It starts gently and follows the master slider. The phone rocket stays quiet.",
   vibrationTitle: "Vibration",
   vibrationBody: "The phone buzzes while the engines push. A harder push buzzes more of the time.",
   on: "On",

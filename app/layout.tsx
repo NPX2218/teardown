@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
+import { BackgroundMusic } from "@/components/audio/BackgroundMusic";
 import { PagesAssetPrefix, PagesPreviewNote } from "@/components/pages/PagesBuild";
 import { MotionProvider } from "@/components/ui/MotionProvider";
 import { Footer } from "@/components/ui/Footer";
@@ -41,6 +42,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <PagesPreviewNote />
         <MotionProvider>
+          <BackgroundMusic />
           {children}
           <Footer />
         </MotionProvider>
