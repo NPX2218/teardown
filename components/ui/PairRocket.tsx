@@ -147,6 +147,7 @@ export function PairRocket() {
     };
   }, [showCard]);
 
+  const flightEnded = useScene((s) => s.flight.outcome !== null);
   const qr = useMemo(() => (code && origin ? qrSvgPath(rocketUrl(origin, code)) : null), [code, origin]);
   const tryNow = useCallback(() => retryNow.current(), []);
 
@@ -165,7 +166,7 @@ export function PairRocket() {
 
   // One surface per state. Each grows out of the top-right corner where the "Connect rocket" button sits
   // (bottom edge on phones, see pair.module.css). Opacity and scale only: no layout work, the 3D scene never re-renders.
-  const view = rocket.connected ? (justConnected ? "toast" : "status") : showCard ? "card" : "button";
+  const view = rocket.connected ? (justConnected ? "toast" : flightEnded ? "chip" : "status") : showCard ? "card" : "button";
   let surface: ReactNode;
   if (view === "toast") {
     surface = (
@@ -173,6 +174,9 @@ export function PairRocket() {
         <p className="lead">Rocket connected</p>
       </div>
     );
+  } else if (view === "chip") {
+    // The flight result card sits in this corner; the full status card would cover Try again.
+    surface = <span className="chip chip--ok">Rocket on</span>;
   } else if (view === "status") {
     surface = (
       <div className="card">
