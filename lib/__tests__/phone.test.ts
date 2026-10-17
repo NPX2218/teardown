@@ -48,8 +48,8 @@ describe("phone glue (10 Task 4)", () => {
 
   it("PR3b engine power reaches the phone rumble", () => {
     const h = handlers();
-    routePhoneMessage({ k: "engine", power: 0.4 }, h);
-    expect(h.setEngine).toHaveBeenCalledWith(0.4);
+    routePhoneMessage({ k: "engine", power: 0.4, sound: false, master: 0.5, vibrate: true }, h);
+    expect(h.setEngine).toHaveBeenCalledWith({ power: 0.4, sound: false, master: 0.5, vibrate: true });
   });
 
   it("PR3 vibrate → vibrate(pattern)", () => {

@@ -28,21 +28,22 @@ describe("engine power", () => {
     expect(quiet.message).toBeNull();
     expect(quiet.key).toBe("off");
 
+    const mix = { sound: true, master: 1, vibrate: true };
     const live = engineBroadcast({ power: 0.5, connected: true, exploring: true }, quiet.key);
-    expect(live.message).toEqual({ k: "engine", power: 0.5 });
+    expect(live.message).toEqual({ k: "engine", power: 0.5, ...mix });
 
     const again = engineBroadcast({ power: 0.5, connected: true, exploring: true }, live.key);
     expect(again.message).toBeNull();
 
     const full = engineBroadcast({ power: 1, connected: true, exploring: true }, live.key);
-    expect(full.message).toEqual({ k: "engine", power: 1 });
+    expect(full.message).toEqual({ k: "engine", power: 1, ...mix });
 
     const leftExplore = engineBroadcast({ power: 1, connected: true, exploring: false }, full.key);
-    expect(leftExplore.message).toEqual({ k: "engine", power: 0 });
+    expect(leftExplore.message).toEqual({ k: "engine", power: 0, ...mix });
 
-    expect(decodeMessage({ k: "engine", power: 0 })).toEqual({ k: "engine", power: 0 });
-    expect(decodeMessage({ k: "engine", power: 0.5 })).toEqual({ k: "engine", power: 0.5 });
-    expect(decodeMessage({ k: "engine", power: 1 })).toEqual({ k: "engine", power: 1 });
+    expect(decodeMessage({ k: "engine", power: 0 })).toEqual({ k: "engine", power: 0, ...mix });
+    expect(decodeMessage({ k: "engine", power: 0.5 })).toEqual({ k: "engine", power: 0.5, ...mix });
+    expect(decodeMessage({ k: "engine", power: 1 })).toEqual({ k: "engine", power: 1, ...mix });
     expect(decodeMessage({ k: "engine", power: 1.2 })).toBeNull();
     expect(decodeMessage({ k: "engine", power: -0.1 })).toBeNull();
     expect(decodeMessage({ k: "engine" })).toBeNull();
@@ -58,9 +59,9 @@ describe("engine power", () => {
       stopListen() {},
       showStatus() {},
       calibrate() {},
-      setEngine(power: number) { seen.push(power); },
+      setEngine(command: { power: number }) { seen.push(command.power); },
     } satisfies PhoneHandlers;
-    routePhoneMessage({ k: "engine", power: 0.25 }, handlers);
+    routePhoneMessage({ k: "engine", power: 0.25, sound: true, master: 1, vibrate: true }, handlers);
     expect(seen).toEqual([0.25]);
   });
 
