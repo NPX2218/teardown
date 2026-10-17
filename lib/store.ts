@@ -39,7 +39,7 @@ export interface SceneState {
   parts: PartsFile | null;
   selectedId: PartId | null;
   explode: number; // 0..1
-  /** Explore-mode Merlin power, 0..1. 0 is off. Other screens can read it. */
+  /** Explore-mode Merlin power, 0..1. 0 is off. Settings and other screens read this. */
   enginePower: number;
   camera: { focus: PartId | "home" };
   tour: { active: boolean; step: number };

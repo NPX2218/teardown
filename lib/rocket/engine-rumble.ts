@@ -1,5 +1,7 @@
 // Synthesized Merlin rumble for the phone speaker. No sample files.
 // Filtered noise plus a low oscillator. Gain and cutoff follow engine power.
+// Settings scales that gain through lib/rocket/engine-audio (master and enabled).
+import { engineAudibleGain, noteEnginePower, onEngineMixChange } from "@/lib/rocket/engine-audio";
 import { getAudioContext } from "@/lib/rocket/sound";
 
 /** Ramp time so a slider move does not click. */
@@ -19,6 +21,11 @@ const MAX_CUTOFF_HZ = 1680;
 const MIN_OSC_HZ = 28;
 const MAX_OSC_HZ = 54;
 const MAX_GAIN = 0.72;
+
+/** Tone gain after the settings master and engine-sound switch. */
+export function enginePlaybackGain(power: number): number {
+  return engineAudibleGain(engineTone(power).gain);
+}
 
 export function engineTone(power: number): EngineTone {
   const p = typeof power === "number" && Number.isFinite(power) ? Math.min(1, Math.max(0, power)) : 0;
@@ -89,18 +96,19 @@ class RumbleVoice {
   constructor(private ctx: AudioContextLike) {}
 
   setPower(power: number): void {
-    const tone = engineTone(power);
+    const gain = enginePlaybackGain(power);
     if (!this.started) {
-      if (tone.gain <= 0) return;
+      if (gain <= 0) return;
       this.start();
     }
     if (!this.gain || !this.filter) return;
-    applyEngineTone({
+    const tone = applyEngineTone({
       now: this.ctx.currentTime,
       gain: this.gain.gain,
       cutoff: this.filter.frequency,
       osc: this.osc ? this.osc.frequency : null,
     }, power);
+    this.gain.gain.setTargetAtTime(engineAudibleGain(tone.gain), this.ctx.currentTime, ENGINE_RAMP_S);
   }
 
   stop(): void {
@@ -162,7 +170,9 @@ function live(): RumbleVoice | null {
 }
 
 function apply(): void {
-  live()?.setPower(holds.size > 0 ? 0 : lastPower);
+  const power = holds.size > 0 ? 0 : lastPower;
+  live()?.setPower(power);
+  noteEnginePower(power);
 }
 
 /** Remember the laptop's power. Silent until the start tap unlocks audio. */
@@ -188,4 +198,7 @@ export function stopEngineRumble(): void {
   holds.clear();
   voice?.stop();
   voice = null;
+  noteEnginePower(0);
 }
+
+onEngineMixChange(apply);
