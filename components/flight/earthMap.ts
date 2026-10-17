@@ -1,4 +1,4 @@
-// Schematic geography so the globe reads as Earth. Not a surveyed coastline.
+// Painted geography for the globe when the NASA textures cannot be loaded. Not a surveyed coastline.
 import { FLIGHT_SCENE } from "@/lib/viewer/colors";
 
 interface Blob {
