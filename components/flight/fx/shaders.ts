@@ -1,6 +1,19 @@
 /** GLSL for the flight FX. Colours arrive as uniforms from the theme tokens. */
 
+// Match the logarithmic depth protocol enabled by FlightScene. Keeping both
+// stages paired also leaves the standalone FX preview usable without log depth.
+const logVertex = /* glsl */ `
+bool isPerspectiveMatrix(mat4 m) {
+  return m[2][3] == -1.0;
+}
+#include <logdepthbuf_pars_vertex>
+`;
+const logFragment = /* glsl */ `
+#include <logdepthbuf_pars_fragment>
+`;
+
 export const plumeVertex = /* glsl */ `
+${logVertex}
 varying float vAlong;
 varying float vSeed;
 void main() {
@@ -12,10 +25,12 @@ void main() {
     vec4 local = vec4(position, 1.0);
   #endif
   gl_Position = projectionMatrix * modelViewMatrix * local;
+  #include <logdepthbuf_vertex>
 }
 `;
 
 export const plumeFragment = /* glsl */ `
+${logFragment}
 uniform float uTime;
 uniform float uBrightness;
 uniform float uVacuum;
@@ -35,10 +50,12 @@ void main() {
   }
   float alpha = pow(1.0 - vAlong, 1.15) * (0.25 + 0.75 * hot) * uBrightness * flick;
   gl_FragColor = vec4(col, alpha);
+  #include <logdepthbuf_fragment>
 }
 `;
 
 export const sparkVertex = /* glsl */ `
+${logVertex}
 attribute float aSeed;
 uniform float uTime;
 uniform float uLength;
@@ -55,20 +72,24 @@ void main() {
   gl_PointSize = max(1.0, (1.5 + (1.0 - life) * 4.5) * (28.0 / max(0.2, -mv.z)));
   gl_Position = projectionMatrix * mv;
   vAlpha = (1.0 - life) * step(0.001, uLength);
+  #include <logdepthbuf_vertex>
 }
 `;
 
 export const sparkFragment = /* glsl */ `
+${logFragment}
 uniform vec3 uHot;
 varying float vAlpha;
 void main() {
   vec2 d = gl_PointCoord - vec2(0.5);
   float a = smoothstep(0.5, 0.05, length(d)) * vAlpha;
   gl_FragColor = vec4(uHot, a);
+  #include <logdepthbuf_fragment>
 }
 `;
 
 export const smokeVertex = /* glsl */ `
+${logVertex}
 attribute float aSeed;
 attribute vec3 aDir;
 uniform float uTime;
@@ -92,10 +113,12 @@ void main() {
   mv.xy += position.xy * size;
   gl_Position = projectionMatrix * mv;
   vAlpha = uSmoke * (0.55 + 0.45 * sin(clamp(life, 0.0, 1.0) * 3.14159265));
+  #include <logdepthbuf_vertex>
 }
 `;
 
 export const smokeFragment = /* glsl */ `
+${logFragment}
 uniform vec3 uCream;
 uniform vec3 uFlame;
 uniform sampler2D uMap;
@@ -106,11 +129,13 @@ void main() {
   float sprite = texture2D(uMap, vUv).a;
   vec3 col = mix(uCream, uFlame, clamp(vOrange * 0.4, 0.0, 1.0));
   gl_FragColor = vec4(col, sprite * vAlpha * 0.48);
+  #include <logdepthbuf_fragment>
 }
 `;
 
 /** Crash smoke. Smaller and darker than the pad billow, and it loops once. */
 export const burstSmokeVertex = /* glsl */ `
+${logVertex}
 attribute float aSeed;
 attribute vec3 aDir;
 uniform float uTime;
@@ -128,10 +153,12 @@ void main() {
   mv.xy += position.xy * size;
   gl_Position = projectionMatrix * mv;
   vAlpha = uSmoke * (1.0 - life) * (1.0 - life);
+  #include <logdepthbuf_vertex>
 }
 `;
 
 export const burstSmokeFragment = /* glsl */ `
+${logFragment}
 uniform vec3 uColor;
 uniform sampler2D uMap;
 varying float vAlpha;
@@ -139,10 +166,12 @@ varying vec2 vUv;
 void main() {
   float sprite = texture2D(uMap, vUv).a;
   gl_FragColor = vec4(uColor, sprite * vAlpha);
+  #include <logdepthbuf_fragment>
 }
 `;
 
 export const contrailVertex = /* glsl */ `
+${logVertex}
 attribute float aSeed;
 attribute vec3 aDir;
 uniform float uTime;
@@ -166,10 +195,12 @@ void main() {
   gl_Position = projectionMatrix * mv;
   float body = smoothstep(0.0, 0.06, along) * (1.0 - smoothstep(0.88, 1.0, along));
   vAlpha = uAmount * (0.4 + 0.6 * body);
+  #include <logdepthbuf_vertex>
 }
 `;
 
 export const contrailFragment = /* glsl */ `
+${logFragment}
 uniform vec3 uCream;
 uniform sampler2D uMap;
 varying float vAlpha;
@@ -177,10 +208,12 @@ varying vec2 vUv;
 void main() {
   float sprite = texture2D(uMap, vUv).a;
   gl_FragColor = vec4(uCream, sprite * vAlpha * 0.8);
+  #include <logdepthbuf_fragment>
 }
 `;
 
 export const padCloudVertex = /* glsl */ `
+${logVertex}
 attribute float aSeed;
 uniform float uScale;
 uniform float uOpacity;
@@ -200,10 +233,12 @@ void main() {
   gl_Position = projectionMatrix * mv;
   vAlpha = uOpacity * (0.32 + 0.45 * fract(aSeed * 3.1));
   vOrange = uOrange * (1.0 - smoothstep(0.04, 0.16, aSeed));
+  #include <logdepthbuf_vertex>
 }
 `;
 
 export const padCloudFragment = /* glsl */ `
+${logFragment}
 uniform vec3 uCream;
 uniform vec3 uFlame;
 uniform sampler2D uMap;
@@ -215,10 +250,12 @@ void main() {
   vec3 col = mix(uCream, uFlame, clamp(vOrange * 0.55, 0.0, 1.0));
   if (sprite * vAlpha < 0.02) discard;
   gl_FragColor = vec4(col, sprite * vAlpha);
+  #include <logdepthbuf_fragment>
 }
 `;
 
 export const fireballVertex = /* glsl */ `
+${logVertex}
 varying vec3 vNormalV;
 varying vec3 vView;
 void main() {
@@ -226,10 +263,12 @@ void main() {
   vNormalV = normalize(normalMatrix * normal);
   vView = normalize(-mv.xyz);
   gl_Position = projectionMatrix * mv;
+  #include <logdepthbuf_vertex>
 }
 `;
 
 export const fireballFragment = /* glsl */ `
+${logFragment}
 uniform float uFire;
 uniform float uFlash;
 uniform vec3 uHot;
@@ -241,10 +280,12 @@ void main() {
   vec3 col = mix(uFlame, uHot, fres);
   float alpha = (0.25 + 0.75 * fres) * max(uFire, uFlash);
   gl_FragColor = vec4(col, alpha);
+  #include <logdepthbuf_fragment>
 }
 `;
 
 export const debrisVertex = /* glsl */ `
+${logVertex}
 attribute vec3 aVel;
 attribute float aSeed;
 uniform float uAge;
@@ -259,19 +300,23 @@ void main() {
   vec4 mv = modelViewMatrix * vec4(p, 1.0);
   gl_Position = projectionMatrix * mv;
   vAlpha = 1.0;
+  #include <logdepthbuf_vertex>
 }
 `;
 
 export const debrisFragment = /* glsl */ `
+${logFragment}
 uniform vec3 uColor;
 uniform float uFade;
 varying float vAlpha;
 void main() {
   gl_FragColor = vec4(uColor, vAlpha * uFade);
+  #include <logdepthbuf_fragment>
 }
 `;
 
 export const emberVertex = /* glsl */ `
+${logVertex}
 attribute vec3 aVel;
 attribute float aSeed;
 uniform float uAge;
@@ -283,31 +328,36 @@ void main() {
   gl_PointSize = max(1.0, (2.0 + aSeed * 3.0) * (18.0 / max(0.15, -mv.z)) * uFade);
   gl_Position = projectionMatrix * mv;
   vAlpha = uFade * (1.0 - smoothstep(1.4, 2.6, uAge));
+  #include <logdepthbuf_vertex>
 }
 `;
 
 export const emberFragment = /* glsl */ `
+${logFragment}
 uniform vec3 uHot;
 varying float vAlpha;
 void main() {
   vec2 d = gl_PointCoord - vec2(0.5);
   float a = smoothstep(0.5, 0.05, length(d)) * vAlpha;
   gl_FragColor = vec4(uHot, a);
+  #include <logdepthbuf_fragment>
 }
 `;
 
 export const cloudVertex = /* glsl */ `
+${logVertex}
 varying vec3 vPos;
 varying vec3 vNormalW;
 void main() {
-  vec4 world = modelMatrix * vec4(position, 1.0);
   vPos = position;
   vNormalW = normalize(mat3(modelMatrix) * normal);
-  gl_Position = projectionMatrix * viewMatrix * world;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  #include <logdepthbuf_vertex>
 }
 `;
 
 export const cloudFragment = /* glsl */ `
+${logFragment}
 uniform float uTime;
 uniform float uOpacity;
 uniform float uSeed;
@@ -338,10 +388,12 @@ void main() {
   float alpha = smoothstep(0.62, 0.95, puff) * uOpacity;
   if (alpha < 0.02) discard;
   gl_FragColor = vec4(uColor, alpha);
+  #include <logdepthbuf_fragment>
 }
 `;
 
 export const puffVertex = /* glsl */ `
+${logVertex}
 uniform float uScale;
 varying float vAlpha;
 varying vec2 vUv;
@@ -351,10 +403,12 @@ void main() {
   mv.xy += position.xy * uScale;
   gl_Position = projectionMatrix * mv;
   vAlpha = 1.0;
+  #include <logdepthbuf_vertex>
 }
 `;
 
 export const puffFragment = /* glsl */ `
+${logFragment}
 uniform vec3 uColor;
 uniform float uOpacity;
 uniform sampler2D uMap;
@@ -363,18 +417,22 @@ varying vec2 vUv;
 void main() {
   float sprite = texture2D(uMap, vUv).a;
   gl_FragColor = vec4(uColor, sprite * uOpacity * vAlpha);
+  #include <logdepthbuf_fragment>
 }
 `;
 
 export const fogVertex = /* glsl */ `
+${logVertex}
 varying vec2 vUv;
 void main() {
   vUv = uv;
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  #include <logdepthbuf_vertex>
 }
 `;
 
 export const fogFragment = /* glsl */ `
+${logFragment}
 uniform vec3 uColor;
 uniform float uOpacity;
 varying vec2 vUv;
@@ -382,5 +440,6 @@ void main() {
   vec2 d = vUv - vec2(0.5);
   float a = smoothstep(0.72, 0.15, length(d)) * uOpacity;
   gl_FragColor = vec4(uColor, a);
+  #include <logdepthbuf_fragment>
 }
 `;

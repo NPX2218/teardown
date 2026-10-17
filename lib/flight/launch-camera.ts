@@ -103,6 +103,15 @@ function aboveGround(anchor: EarthRadiiVec3, direction: Vec3, distanceM: number,
 export const PAD_YAW = 0.57;
 export const PAD_PITCH = -0.36;
 
+/**
+ * Presentation tuning for the 2026-10-17 liftoff rendering report.
+ * Switching to the old chase pose moved the desired eye by 301 m.
+ * Keep the pad shot at zero altitude and finish the handoff after one
+ * existing flight-model length (70 m), so the transition follows ascent.
+ * This is a camera blend distance, not a physical launch threshold.
+ */
+const LIFTOFF_BLEND_HEIGHT_M = 70;
+
 export function padShot(frame: GlobeFrame, yaw = PAD_YAW, pitch = PAD_PITCH): CameraShot {
   const anchor = frame.up;
   const behind = scale(frame.downrange, -1);
@@ -112,7 +121,7 @@ export function padShot(frame: GlobeFrame, yaw = PAD_YAW, pitch = PAD_PITCH): Ca
   return { position: eye, target, fov: 46 };
 }
 
-/** Above and behind the nose. Distance grows with altitude so the coast falls away. */
+/** Stable launch-plane orbit; the nose controls look-ahead, not the orbit side. */
 export function chaseShot(args: {
   frame: GlobeFrame;
   position: EarthRadiiVec3;
@@ -125,24 +134,16 @@ export function chaseShot(args: {
   const pitch = args.pitch ?? PAD_PITCH;
   const nose = normalize(args.nose);
   const up = args.frame.up;
-  const horizontal = [
-    nose[0] - up[0] * (nose[0] * up[0] + nose[1] * up[1] + nose[2] * up[2]),
-    nose[1] - up[1] * (nose[0] * up[0] + nose[1] * up[1] + nose[2] * up[2]),
-    nose[2] - up[2] * (nose[0] * up[0] + nose[1] * up[1] + nose[2] * up[2]),
-  ] as [number, number, number];
-  const behind = length(horizontal) > 0.08 ? scale(normalize(horizontal), -1) : scale(args.frame.downrange, -1);
-  const sideRaw = [
-    behind[1] * up[2] - behind[2] * up[1],
-    behind[2] * up[0] - behind[0] * up[2],
-    behind[0] * up[1] - behind[1] * up[0],
-  ] as [number, number, number];
-  const side = length(sideRaw) > 1e-6 ? normalize(sideRaw) : args.frame.right;
+  const behind = scale(args.frame.downrange, -1);
+  const side = args.frame.right;
   const distanceM = chaseRangeM(args.altitudeM);
   const minHeight = Math.max(8, distanceM * 0.012);
   const eye = aboveGround(args.position, orbitDirection(behind, side, scale(up, -1), yaw, pitch), distanceM, minHeight);
   const lookAhead = Math.min(distanceM * 0.16, 500_000) / EARTH_RADIUS_M;
   const target = earthRadiiToScene(add(args.position, scale(nose, lookAhead)));
-  return { position: eye, target, fov: distanceM > 500_000 ? 42 : 50 };
+  const chase = { position: eye, target, fov: distanceM > 500_000 ? 42 : 50 };
+  const altitudeM = Number.isFinite(args.altitudeM) ? args.altitudeM : 0;
+  return blendShots(padShot(args.frame, yaw, pitch), chase, altitudeM / LIFTOFF_BLEND_HEIGHT_M);
 }
 
 export function blendShots(from: CameraShot, to: CameraShot, t: number): CameraShot {

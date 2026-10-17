@@ -25,7 +25,7 @@ import styles from "./flight.module.css";
 function PosePublisher() {
   useFrame(() => {
     flightDrawNow.current = readFlightDraw();
-  });
+  }, -2); // After the clock (-3), before camera (-1) and visual effects (0).
   return null;
 }
 

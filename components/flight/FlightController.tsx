@@ -159,7 +159,7 @@ export function FlightController() {
       if (!shouldAdvanceFlight(useScene.getState().flight.status, false)) break;
       useScene.getState().advanceFlight(wall);
     }
-  });
+  }, -3); // Advance the clock before publishing the frame's draw sample (-2).
 
   return null;
 }
