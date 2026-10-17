@@ -7,7 +7,7 @@ import { resetMascotActivity, setAgentBusy, setVoiceState } from "@/lib/mascot/a
 import type { MascotMood } from "@/lib/mascot/mood";
 
 const MOODS: MascotMood[] = [
-  "rest", "listening", "talking", "thinking",
+  "rest", "listening", "user-speaking", "talking", "thinking",
   "celebrate", "surprised", "sad", "sleeping",
   "worried", "alarmed",
 ];
@@ -43,6 +43,10 @@ describe("GuideLauncher", () => {
   it("listens, talks, and thinks from the activity bus", () => {
     setVoiceState("listening");
     expect(renderToStaticMarkup(<GuideLauncher />)).toContain('data-mood="listening"');
+    setVoiceState("user-speaking");
+    expect(renderToStaticMarkup(<GuideLauncher />)).toContain('data-mood="user-speaking"');
+    setVoiceState("thinking");
+    expect(renderToStaticMarkup(<GuideLauncher />)).toContain('data-mood="thinking"');
     setVoiceState("speaking");
     expect(renderToStaticMarkup(<GuideLauncher />)).toContain('data-mood="talking"');
     setVoiceState("idle");

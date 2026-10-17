@@ -12,6 +12,15 @@ describe("moodFor", () => {
   });
   it("voice beats a warning and the agent", () => {
     expect(moodFor({ ...base, voice: "listening", agentBusy: true, warning: "warning" })).toBe("listening");
+    expect(moodFor({ ...base, voice: "user-speaking", agentBusy: true })).toBe("user-speaking");
+    expect(moodFor({ ...base, voice: "thinking" })).toBe("thinking");
+    expect(moodFor({ ...base, voice: "speaking", flight: "sad" })).toBe("talking");
+  });
+  it("listening and user-speaking use the dot body, speaking keeps a face", () => {
+    expect(MOOD_VISUAL.listening.state).toBe("thinking");
+    expect(MOOD_VISUAL["user-speaking"].state).toBe("thinking");
+    expect(MOOD_VISUAL.thinking.state).toBe("thinking");
+    expect(MOOD_VISUAL.talking.state).toBe("idle");
   });
   it("a flight result beats a warning", () => {
     expect(moodFor({ ...base, flight: "sad", warning: "caution" })).toBe("sad");

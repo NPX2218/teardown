@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { GrokMascot } from "@/components/ui/GrokMascot";
 import { useReducedMotion } from "@/components/ui/useReducedMotion";
 import { useMascotActivity } from "@/lib/mascot/activity";
+import { connectVoiceActivity } from "@/lib/mascot/voice-bridge";
 import { readFlightResult, readWarningLevel } from "@/lib/mascot/flight-cue";
 import { moodFor } from "@/lib/mascot/mood";
 import { outcomeFace, type FlightFace, type ResultStamp } from "@/lib/mascot/outcome";
@@ -60,6 +61,8 @@ export function GuideLauncher() {
     setOpen(false);
     setAnswer(null);
   }, [attract]);
+
+  useEffect(() => connectVoiceActivity(), []);
 
   return (
     <div className={styles.wrap} data-guide>
