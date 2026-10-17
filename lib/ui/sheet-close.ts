@@ -11,3 +11,18 @@ export function finishSheetIfReduced(
   finish();
   return true;
 }
+
+/**
+ * The dialog steals focus when it closes. Call this after it has unmounted,
+ * and only when this close asked to return to the opener.
+ */
+export function takeOpenerFocus(
+  open: boolean,
+  pending: { current: boolean },
+  opener: { focus(): void } | null,
+): boolean {
+  if (open || !pending.current || !opener) return false;
+  pending.current = false;
+  opener.focus();
+  return true;
+}

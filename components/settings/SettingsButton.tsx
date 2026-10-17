@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { patchSettings, useSettings } from "@/lib/settings/prefs";
+import { takeOpenerFocus } from "@/lib/ui/sheet-close";
 import { SETTINGS_COPY } from "./copy";
 import { SettingsSheet } from "./SettingsSheet";
 import { SettingsSync } from "./SettingsSync";
@@ -17,10 +18,11 @@ export function SettingsButton() {
   const closeRef = useRef<HTMLButtonElement>(null);
 
   const close = () => setClosing(true);
+  const pendingFocus = useRef(false);
   const finishClose = () => {
+    pendingFocus.current = true;
     setClosing(false);
     setOpen(false);
-    openerRef.current?.focus();
   };
 
   useEffect(() => {
@@ -43,6 +45,10 @@ export function SettingsButton() {
       dialog.removeEventListener("cancel", onCancel);
       if (dialog.open) dialog.close();
     };
+  }, [open]);
+
+  useEffect(() => {
+    takeOpenerFocus(open, pendingFocus, openerRef.current);
   }, [open]);
 
   return (

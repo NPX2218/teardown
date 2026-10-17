@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { takeOpenerFocus } from "@/lib/ui/sheet-close";
 import { AboutSheet } from "./AboutSheet";
 import styles from "./about.module.css";
 
@@ -14,10 +15,11 @@ export function AboutButton() {
   const closeRef = useRef<HTMLButtonElement>(null);
 
   const close = () => setClosing(true);
+  const pendingFocus = useRef(false);
   const finishClose = () => {
+    pendingFocus.current = true;
     setClosing(false);
     setOpen(false);
-    openerRef.current?.focus();
   };
 
   useEffect(() => {
@@ -41,6 +43,10 @@ export function AboutButton() {
       dialog.removeEventListener("cancel", onCancel);
       if (dialog.open) dialog.close();
     };
+  }, [open]);
+
+  useEffect(() => {
+    takeOpenerFocus(open, pendingFocus, openerRef.current);
   }, [open]);
 
   return (
