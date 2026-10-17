@@ -1,26 +1,16 @@
 "use client";
 // components/voice/AgentBox.tsx — type or tap a question for Grok (04 Task 5). Owner: Anders.
-import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { askAgent, cancelAgent } from "@/lib/agent/client";
 import { toolCallLines } from "@/lib/agent/messages";
 import { AGENT_STARTERS, readAgentKiosk } from "@/lib/agent/starters";
 import type { ChatMessage } from "@/lib/agent/types";
 import { getScene } from "@/lib/agent/scene";
+import styles from "./AgentBox.module.css";
 
 const LOG_LINES = 6;
 export const CONVERSATION_IDLE_MS = 60_000;
 const IDLE_CHECK_MS = 1_000;
-
-const BOX: CSSProperties = { width: "min(28rem, calc(100vw - 2 * var(--gutter)))" };
-const INPUT: CSSProperties = {
-  flex: 1,
-  minWidth: 0,
-  minHeight: "var(--target)",
-  padding: "0 var(--sp-4)",
-  background: "var(--panel-hud)",
-  border: "2px solid var(--line-strong)",
-  borderRadius: "var(--radius-sm)",
-};
 
 export function AgentBox({ embedded = false }: { embedded?: boolean } = {}) {
   const [text, setText] = useState("");
@@ -89,40 +79,40 @@ export function AgentBox({ embedded = false }: { embedded?: boolean } = {}) {
   };
 
   return (
-    <div className={embedded ? undefined : "dock dock--tr"}>
-      <section className="hud" style={{ ...BOX, width: embedded ? "100%" : BOX.width, position: "static" }} aria-label="Ask Grok">
+    <div className={embedded ? undefined : `dock dock--tr ${styles.dock}`}>
+      <section className={`hud ${styles.box}${embedded ? ` ${styles.embedded}` : ""}`} aria-label="Ask Grok">
         {!kiosk && (
-          <form className="row" onSubmit={onSubmit}>
+          <form className={`row ${styles.form}`} onSubmit={onSubmit}>
             <label htmlFor="agent-q" className="sr-only">Ask Grok</label>
             <input
               id="agent-q"
-              style={INPUT}
+              className={styles.input}
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="Ask about the rocket"
               autoComplete="off"
               disabled={busy}
             />
-            <button type="submit" className="btn btn-accent" disabled={busy || text.trim() === ""}>
+            <button type="submit" className={`btn btn-accent ${styles.send}`} disabled={busy || text.trim() === ""}>
               {busy ? "Thinking" : "Send"}
             </button>
           </form>
         )}
-        <div className="row" role="group" aria-label="Example questions">
+        <div className={`row ${styles.starters}`} role="group" aria-label="Example questions">
           {AGENT_STARTERS.map((q) => (
-            <button key={q.label} type="button" className="btn btn-outline" disabled={busy} onClick={() => void ask(q.text)}>
+            <button key={q.label} type="button" className={`btn btn-outline ${styles.starter}`} disabled={busy} onClick={() => void ask(q.text)}>
               {q.label}
             </button>
           ))}
         </div>
         {reply && (
-          <div className="card" aria-live="polite">
+          <div className={`card ${styles.reply}`} aria-live="polite">
             {!reply.ok && <span className="chip chip--bad">Couldn&apos;t reach Grok</span>}
-            <p className="lead" style={{ margin: 0 }}>{reply.text}</p>
+            <p className={`lead ${styles.replyText}`}>{reply.text}</p>
           </div>
         )}
         {!kiosk && log.length > 0 && (
-          <ul className="muted" style={{ margin: 0, paddingLeft: "var(--sp-4)" }} aria-label="What Grok did">
+          <ul className={`muted ${styles.log}`} aria-label="What Grok did">
             {log.map((line, i) => <li key={i}>{line}</li>)}
           </ul>
         )}

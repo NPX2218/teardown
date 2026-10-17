@@ -131,7 +131,7 @@ export function PushToTalk({ embedded = false }: { embedded?: boolean } = {}) {
         {phase === "listening" ? "Listening" : phase === "thinking" ? "Thinking" : "Ask the rocket"}
       </button>
       {caption && (
-        <div className="card" aria-live="polite">
+        <div className={`card ${styles.card}`} aria-live="polite">
           {failed && <span className="chip chip--bad">Couldn&apos;t reach Grok</span>}
           <p className={`lead ${styles.caption}`}>{caption}</p>
         </div>
