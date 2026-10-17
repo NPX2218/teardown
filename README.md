@@ -179,9 +179,9 @@ The committed template is `.env.local.example`. The gitignore keeps every other 
 
 | Variable | What it does |
 |:---|:---|
-| `XAI_API_KEY` | Authorizes the voice token (`POST /v1/realtime/client_secrets`) and the text agent. |
+| `XAI_API_KEY` | Authorizes the voice token (`POST /v1/realtime/client_secrets`), the text agent, and Imagine. |
 | `XAI_TEXT_MODEL` | Chat model for the text guide. |
-| `XAI_IMAGE_MODEL` | Imagine model. |
+| `XAI_IMAGE_MODEL` | Imagine model. Current docs id: `grok-imagine-image-2.0`. |
 | `XAI_VOICE` | Optional TTS voice id. Defaults to `eve`. The live Voice socket uses `eve` as well. |
 
 **Try the phone rocket without a phone.** Run each command in its own terminal:

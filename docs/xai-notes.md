@@ -55,8 +55,16 @@ Confirmed on the text-to-speech page, not guessed:
 
 ## Imagine (09) → `XAI_IMAGE_MODEL`
 
-- **Not confirmed in this pass.** Stage 09 is out of scope. The agent `imagine` tool validates arguments and returns `imagine not available yet`. It does not invent an image URL or call an image endpoint.
-- Endpoint, request body, response, latency, rate limits, price: **pending a 09 docs pass with a key**.
+Checked against the image generation docs on 2026-10-17. This was a docs pass, not a live call.
+
+- Endpoint the route calls: `POST https://api.x.ai/v1/images/generations` with `Authorization: Bearer $XAI_API_KEY`.
+- Model id for `XAI_IMAGE_MODEL`: `grok-imagine-image-2.0`, the current docs model. The route does not guess a model. A blank key or model is `503` `{ "error": "imagine is not set up on the server" }`.
+- Body this app sends: `{ model, prompt, n: 1, response_format: "url" }`. The docs also allow `aspect_ratio`, `resolution` (`1k` or `2k`), and `quality` (`low`, `medium`, `auto`).
+- Reply shape: `{ data: [{ url }] }` or `{ data: [{ b64_json }] }`. A `url` must be `https`. A `b64_json` value becomes a JPEG data URL. Anything else is a 502, and the route does not invent a picture.
+- Edits are `POST https://api.x.ai/v1/images/edits` with `image: { url, type: "image_url" }`. `IMAGE_INPUT_SUPPORTED` stays false, so the part card sends the grounded text prompt only.
+- The mission patch uses the same generation call, then stores the bytes and returns `/api/imagine/patch/<id>`.
+- The agent `imagine` tool starts that same part-card request. The mascot Voice socket registers `start_tour` and `set_level` only, so this tool stays on the text agent.
+- Latency, rate limits, price: **not measured** here. The docs list image pricing separately.
 
 ## Fallback when the provider is down
 
