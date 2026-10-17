@@ -19,8 +19,7 @@ import type {
 import { DEFAULT_SCENARIO_ID, isControlAxis, isControlSource, isExplainLevel, isFlightWarp } from "@/lib/types";
 import { MISSIONS } from "@/data/missions/index";
 import { FLIGHT_SCENARIOS } from "@/data/flight/index";
-// Stand-in until Anders PR #2 adds data/parts/falcon9.json. Swap this import then.
-import partsData from "@/lib/fixtures/parts-falcon9.placeholder.json";
+import { loadParts } from "@/lib/parts-source";
 import { assignAxisOwner, mixFlightInput, NEUTRAL_FLIGHT_INPUT } from "@/lib/flight/input-mixer";
 import { clampFlightWallDelta, holdFlightStep } from "@/lib/flight/hold-step";
 import { validateFlightScenario } from "@/lib/flight/scenario";
@@ -137,7 +136,7 @@ export const useScene = create<SceneState>()((set, get) => {
     typeof id === "string" && (get().parts?.groups.some((group) => group.id === id) ?? false);
 
   return {
-    parts: partsData as unknown as PartsFile,
+    parts: loadParts(),
     selectedId: null,
     explode: 0,
     camera: { focus: "home" },
