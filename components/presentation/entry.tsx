@@ -7,4 +7,4 @@ import { createRoot } from "react-dom/client";
 import { Deck } from "./Deck";
 
 const root = document.getElementById("root");
-if (root) createRoot(root).render(<Deck pdfHref="teardown.pdf" />);
+if (root) createRoot(root).render(<Deck mediaBase="media/" />);
