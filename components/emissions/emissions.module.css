@@ -1,0 +1,54 @@
+/* Embedded flight readout. Tokens only. The host places this block in the flight HUD.
+   It stays in normal flow so it does not cover steering, throttle, staging, or the vehicle. */
+.readout {
+  position: static;
+  inset: auto;
+  width: min(100%, 22rem);
+  max-height: 16rem;
+  overflow: auto;
+  pointer-events: auto;
+}
+
+.readout :global(.hud__v) {
+  font-variant-numeric: tabular-nums;
+}
+
+.sentence,
+.note {
+  margin: 0;
+}
+
+.stages {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.details {
+  min-height: var(--target);
+  min-width: var(--target);
+}
+
+.panel {
+  position: relative;
+}
+
+.panel h2 {
+  padding-right: calc(var(--target) + var(--sp-4));
+}
+
+.list {
+  display: grid;
+  gap: var(--sp-4);
+  margin: var(--sp-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.used {
+  font-weight: 600;
+}
