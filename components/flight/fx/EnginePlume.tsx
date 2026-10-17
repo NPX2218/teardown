@@ -224,7 +224,7 @@ export function EnginePlume({ throttle, altitudeKm, reducedMotion }: EnginePlume
       smokeMat.uniforms.uTime.value = time;
       smokeMat.uniforms.uSmoke.value = profile.smoke;
       smokeMat.uniforms.uOrange.value = profile.orange;
-      smokeMat.uniforms.uSpread.value = 36 + profile.smoke * 130;
+      smokeMat.uniforms.uSpread.value = 48 + profile.smoke * 170;
       smokeMat.uniforms.uReduced.value = reduced ? 1 : 0;
     }
     if (contrail.current) {

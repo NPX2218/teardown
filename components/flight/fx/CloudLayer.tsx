@@ -83,7 +83,7 @@ export function CloudLayer({ altitudeKm, pad, reducedMotion }: CloudLayerProps &
 
   const bankMat = useMemo(() => new THREE.ShaderMaterial({
     uniforms: {
-      uScale: { value: 210 * METRES_TO_SCENE },
+      uScale: { value: 280 * METRES_TO_SCENE },
       uOpacity: { value: 0 },
       uOrange: { value: 0.8 },
       uTime: { value: 0 },
@@ -220,6 +220,7 @@ export function CloudLayer({ altitudeKm, pad, reducedMotion }: CloudLayerProps &
     bankMat.uniforms.uDrift.value = reducedRef.current ? 0 : 1;
     columnMat.uniforms.uTime.value = clock.elapsedTime;
     columnMat.uniforms.uOpacity.value = columnState.amount;
+    columnMat.uniforms.uScale.value = Math.max(90, columnState.lengthM / 16) * METRES_TO_SCENE;
     columnMat.uniforms.uDrift.value = reducedRef.current ? 0 : 0.35;
     if (bank.current) {
       bank.current.visible = bankOpacity > 0.03;

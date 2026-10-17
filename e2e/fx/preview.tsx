@@ -6,7 +6,7 @@ import type { PerspectiveCamera } from "three";
 import { EARTH_RADIUS_M } from "@/lib/flight.helpers";
 import { METRES_TO_SCENE } from "@/lib/flight/scene-scale";
 import { FLIGHT_SCENE, SCENE_COLORS } from "@/lib/viewer/colors";
-import { CloudLayer, EnginePlume, Explosion, FALCON_M, StageSeparation, bocaChicaPad } from "@/components/flight/fx";
+import { CloudLayer, EnginePlume, Explosion, FALCON_M, StageSeparation, bocaChicaPad, padBasis } from "@/components/flight/fx";
 
 declare global {
   interface Window {
@@ -151,7 +151,7 @@ function Scene({ shot }: { shot: string }) {
   if (shot === "overhead") {
     return (
       <>
-        <Frame position={[2, 360, 3]} look={[0, 0, 0]} near={0.6} far={1800} fov={48} up={[0, 0, 1]} />
+        <Frame position={[12, 920, 16]} look={[0, 0, 0]} near={2} far={4000} fov={42} up={[0, 0, 1]} />
         <PlumeShot altitudeKm={0} />
       </>
     );
@@ -159,24 +159,32 @@ function Scene({ shot }: { shot: string }) {
   if (shot === "climb") {
     return (
       <>
-        <Frame position={[220, -500, 80]} look={[0, -500, 0]} near={1} far={7000} fov={28} />
+        <Frame position={[3400, -1100, 800]} look={[0, -1100, 0]} near={8} far={20000} fov={46} />
         <PlumeShot altitudeKm={2.5} />
       </>
     );
   }
   if (shot === "pad") {
     const pad = bocaChicaPad();
+    const basis = padBasis(pad);
+    const back = 1900 * METRES_TO_SCENE;
+    const lift = 620 * METRES_TO_SCENE;
+    const aim = 480 * METRES_TO_SCENE;
     const x = pad[0] * EARTH_RADIUS;
     const y = pad[1] * EARTH_RADIUS;
     const z = pad[2] * EARTH_RADIUS;
     return (
       <>
         <Frame
-          position={[x + 0.00062, y + 0.00028, z + 0.00048]}
-          look={[x, y, z]}
-          near={0.00002}
-          far={2}
-          fov={46}
+          position={[
+            x + basis.east[0] * back + basis.up[0] * lift,
+            y + basis.east[1] * back + basis.up[1] * lift,
+            z + basis.east[2] * back + basis.up[2] * lift,
+          ]}
+          look={[x + basis.up[0] * aim, y + basis.up[1] * aim, z + basis.up[2] * aim]}
+          near={0.00004}
+          far={4}
+          fov={42}
           up={[pad[0], pad[1], pad[2]]}
         />
         <group scale={EARTH_RADIUS}>
@@ -207,7 +215,7 @@ function Scene({ shot }: { shot: string }) {
   }
   return (
     <>
-      <Frame position={[120, 46, 156]} look={[0, 14, 0]} near={0.5} far={2000} fov={36} />
+      <Frame position={[340, 78, 430]} look={[0, 22, 0]} near={1} far={4000} fov={38} />
       <PlumeShot altitudeKm={0.08} />
     </>
   );
