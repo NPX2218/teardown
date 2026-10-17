@@ -151,7 +151,7 @@ function Scene({ shot }: { shot: string }) {
   if (shot === "overhead") {
     return (
       <>
-        <Frame position={[6, 420, 8]} look={[0, 0, 0]} near={1} far={2400} fov={50} up={[0, 0, 1]} />
+        <Frame position={[10, 480, 12]} look={[0, 0, 0]} near={1} far={2800} fov={48} up={[0, 0, 1]} />
         <PlumeShot altitudeKm={0} />
       </>
     );
@@ -215,7 +215,7 @@ function Scene({ shot }: { shot: string }) {
   }
   return (
     <>
-      <Frame position={[190, 150, 250]} look={[0, 24, 0]} near={0.8} far={3000} fov={42} />
+      <Frame position={[220, 52, 280]} look={[0, 28, 0]} near={0.8} far={3000} fov={40} />
       <PlumeShot altitudeKm={0.08} />
     </>
   );
