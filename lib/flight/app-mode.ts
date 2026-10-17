@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { useScene } from "@/lib/store";
 import { clearHeldAxes } from "@/lib/flight/local-controls";
+import { endGuidedTour } from "@/lib/viewer/tour";
 import { MISSIONS } from "@/data/missions/index";
 import { missionById } from "@/lib/flight/mission-select";
 
@@ -37,7 +38,8 @@ export const useAppMode = create<AppModeState>((set, get) => ({
       useScene.getState().stopFlight();
     }
     const scene = useScene.getState();
-    scene.stopTour();
+    if (scene.tour.active) endGuidedTour();
+    else scene.stopTour();
     if (scene.flight.status === "idle" || scene.flight.scenarioId !== scenarioId) {
       scene.startFlight(scenarioId);
     }
@@ -53,8 +55,10 @@ export const useAppMode = create<AppModeState>((set, get) => ({
   },
   openReplay: () => {
     clearHeldAxes();
-    useScene.getState().stopFlight();
-    useScene.getState().stopTour();
+    const scene = useScene.getState();
+    scene.stopFlight();
+    if (scene.tour.active) endGuidedTour();
+    else scene.stopTour();
     set({ mode: "replay", view: "follow", heardUntil: -1 });
   },
   openExplore: () => {
@@ -62,7 +66,8 @@ export const useAppMode = create<AppModeState>((set, get) => ({
     const scene = useScene.getState();
     scene.stopFlight();
     scene.stopReplay();
-    scene.stopTour();
+    if (scene.tour.active) endGuidedTour();
+    else scene.stopTour();
     set({ mode: "explore" });
   },
   setView: (view) => set({ view }),

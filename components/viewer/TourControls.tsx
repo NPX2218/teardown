@@ -2,7 +2,7 @@
 import { motion } from "motion/react";
 import { motionPresets } from "@/lib/ui/motion";
 import { useScene } from "@/lib/store";
-import { tourGroups } from "@/lib/viewer/tour";
+import { endGuidedTour, tourGroups } from "@/lib/viewer/tour";
 import styles from "./viewer.module.css";
 
 export function TourButton() {
@@ -10,9 +10,7 @@ export function TourButton() {
   const onClick = () => {
     const st = useScene.getState();
     if (!st.tour.active) { st.startTour(); return; }
-    st.stopTour();
-    st.selectPart(null);
-    st.flyTo("home");
+    endGuidedTour();
   };
   return (
     <button type="button" className="btn" onClick={onClick}>

@@ -4,6 +4,7 @@ import { Canvas, useThree } from "@react-three/fiber";
 import { Environment, OrbitControls, Stars } from "@react-three/drei";
 import { useReducedMotion } from "@/components/ui/useReducedMotion";
 import { useScene } from "@/lib/store";
+import { endGuidedTour } from "@/lib/viewer/tour";
 import { SCENE_COLORS } from "@/lib/viewer/colors";
 import { DISPLAY_HEIGHT } from "@/lib/viewer/prepareModel";
 import { makeSnapshot } from "@/lib/viewer/snapshot";
@@ -42,7 +43,10 @@ export function Stage() {
       dpr={[1, 2]}
       onPointerMissed={() => {
         const st = useScene.getState();
-        if (st.tour.active) st.stopTour();
+        if (st.tour.active) {
+          endGuidedTour();
+          return;
+        }
         st.selectPart(null);
       }}
     >

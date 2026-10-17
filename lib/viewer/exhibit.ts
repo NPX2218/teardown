@@ -5,6 +5,7 @@ import { create } from "zustand";
 import { MISSIONS } from "@/data/missions/index";
 import { useAppMode } from "@/lib/flight/app-mode";
 import { resumeFlightExplicit } from "@/lib/flight/phone-pitch";
+import { endGuidedTour } from "@/lib/viewer/tour";
 import { sendToRocket } from "@/lib/rocket/commands";
 import { isPairCode, newPairCode } from "@/lib/rocket/protocol";
 import { useScene } from "@/lib/store";
@@ -147,15 +148,8 @@ export const useExhibit = create<ExhibitState>()((set, get) => ({
 
 /** Puts the exhibit back for the next visitor. Does not mark activity. */
 export function resetExhibit(): void {
-  const scene = useScene.getState();
-  scene.stopTour();
-  scene.stopFlight();
-  scene.stopReplay();
-  scene.setExplode(0);
-  scene.selectPart(null);
-  scene.flyTo("home");
-  scene.setLevel("kid");
-  scene.setImageUrl(null);
+  // Clears flight, tour, explode, engine power, phone tilt, and the part camera.
+  useScene.getState().applyExhibitReset();
   useAppMode.setState({ mode: "explore", heardUntil: -1 });
   sendToRocket({ k: "stop" });
   sendToRocket({ k: "stopSay" });
@@ -280,7 +274,7 @@ export function runShortcut(id: ShortcutId, now: number, missions: Record<string
     }
     case "tour":
       if (scene.tour.active) {
-        scene.stopTour();
+        endGuidedTour();
         return { ok: true };
       }
       useAppMode.setState({ mode: "explore" });

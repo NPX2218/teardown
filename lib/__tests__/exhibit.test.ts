@@ -109,6 +109,8 @@ describe("exhibit walk-up", () => {
   });
 
   it("reset clears the flight and tells the other lane the visitor left", () => {
+    useScene.getState().setOrientation([0, 0, 0, 1]);
+    useScene.getState().setEnginePower(0.8);
     useScene.getState().startFlight("classroom");
     useScene.getState().launchFlight();
     useScene.getState().setLevel("engineer");
@@ -119,6 +121,8 @@ describe("exhibit walk-up", () => {
     expect(useScene.getState().flight.status).toBe("idle");
     expect(useScene.getState().level).toBe("kid");
     expect(useScene.getState().explode).toBe(0);
+    expect(useScene.getState().enginePower).toBe(0);
+    expect(useScene.getState().orientation).toBeNull();
     expect(useScene.getState().replay.missionId).toBeNull();
     expect(types).toEqual([RESET_EVENT]);
     vi.unstubAllGlobals();
@@ -137,6 +141,16 @@ describe("exhibit walk-up", () => {
     expect(useScene.getState().replay.playing).toBe(true);
     expect(useScene.getState().flight.status).toBe("idle");
     expect(MISSIONS.practice.kind).not.toBe("historical");
+  });
+
+  it("stopping the kiosk tour puts the rocket back together", () => {
+    useExhibit.getState().setFlags({ demo: false, kiosk: true });
+    useScene.getState().startTour();
+    expect(useScene.getState().explode).toBe(1);
+    expect(runShortcut("tour", 10).ok).toBe(true);
+    expect(useScene.getState().tour.active).toBe(false);
+    expect(useScene.getState().explode).toBe(0);
+    expect(useScene.getState().camera.focus).toBe("home");
   });
 
   it("kiosk keys fly, watch, and reset without a checkpoint or an engine-out control", () => {
