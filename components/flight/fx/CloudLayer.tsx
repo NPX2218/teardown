@@ -96,6 +96,7 @@ export function CloudLayer({ altitudeKm, pad, reducedMotion }: CloudLayerProps &
     fragmentShader: padCloudFragment,
     transparent: true,
     depthWrite: false,
+    depthTest: false,
     toneMapped: false,
   }), [cream, flame, map]);
 
@@ -114,6 +115,7 @@ export function CloudLayer({ altitudeKm, pad, reducedMotion }: CloudLayerProps &
     fragmentShader: padCloudFragment,
     transparent: true,
     depthWrite: false,
+    depthTest: false,
     toneMapped: false,
   }), [cream, flame, map]);
 
@@ -220,7 +222,7 @@ export function CloudLayer({ altitudeKm, pad, reducedMotion }: CloudLayerProps &
     bankMat.uniforms.uDrift.value = reducedRef.current ? 0 : 1;
     columnMat.uniforms.uTime.value = clock.elapsedTime;
     columnMat.uniforms.uOpacity.value = columnState.amount;
-    columnMat.uniforms.uScale.value = Math.max(90, columnState.lengthM / 16) * METRES_TO_SCENE;
+    columnMat.uniforms.uScale.value = Math.max(160, columnState.lengthM / 8) * METRES_TO_SCENE;
     columnMat.uniforms.uDrift.value = reducedRef.current ? 0 : 0.35;
     if (bank.current) {
       bank.current.visible = bankOpacity > 0.03;
