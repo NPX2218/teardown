@@ -1,0 +1,124 @@
+/* Flight and replay layout. Colours come from theme tokens only. */
+
+.slot {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-canvas);
+  pointer-events: none;
+}
+
+.stage {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-canvas);
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.stage:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: -3px;
+}
+
+.readout {
+  top: 5.5rem;
+  left: var(--gutter);
+  width: min(24rem, calc(100vw - 2 * var(--gutter)));
+  max-height: calc(100dvh - 8rem);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.controls {
+  right: var(--gutter);
+  bottom: var(--sp-4);
+  width: min(26rem, calc(100vw - 2 * var(--gutter)));
+  max-height: calc(100dvh - 8rem);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.result {
+  top: 16dvh;
+  left: 0;
+  right: 0;
+  margin-inline: auto;
+  width: min(28rem, calc(100% - 2 * var(--gutter)));
+  z-index: var(--z-overlay);
+}
+
+.stack {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-4);
+}
+
+.hold {
+  touch-action: none;
+}
+
+.note {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--sp-2);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  color: var(--text-muted);
+}
+
+.events {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.event {
+  display: grid;
+  gap: var(--sp-1);
+}
+
+.more summary {
+  display: flex;
+  align-items: center;
+  min-height: var(--target);
+  cursor: pointer;
+}
+
+.embedded {
+  display: grid;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--line-soft);
+}
+
+@media (max-width: 720px) {
+  .readout {
+    top: 5.25rem;
+    right: var(--gutter);
+    width: auto;
+    max-height: calc(52dvh - 5.25rem);
+  }
+
+  .controls {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    max-height: 46dvh;
+    padding-bottom: max(var(--sp-4), env(safe-area-inset-bottom));
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+  }
+}
