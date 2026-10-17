@@ -435,7 +435,11 @@ describe("browser adapters (05 Task 1)", () => {
 
   it("BA8 fetchVoice posts text and returns null on failure, empty audio, or abort", async () => {
     vi.stubGlobal("window", {});
-    const f = vi.fn(async (_u: string, _i?: RequestInit) => new Response(new Uint8Array([1, 2, 3]), { status: 200 }));
+    const f = vi.fn(async (url: string, init?: RequestInit) => {
+      void url;
+      void init;
+      return new Response(new Uint8Array([1, 2, 3]), { status: 200 });
+    });
     vi.stubGlobal("fetch", f);
     const blob = await fetchVoice("hello", new AbortController().signal);
     expect(blob?.size).toBe(3);

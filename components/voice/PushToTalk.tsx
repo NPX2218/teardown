@@ -1,4 +1,3 @@
-/// <reference path="./css-modules.d.ts" />
 "use client";
 // components/voice/PushToTalk.tsx — Ask the rocket (05 Task 3). Owner: Anders.
 // The microphone uses the realtime socket. This button never claims Grok answered if the listen step failed.
@@ -15,6 +14,13 @@ import { speakLine, stopSpeaking } from "@/lib/voice/speak";
 import type { ChatMessage } from "@/lib/agent/types";
 import styles from "./PushToTalk.module.css";
 
+const HOLD_KEY = "v";
+
+function isTypingTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  return target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable;
+}
+
 export function PushToTalk({ embedded = false }: { embedded?: boolean } = {}) {
   const [phase, setPhase] = useState<"idle" | "listening" | "thinking">("idle");
   const [caption, setCaption] = useState("");
@@ -22,9 +28,16 @@ export function PushToTalk({ embedded = false }: { embedded?: boolean } = {}) {
   const history = useRef<ChatMessage[]>([]);
   const generation = useRef(0);
   const runId = useRef<string | null>(null);
+  const endEarly = useRef<AbortController | null>(null);
+  const busy = useRef(false);
+  const phaseRef = useRef(phase);
+  phaseRef.current = phase;
 
   useEffect(() => {
     const reset = () => {
+      endEarly.current?.abort();
+      busy.current = false;
+      phaseRef.current = "idle";
       stopSpeaking();
       history.current = [];
       generation.current = agentGeneration();
@@ -62,8 +75,10 @@ export function PushToTalk({ embedded = false }: { embedded?: boolean } = {}) {
     setPhase("idle");
   }
 
-  async function onAsk() {
-    if (phase !== "idle") return;
+  async function onAsk(signal?: AbortSignal) {
+    if (busy.current || phaseRef.current !== "idle") return;
+    busy.current = true;
+    phaseRef.current = "listening";
     setPhase("listening");
     setFailed(false);
     try {
@@ -71,6 +86,7 @@ export function PushToTalk({ embedded = false }: { embedded?: boolean } = {}) {
         source: MIC_SOURCE,
         rocketConnected: isRocketConnected,
         listen: (source, opts) => listenOnce(source, opts?.endEarly),
+        endEarly: signal,
       });
       await ask(heard.text);
     } catch (err) {
@@ -78,8 +94,34 @@ export function PushToTalk({ embedded = false }: { embedded?: boolean } = {}) {
       setFailed(true);
       setCaption(reason === "no-speech" ? LINES.didntHear : "Couldn't hear you. Use the buttons below.");
       setPhase("idle");
+      phaseRef.current = "idle";
+    } finally {
+      busy.current = false;
     }
   }
+
+  useEffect(() => {
+    const down = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() !== HOLD_KEY || event.repeat || event.metaKey || event.ctrlKey || event.altKey || isTypingTarget(event.target)) return;
+      if (phaseRef.current !== "idle") return;
+      const ctl = new AbortController();
+      endEarly.current = ctl;
+      void onAsk(ctl.signal);
+    };
+    const up = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() !== HOLD_KEY) return;
+      endEarly.current?.abort();
+    };
+    window.addEventListener("keydown", down);
+    window.addEventListener("keyup", up);
+    return () => {
+      window.removeEventListener("keydown", down);
+      window.removeEventListener("keyup", up);
+      endEarly.current?.abort();
+    };
+    // onAsk reads phase through phaseRef, so this listener stays for the life of the dock.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className={embedded ? undefined : `dock ${styles.dock}`}>
@@ -88,7 +130,7 @@ export function PushToTalk({ embedded = false }: { embedded?: boolean } = {}) {
       </button>
       {caption && (
         <div className="card" aria-live="polite">
-          {failed && <span className="chip chip--bad">Couldn't reach Grok</span>}
+          {failed && <span className="chip chip--bad">Couldn&apos;t reach Grok</span>}
           <p className={`lead ${styles.caption}`}>{caption}</p>
         </div>
       )}

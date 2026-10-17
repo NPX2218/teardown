@@ -74,14 +74,14 @@ export function browserSpeak(text: string): Playback {
     return settled("ended");
   }
   const synth = window.speechSynthesis;
-  let timer: ReturnType<typeof setTimeout> | undefined;
+  const pending: { timer?: ReturnType<typeof setTimeout> } = {};
   let isDone = false;
   let finish: () => void = () => {};
   const done = new Promise<PlaybackResult>((resolve) => {
     finish = () => {
       if (isDone) return;
       isDone = true;
-      if (timer !== undefined) clearTimeout(timer);
+      if (pending.timer !== undefined) clearTimeout(pending.timer);
       resolve("ended");
     };
   });
@@ -90,7 +90,7 @@ export function browserSpeak(text: string): Playback {
     synth.cancel();
     finish();
   };
-  timer = setTimeout(stop, playCapMs(text));
+  pending.timer = setTimeout(stop, playCapMs(text));
   const u = new SpeechSynthesisUtterance(text);
   u.onend = finish;
   u.onerror = finish;

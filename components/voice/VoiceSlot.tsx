@@ -1,4 +1,3 @@
-/// <reference path="./css-modules.d.ts" />
 "use client";
 // components/voice/VoiceSlot.tsx — push-to-talk plus the text box (05 Task 3). Owner: Anders.
 import { AgentBox } from "@/components/voice/AgentBox";

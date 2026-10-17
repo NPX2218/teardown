@@ -1,0 +1,19 @@
+{
+  "id": "practice",
+  "name": "Practice mission (sample data)",
+  "date": "2020-03-18",
+  "booster": { "serial": "SAMPLE", "flight": 1 },
+  "landing": "droneship",
+  "source": "https://spaceflightnow.com/2020/03/15/timeline-for-falcon-9-launch-of-starlink-satellites-3/",
+  "events": [
+    { "t": 0, "id": "liftoff", "say": "Liftoff! We're entering the first phase of flight." },
+    { "t": 72, "id": "maxq", "say": "Max-Q! This is when the air pushes hardest on the rocket." },
+    { "t": 152, "id": "meco", "say": "Main engine cutoff. The first stage's engines are off." },
+    { "t": 156, "id": "stage_sep", "say": "Stage separation! The booster lets go of the second stage." },
+    { "t": 163, "id": "ses1", "say": "The second stage engine is on. Next stop, space!" },
+    { "t": 190, "id": "fairing_sep", "say": "The nose cone opens and falls away. The satellites are free to go." },
+    { "t": 419, "id": "entry_burn", "say": "Entry burn complete! The booster has slowed down for landing." },
+    { "t": 515, "id": "landing", "say": "Touchdown! The booster landed and can fly again." },
+    { "t": 532, "id": "seco", "say": "Second stage engine cutoff. We made it to orbit!" }
+  ]
+}
