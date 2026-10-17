@@ -1,39 +1,9 @@
 // lib/parts.ts — validator for data/parts/falcon9.json (02 Task 2). Owner: Anders.
 // Pure functions. Never throws: bad input becomes error strings.
-//
-// Contract fixture: `PartsFile` / `PartGroup` match 01's agreed shape.
-// Neel's scaffold has not landed, so the types live here instead of `@/lib/types`.
-// When `lib/types.ts` exists, delete these interfaces and import the type only.
+// PartId, PartGroup and PartsFile live in the shared contract. This file only checks them.
 
-export type PartId = string;
-
-export interface PartGroup {
-  id: PartId;
-  nodes: string[];
-  name: string;
-  eyebrow: string;
-  role: string;
-  specs: Record<string, string>;
-  explode: { up: number; radial: number };
-  tourOrder: number | null;
-  say: string;
-  source: string;
-}
-
-export interface PartsFile {
-  model: string;
-  glb: string;
-  vehicle: {
-    heightM: number;
-    diameterM: number;
-    liftoffMassKg: number;
-    payloadLeoKg: number;
-    merlinThrustSlKN: number;
-    merlinCount: number;
-  };
-  groups: PartGroup[];
-  glossary: Record<string, string>;
-}
+export type { PartGroup, PartId, PartsFile } from "@/lib/types";
+import type { PartsFile } from "@/lib/types";
 
 // Plan 02 "kid-first" rule: every sentence in `say` and `role` is at most 20 words.
 export const MAX_WORDS_PER_SENTENCE = 20;
