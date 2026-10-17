@@ -40,10 +40,15 @@ export function isRocketPath(pathname: string | null | undefined): boolean {
   return path === "/rocket" || path.startsWith("/rocket/");
 }
 
-/** The phone page stays silent. Every other route may mount the player. */
+function isPresentationPath(pathname: string): boolean {
+  const path = pathname.length > 1 && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
+  return path === "/presentation";
+}
+
+/** The phone page and the pitch deck stay silent. Every other route may mount the player. */
 export function shouldMountBackgroundMusic(pathname: string | null | undefined): boolean {
   if (!pathname) return false;
-  return !isRocketPath(pathname);
+  return !isRocketPath(pathname) && !isPresentationPath(pathname);
 }
 
 /**

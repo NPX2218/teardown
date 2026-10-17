@@ -631,6 +631,7 @@
   object-fit: cover;
   object-position: 60% center;
 }
+.deck-shot[data-fit="contain"] img { object-fit: contain; object-position: 60% center; }
 .deck-shot::after {
   content: "";
   position: absolute;
@@ -642,7 +643,7 @@
 .deck-shot figcaption {
   position: absolute;
   right: var(--gutter);
-  bottom: var(--sp-4);
+  bottom: var(--sp-6);
   z-index: 1;
   margin: 0;
   font-family: var(--font-display);

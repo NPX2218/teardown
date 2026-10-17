@@ -162,7 +162,7 @@ Three rules hold it together:
 2. **Store actions are Grok's tools.** A test keeps the two lists in sync.
 3. **Facts live in data files.** Every number on screen or spoken aloud is read from `data/`.
 
-Under the hood, the flight steps every 1/60 s: gravity, thrust and drag, then speed, then position, then the orbit's lowest and highest points. The rocket is swept against the Earth and the launch-site shapes each step, so a fast frame can't tunnel through the pad. Phone steering blends gyro and gravity into one calibrated attitude, with a small dead zone and a turn-rate limit. The [presentation appendix](docs/presentation/story.md) has every constant and the file it lives in.
+Under the hood, the flight steps every 1/60 s: gravity, thrust and drag, then speed, then position, then the orbit's lowest and highest points. The rocket is swept against the Earth and the launch-site shapes each step, so a fast frame can't tunnel through the pad. Phone steering blends gyro and gravity into one calibrated attitude, with a small dead zone and a turn-rate limit. The deck's [speaker notes](docs/presentation/story.md) list the main constants and the files they live in.
 
 <br />
 
@@ -232,7 +232,7 @@ Run `npm test` for the unit tests (1,116 passing), `npm run test:e2e` for the Pl
 
 ## BACKGROUND MUSIC
 
-The laptop plays a quiet loop on every page except `/rocket`. The phone engine rumble is separate. It still follows engine power.
+The laptop plays a quiet loop on every page except `/rocket` and `/presentation`. The phone engine rumble is separate. It still follows engine power.
 
 The track is **Mokka - No Copyright Music**, trimmed to the first 2 minutes with a short fade at the end, at [`public/audio/background.mp3`](public/audio/background.mp3). If that file is missing, the player uses [`public/audio/background-placeholder.mp3`](public/audio/background-placeholder.mp3), an original sine pad.
 

@@ -121,7 +121,9 @@ describe("background music route and gesture", () => {
     expect(shouldMountBackgroundMusic("/rocket/")).toBe(false);
     expect(shouldMountBackgroundMusic("/rocket/preview")).toBe(false);
     expect(shouldMountBackgroundMusic("/")).toBe(true);
-    expect(shouldMountBackgroundMusic("/presentation")).toBe(true);
+    // M2 (2026-10-17): the pitch deck stays silent so music never plays over the talk.
+    expect(shouldMountBackgroundMusic("/presentation")).toBe(false);
+    expect(shouldMountBackgroundMusic("/presentation/")).toBe(false);
     expect(nextMusicMount("off", false, true)).toBe("off");
     expect(nextMusicMount("on", false, false)).toBe("fading-out");
     expect(nextMusicMount("fading-out", false, true)).toBe("off");
