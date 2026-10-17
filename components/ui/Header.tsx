@@ -53,9 +53,9 @@ export function Header() {
           </ul>
         )}
         <div className={styles.barEnd}>
-          <SettingsButton />
           <AboutButton />
           {mode === "explore" && <LevelSwitch />}
+          <SettingsButton />
         </div>
       </div>
     </header>
