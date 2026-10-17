@@ -171,7 +171,7 @@ Three rules hold it together:
 
 ```bash
 npm ci
-cp .env.local.example .env.local   # add XAI_API_KEY and the XAI_* model names
+cp .env.local.example .env.local   # XAI_API_KEY, XAI_TEXT_MODEL, and XAI_IMAGE_MODEL
 npm run dev                        # http://localhost:3000
 ```
 

@@ -5,6 +5,7 @@
 import { MISSIONS } from "@/data/missions/index";
 import { PARTS } from "@/lib/agent/fixtures/exhibit";
 import { getScene, sceneMode } from "@/lib/agent/scene";
+import { runImagineTool } from "@/lib/imagine/client";
 import { useScene } from "@/lib/store";
 import {
   DEFAULT_SCENARIO_ID,
@@ -37,7 +38,6 @@ export interface ToolDef {
 }
 
 export const IMAGINE_PROMPT_MAX = 200;
-export const IMAGINE_NOT_READY = "imagine not available yet";
 
 const PART_IDS: string[] = useScene.getState().parts?.groups.map((group) => group.id) ?? PARTS.groups.map((group) => group.id);
 const MISSION_IDS: string[] = Object.keys(MISSIONS);
@@ -117,7 +117,7 @@ export const TOOLS: ToolDef[] = [
     type: "function",
     function: {
       name: "imagine",
-      description: "Draw a picture of a part in action. Picture generation is not available in this build.",
+      description: "Draw a picture of one part in action and show it on the part card.",
       parameters: obj(
         {
           prompt: { type: "string", maxLength: IMAGINE_PROMPT_MAX },
@@ -248,9 +248,7 @@ export const HANDLERS: Record<ToolName, Handler> = {
       return fail(`prompt must be text up to ${IMAGINE_PROMPT_MAX} characters`);
     }
     if (!str(part_id) || !PART_IDS.includes(part_id)) return fail(`unknown part: ${String(part_id)}`);
-    // Picture generation lives on the Imagine branch. This handler stays a clear
-    // refusal until that branch's showPartInAction can be called from here.
-    return fail(IMAGINE_NOT_READY);
+    return runImagineTool({ prompt, part_id });
   },
 };
 
