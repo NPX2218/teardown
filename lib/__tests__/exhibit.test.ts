@@ -118,7 +118,7 @@ describe("exhibit walk-up", () => {
     const action = idleTick(IDLE_MS + 5);
     expect(action).toBe("reset");
     expect(useExhibit.getState().phase).toBe("attract");
-    expect(useScene.getState().replay.missionId).toBe("practice");
+    expect(useScene.getState().replay.missionId).toBe(exhibitIllustrationId(MISSIONS));
     expect(useScene.getState().replay.playing).toBe(true);
     expect(useScene.getState().flight.status).toBe("idle");
     expect(MISSIONS.practice.kind).not.toBe("historical");
@@ -139,7 +139,7 @@ describe("exhibit walk-up", () => {
     expect(runShortcut("fly", 30).ok).toBe(true);
     expect(useScene.getState().flight.status).toBe("paused");
     expect(runShortcut("replay", 40).ok).toBe(true);
-    expect(useScene.getState().replay.missionId).toBe("practice");
+    expect(useScene.getState().replay.missionId).toBe(exhibitIllustrationId(MISSIONS));
     expect(runShortcut("reset", 50).ok).toBe(true);
     expect(useExhibit.getState().phase).toBe("attract");
   });
