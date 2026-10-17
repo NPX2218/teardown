@@ -1,0 +1,1 @@
+D-DIN by Datto Inc., SIL OFL 1.1. Reserved Font Name "D-DIN". Files from the official D-DIN complete v1.0 release (Fedora d-din-fonts source package). Not the SpaceX-hosted files. npm typeface-d-din declares the same family but its published tarball omitted the font binaries.

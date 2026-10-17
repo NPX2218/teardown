@@ -9,7 +9,7 @@ export function ExplodeSlider() {
   const pct = Math.round(explode * 100);
   return (
     <div>
-      <label htmlFor={id} className="hud__k">Explode</label>
+      <label htmlFor={id} className="tool-label">Explode</label>
       <div className="range">
         <input
           id={id}

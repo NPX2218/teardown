@@ -264,15 +264,15 @@ const EARTH_IMAGERY_STYLE = `
 .earth-imagery {
   position: absolute;
   z-index: 2;
-  left: 50%;
-  bottom: var(--sp-4);
-  transform: translateX(-50%);
+  left: 24px;
+  bottom: 14px;
+  transform: none;
   margin: 0;
   pointer-events: none;
-  color: var(--text-muted);
-  font-family: var(--font-body);
-  font-size: var(--fs-caption);
-  letter-spacing: var(--track-eyebrow);
+  color: rgba(255, 255, 255, 0.35);
+  font-family: var(--font-sans, var(--font-body));
+  font-size: 12px;
+  letter-spacing: 0;
   white-space: nowrap;
   text-shadow: 0 1px 2px var(--scrim-80);
 }

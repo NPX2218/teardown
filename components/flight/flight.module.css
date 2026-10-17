@@ -1,4 +1,4 @@
-/* Flight and replay layout. Colours come from theme tokens only. */
+/* Flight and replay. One readout, one control cluster. The Earth stays the picture. */
 
 .slot {
   position: absolute;
@@ -16,136 +16,148 @@
 }
 
 .stage:focus-visible {
-  outline: 3px solid var(--accent);
-  outline-offset: -3px;
+  outline: 2px solid transparent;
+  box-shadow: var(--ring);
 }
 
 .readout {
-  top: 5.5rem;
-  left: var(--gutter);
-  width: min(24rem, calc(100vw - 2 * var(--gutter)));
-  max-height: calc(100dvh - 8rem);
+  top: 80px;
+  left: 24px;
+  width: min(22rem, calc(100vw - 48px));
+  max-height: calc(100dvh - 280px);
   overflow: auto;
   overscroll-behavior: contain;
 }
 
 .controls {
-  right: var(--gutter);
-  bottom: var(--sp-4);
-  width: min(26rem, calc(100vw - 2 * var(--gutter)));
-  max-height: calc(100dvh - 8rem);
+  left: 50%;
+  right: auto;
+  bottom: 48px;
+  transform: translateX(-50%);
+  width: min(34rem, calc(100vw - 120px));
+  max-height: 38dvh;
   overflow: auto;
   overscroll-behavior: contain;
+  background: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 .result {
-  top: 16dvh;
-  left: 0;
-  right: 0;
-  margin-inline: auto;
-  width: min(28rem, calc(100% - 2 * var(--gutter)));
+  top: 132px;
+  right: 24px;
+  left: auto;
+  bottom: auto;
+  margin: 0;
+  transform: none;
+  width: min(24rem, calc(100% - 48px));
   z-index: var(--z-overlay);
+  background: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
-.stack {
-  display: grid;
-  gap: var(--sp-3);
-}
+.stack { display: grid; gap: 12px; }
 
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--sp-4);
-}
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
 
-.hold {
-  touch-action: none;
-}
+.hold { touch-action: none; }
 
 .note {
   margin: 0;
-  color: var(--text-muted);
+  color: var(--text-3);
+  font-size: 13px;
+  line-height: 1.45;
 }
 
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 0 var(--sp-2);
-  border: 1px solid var(--line-strong);
+  padding: 0 8px;
+  border: 0;
   border-radius: var(--radius-pill);
-  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-2);
+  font-size: 12px;
 }
 
 .events {
   display: grid;
-  gap: var(--sp-3);
-  margin: 0;
+  gap: 10px;
+  margin: 8px 0 0;
   padding: 0;
   list-style: none;
 }
 
 .event {
   display: grid;
-  gap: var(--sp-1);
+  gap: 2px;
+  padding-top: 8px;
+  border-top: 1px solid #1f2228;
+  font-size: 13px;
+  color: var(--text-2);
 }
+
+.event[aria-current="true"] { color: var(--text); }
 
 .more summary {
   display: flex;
   align-items: center;
-  min-height: var(--target);
+  min-height: 32px;
   cursor: pointer;
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 500;
 }
+
+.more summary:hover { color: var(--text); }
 
 .vignette {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  box-shadow: inset 0 0 4rem 1.2rem rgba(180, 24, 16, 0.55);
+  background: linear-gradient(180deg, rgba(255, 181, 71, 0.22), transparent 22%);
+  box-shadow: none;
   z-index: var(--z-overlay);
 }
 
 .embedded {
   display: grid;
-  gap: var(--sp-2);
-  margin-top: var(--sp-3);
-  padding-top: var(--sp-3);
-  border-top: 1px solid var(--line-soft);
+  gap: 2px;
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid #1f2228;
 }
+
+.embedded .hud__v { font-size: 16px; }
 
 @media (max-width: 720px) {
   .readout {
-    top: 7.5rem;
-    right: var(--gutter);
+    top: 72px;
+    left: 12px;
+    right: 12px;
     width: auto;
-    max-height: 28dvh;
+    max-height: 26dvh;
   }
 
   .controls {
-    left: 0;
-    right: 0;
-    bottom: 0;
+    left: 12px;
+    right: 12px;
+    bottom: 40px;
     width: auto;
-    max-height: 38dvh;
-    padding-bottom: max(var(--sp-4), env(safe-area-inset-bottom));
-    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    transform: none;
+    max-height: 34dvh;
   }
 
   .result {
     top: auto;
-    bottom: 40dvh;
+    bottom: 42dvh;
+    left: 12px;
+    transform: none;
+    width: auto;
   }
-}
-
-@media (max-width: 420px) {
-  .readout { top: 10.75rem; max-height: 22dvh; }
-}
-
-@media (min-width: 1280px) {
-  .readout { top: 6.5rem; max-height: calc(100dvh - 9rem); }
-  .controls { max-height: calc(100dvh - 8rem); }
-}
-
-@media (min-width: 1920px) {
-  .readout { width: min(28rem, calc(100vw - 2 * var(--gutter))); }
-  .controls { width: min(30rem, calc(100vw - 2 * var(--gutter))); }
 }

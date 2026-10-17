@@ -146,7 +146,7 @@ export function PairRocket() {
           </div>
         ) : (
           <div className="card">
-            <span className="chip chip--ok">ROCKET ON</span>
+            <span className="chip chip--ok">Rocket on</span>
             <button type="button" className="btn" onClick={zeroRocket}>
               Calibrate
             </button>
@@ -178,11 +178,11 @@ export function PairRocket() {
     <div className={styles.center}>
       {live}
       <div className={`card card--solid ${styles.card}`}>
-        <p className="eyebrow">PAIR YOUR ROCKET</p>
+        <p className="eyebrow">Pair your rocket</p>
         <p className="lead">Slide your phone into the rocket. Scan to connect.</p>
         {relayDown ? (
           <div>
-            <span className="chip chip--bad">NO CONNECTION</span>
+            <span className="chip chip--bad">No connection</span>
             <p className="small">The rocket can&apos;t connect right now. Trying again.</p>
             <button type="button" className="btn" onClick={tryNow}>
               Try now
@@ -202,14 +202,14 @@ export function PairRocket() {
                 <path d={qr.d} fill="currentColor" />
               </svg>
             </div>
-            <p className="display" aria-hidden="true">
+            <p className={styles.code} aria-hidden="true">
               {code}
             </p>
           </>
         ) : null}
         {localhostOnly && !relayDown && (
           <div>
-            <span className="chip chip--warn">LOCALHOST QR</span>
+            <span className="chip chip--warn">Localhost QR</span>
             <p className="small">Developer note: a phone can&apos;t open localhost. Use the tunnel or deployed URL, or set NEXT_PUBLIC_ROCKET_ORIGIN.</p>
           </div>
         )}

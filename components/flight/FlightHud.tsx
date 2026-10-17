@@ -99,8 +99,6 @@ export function FlightHud() {
           <div className={styles.stack}>
             <p className="hud__k">Your mission</p>
             <h2>Go up, then turn to build speed around Earth.</h2>
-            <p>The goal is a path around Earth. The lowest point stays at least 200 km up. The highest point stays under 2,000 km. Then coast for 10 seconds with the engines off.</p>
-            <p className={styles.note}>Earth is drawn to size. The rocket dot is bigger so you can see it.</p>
             <div className={styles.actions} role="group" aria-label="Flight mode">
               <button type="button" className="btn" aria-pressed={playMode === "free"} onClick={() => useScene.getState().setPlayMode("free")}>Free flight</button>
               <button type="button" className="btn" aria-pressed={playMode === "mission"} onClick={() => useScene.getState().setPlayMode("mission")}>Mission</button>
@@ -121,8 +119,13 @@ export function FlightHud() {
                   : <button type="button" className="btn" disabled>Sentinel-6</button>}
               </div>
             )}
-            <p className={styles.note}>{SENTINEL_REFERENCE_UNAVAILABLE} These classroom rockets are practice vehicles, not a recorded flight.</p>
-            {readyNote && <p className={styles.note}>{readyNote}</p>}
+            <details className={styles.more}>
+              <summary>About this flight</summary>
+              <p>The goal is a path around Earth. The lowest point stays at least 200 km up. The highest point stays under 2,000 km. Then coast for 10 seconds with the engines off.</p>
+              <p className={styles.note}>Earth is drawn to size. The rocket dot is bigger so you can see it.</p>
+              <p className={styles.note}>{SENTINEL_REFERENCE_UNAVAILABLE} These classroom rockets are practice vehicles, not a recorded flight.</p>
+              {readyNote && <p className={styles.note}>{readyNote}</p>}
+            </details>
           </div>
         )}
         {readout && status !== "ready" && (
@@ -137,12 +140,10 @@ export function FlightHud() {
               <span className="hud__k">Lowest point</span>
               <span className="hud__v">{formatKm(readout.periapsisAltitudeM)}</span>
             </div>
-            <p className={styles.note}>The lowest part of your path around Earth.</p>
             <div className="hud__row">
               <span className="hud__k">Highest point</span>
               <span className="hud__v">{formatKm(readout.apoapsisAltitudeM)}</span>
             </div>
-            <p className={styles.note}>The highest part of your path around Earth.</p>
             <p>{goalLine(readout)}</p>
             {notice && <p className="hud__v hud__v--bad">{notice}</p>}
             {guide?.banner && <p className={warningLevel === "warning" || warningLevel === "failed" ? "hud__v hud__v--bad" : styles.note} data-banner={warningLevel}>{guide.banner}</p>}
@@ -161,12 +162,12 @@ export function FlightHud() {
                 )}
               </div>
             )}
-            {playMode === "mission" && guide && guide.milestones.length > 0 && (
-              <p className={styles.note}>Milestones: {guide.milestones.join(", ")}</p>
-            )}
-            <p className={styles.note}>Earth is drawn to size. The rocket dot is bigger so you can see it. The pale line is the coast if you cut thrust now.</p>
             <details className={styles.more}>
               <summary>More numbers</summary>
+              {playMode === "mission" && guide && guide.milestones.length > 0 && (
+                <p className={styles.note}>Milestones: {guide.milestones.join(", ")}</p>
+              )}
+              <p className={styles.note}>The lowest part of your path around Earth. The highest part is the top of that path. Earth is drawn to size. The rocket dot is bigger so you can see it. The pale line is the coast if you cut thrust now.</p>
               <div className="hud__row"><span className="hud__k">Up speed</span><span>{formatSpeed(readout.radialSpeedMps)}</span></div>
               <div className="hud__row"><span className="hud__k">Full speed</span><span>{formatSpeed(readout.totalSpeedMps)}</span></div>
               <div className="hud__row"><span className="hud__k">Mission time</span><span>{flight.simulatedTimeS.toFixed(1)} s</span></div>
@@ -205,7 +206,6 @@ export function FlightHud() {
               </button>
             )}
           </div>
-          <p className={styles.note}>0 tilt is straight up. A positive tilt turns downrange. Launch leaves the engines off until you set power.</p>
           <label className="range" htmlFor="pitch-control">
             Tilt
             <input
@@ -265,6 +265,10 @@ export function FlightHud() {
               onChange={(event) => steerThrottle(Number(event.target.value))}
             />
           </label>
+          <details className={styles.more}>
+            <summary>How tilt works</summary>
+            <p className={styles.note}>0 tilt is straight up. A positive tilt turns downrange. Launch leaves the engines off until you set power.</p>
+          </details>
           <div className={styles.actions} role="group" aria-label="Time scale">
             {([1, 4, 8] as const).map((value) => (
               <button id={`warp-${value}`} key={value} type="button" className="btn" aria-pressed={flight.warp === value} onClick={() => warp(value)}>
