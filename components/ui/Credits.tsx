@@ -9,6 +9,13 @@ export function Credits({ className = "legal" }: { className?: string }) {
           CC BY 4.0
         </a>
       </span>
+      <span>
+        Guide avatar:{" "}
+        <a className="hit" href="https://github.com/jeremy-prt/bloub" target="_blank" rel="noopener noreferrer">
+          bloub
+        </a>{" "}
+        by Jérémy Perret (MIT), an unofficial recreation of the Grok Bot. Not affiliated with xAI.
+      </span>
     </footer>
   );
 }
