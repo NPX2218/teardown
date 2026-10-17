@@ -1,0 +1,23 @@
+/* Tokens only. The picture overlay uses the global overlay, meter, and chip classes. */
+.trigger {
+  position: absolute;
+  z-index: var(--z-hud);
+  right: var(--gutter);
+  top: 40%;
+  min-height: var(--target);
+  min-width: var(--target);
+}
+:global(body:has(details[data-slot="voice"][open])) .trigger {
+  visibility: hidden;
+}
+.panel {
+  position: relative;
+}
+.panel h2 {
+  padding-right: calc(var(--target) + var(--sp-4));
+}
+.picture {
+  max-height: 60vh;
+  max-height: 60dvh;
+  object-fit: contain;
+}
