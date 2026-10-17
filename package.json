@@ -9,7 +9,8 @@
     "lint": "next lint",
     "test": "vitest run",
     "relay:dev": "tsx scripts/dev-relay.ts",
-    "sim:phone": "tsx scripts/sim-phone.ts"
+    "sim:phone": "tsx scripts/sim-phone.ts",
+    "smoke": "bash scripts/smoke/smoke.sh"
   },
   "dependencies": {
     "@react-three/drei": "9.114.0",

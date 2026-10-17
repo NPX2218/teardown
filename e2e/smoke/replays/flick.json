@@ -1,0 +1,6 @@
+[
+  { "t": 0, "pitchDeg": 0 },
+  { "t": 8000, "pitchDeg": 0, "gesture": "lift" },
+  { "t": 10000, "pitchDeg": 10, "gesture": "flick" },
+  { "t": 20000, "pitchDeg": 10 }
+]
