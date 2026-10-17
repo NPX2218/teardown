@@ -1,0 +1,61 @@
+/* Corner guide. Tokens only. */
+.wrap {
+  position: fixed;
+  z-index: var(--z-chrome);
+  top: max(var(--sp-3), env(safe-area-inset-top));
+  right: var(--gutter);
+  display: grid;
+  justify-items: end;
+  gap: var(--sp-3);
+  pointer-events: none;
+}
+
+.launch,
+.panel {
+  pointer-events: auto;
+}
+
+.launch {
+  width: var(--target);
+  height: var(--target);
+  padding: 0;
+}
+
+.mark {
+  width: 32px;
+  height: 32px;
+  display: block;
+}
+
+.panel {
+  width: min(22rem, calc(100vw - 2 * var(--gutter) - var(--target)));
+  max-height: min(70dvh, 32rem);
+  overflow: auto;
+  overscroll-behavior: contain;
+  text-align: left;
+}
+
+.questions {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.questions > button {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+@media (max-width: 720px) {
+  .panel {
+    width: min(22rem, calc(100vw - 2 * var(--gutter)));
+    max-height: 46dvh;
+  }
+}
+
+@media (min-width: 1280px) {
+  .wrap { top: var(--sp-4); }
+}
+
+@media (min-width: 1920px) {
+  .panel { width: min(24rem, calc(100vw - 2 * var(--gutter))); }
+}

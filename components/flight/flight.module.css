@@ -106,10 +106,10 @@
 
 @media (max-width: 720px) {
   .readout {
-    top: 5.25rem;
+    top: 7.5rem;
     right: var(--gutter);
     width: auto;
-    max-height: calc(52dvh - 5.25rem);
+    max-height: 28dvh;
   }
 
   .controls {
@@ -117,8 +117,23 @@
     right: 0;
     bottom: 0;
     width: auto;
-    max-height: 46dvh;
+    max-height: 38dvh;
     padding-bottom: max(var(--sp-4), env(safe-area-inset-bottom));
     border-radius: var(--radius-md) var(--radius-md) 0 0;
   }
+
+  .result {
+    top: auto;
+    bottom: 40dvh;
+  }
+}
+
+@media (min-width: 1280px) {
+  .readout { top: 6.5rem; max-height: calc(100dvh - 9rem); }
+  .controls { max-height: calc(100dvh - 8rem); }
+}
+
+@media (min-width: 1920px) {
+  .readout { width: min(28rem, calc(100vw - 2 * var(--gutter))); }
+  .controls { width: min(30rem, calc(100vw - 2 * var(--gutter))); }
 }

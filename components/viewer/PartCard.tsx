@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useId, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import { motionPresets } from "@/lib/ui/motion";
 import { useScene } from "@/lib/store";
 import { splitGlossary } from "@/lib/viewer/glossary";
 import { tourGroups } from "@/lib/viewer/tour";
@@ -34,7 +36,16 @@ export function PartCard() {
 
   return (
     <div className="dock dock--br">
-      <section className={`card sheet ${styles.card}`} aria-labelledby={`${baseId}-name`}>
+      <AnimatePresence>
+      <motion.section
+        key={group.id}
+        className={`card sheet ${styles.card}`}
+        aria-labelledby={`${baseId}-name`}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 8 }}
+        transition={motionPresets.out}
+      >
         {tourSay && <p className={styles.cardSay}>{tourSay}</p>}
         <p className="eyebrow">{group.eyebrow}</p>
         <h3 id={`${baseId}-name`}>{group.name}</h3>
@@ -73,7 +84,8 @@ export function PartCard() {
           <a className="chip" href={group.source} target="_blank" rel="noopener noreferrer">Source</a>
           <button type="button" className="btn btn-outline" onClick={close}>Close</button>
         </div>
-      </section>
+      </motion.section>
+      </AnimatePresence>
     </div>
   );
 }

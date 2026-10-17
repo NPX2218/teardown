@@ -13,12 +13,12 @@ import {
 } from "@/lib/rocket/voice";
 import { RETRY_MS, hasStatusWord, parsePairCode, routePhoneMessage, statusWord, type LinkState } from "@/lib/rocket/phone";
 import { openLink, type RocketLink } from "@/lib/rocket/link";
+import { Credits } from "@/components/ui/Credits";
 import { useReducedMotion } from "@/components/ui/useReducedMotion";
 import css from "./rocket.module.css";
 
 // Sounds that make the flame flicker harder (plan 10 Task 4 Step 4).
 const RUMBLES: readonly SoundId[] = ["liftoff_rumble", "maxq_rumble", "entry_burn"];
-const LEGAL = "Student project. Not affiliated with SpaceX or xAI.";
 const NO_LOOPS: SoundId[] = []; // stable server snapshot for useSyncExternalStore
 
 type Phase = "start" | "starting" | "running" | "denied" | "insecure";
@@ -217,7 +217,7 @@ export default function RocketPage() {
         <section className="card phone__status">
           <p className="lead">Open this page with https:// so the phone can feel motion.</p>
         </section>
-        <p className="legal">{LEGAL}</p>
+        <Credits />
       </main>
     );
   }
@@ -234,7 +234,7 @@ export default function RocketPage() {
             <p className="card"><span className="chip chip--warn">Turn off silent mode so the rocket can talk</span></p>
           )}
         </section>
-        <p className="legal">{LEGAL}</p>
+        <Credits />
       </main>
     );
   }
@@ -251,7 +251,7 @@ export default function RocketPage() {
           </p>
           <button className="btn btn-accent" onClick={() => void start()}>Try again</button>
         </section>
-        <p className="legal">{LEGAL}</p>
+        <Credits />
       </main>
     );
   }
@@ -285,6 +285,7 @@ export default function RocketPage() {
 
       <footer>
         {debugOn && <DebugPanel debug={debug} voice={voice} ear={ear} />}
+        <Credits />
       </footer>
 
       {audioAsleep && (

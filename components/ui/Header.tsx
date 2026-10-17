@@ -1,5 +1,7 @@
 "use client";
+import { motion } from "motion/react";
 import { useAppMode } from "@/lib/flight/app-mode";
+import { motionPresets } from "@/lib/ui/motion";
 import { useScene } from "@/lib/store";
 import { vehicleStats } from "@/lib/viewer/stats";
 import styles from "@/components/viewer/viewer.module.css";
@@ -40,7 +42,9 @@ export function Header() {
         {mode === "explore" && (
           <>
             <h1>Falcon 9</h1>
-            <p className={`lead ${styles.motto}`}>Bringing rocket science down to Earth.</p>
+            <motion.p className={`lead ${styles.motto}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={motionPresets.out}>
+              Bringing rocket science down to Earth.
+            </motion.p>
             {vehicle && (
               <ul className={styles.stats} aria-label="Falcon 9 numbers">
                 {vehicleStats(vehicle).map((st) => (

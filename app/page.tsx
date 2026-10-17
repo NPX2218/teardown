@@ -17,7 +17,7 @@ import { ImagineSlot } from "@/components/seams/ImagineSlotFixture";
 // nothing here is a hard-coded colour.
 const STAGE: CSSProperties = {
   position: "relative",
-  width: "100vw",
+  width: "100%",
   height: "100dvh",
   overflow: "hidden",
   background: "var(--bg)",
