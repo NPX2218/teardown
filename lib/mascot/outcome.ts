@@ -1,44 +1,48 @@
 // lib/mascot/outcome.ts — how long a flight result stays on the guide face. Owner: Neel.
 // The store keeps the outcome until the next run. The face does not: it holds
-// the result for a few seconds, then rests. A new run drops it at once.
-import type { MoodInput } from "./mood";
+// the result for a few seconds, then rests. A failure shows a short surprised
+// beat, then sad. A success celebrates for the whole hold. A new run drops it.
+import type { FlightResult } from "./flight-cue";
 
 export const OUTCOME_FACE_MS = 6_000;
+/** First moment of a crash or failure, before the face settles into sad. */
+export const SURPRISE_BEAT_MS = 1_200;
 
-export type OutcomeKind = Exclude<MoodInput["outcome"], null>;
+export type FlightFace = "celebrate" | "surprised" | "sad";
 
-export interface OutcomeStamp {
+export interface ResultStamp {
   runId: string;
-  kind: OutcomeKind;
-  /** performance or wall time. The unit only has to match `now`. */
+  result: FlightResult;
+  /** Same clock as `now`. */
   at: number;
 }
 
 export interface OutcomeFaceInput {
   runId: string | null;
-  outcome: { kind: OutcomeKind; runId: string } | null;
+  result: FlightResult | null;
 }
 
 /**
  * Keep a terminal result on the face for `holdMs`, then rest.
  * Pass the previous `held` back in. After the face expires, `held` stays so
  * the same result does not start the clock again.
- * A different run id, or a cleared outcome, drops the face immediately.
+ * `until` is the next clock time the face changes, or null when it has settled.
  */
 export function outcomeFace(
   flight: OutcomeFaceInput,
-  held: OutcomeStamp | null,
+  held: ResultStamp | null,
   now: number,
   holdMs = OUTCOME_FACE_MS,
-): { kind: OutcomeKind | null; held: OutcomeStamp | null } {
-  const outcome = flight.outcome;
-  if (!outcome || flight.runId === null || outcome.runId !== flight.runId) {
-    return { kind: null, held: null };
-  }
+  beatMs = SURPRISE_BEAT_MS,
+): { face: FlightFace | null; held: ResultStamp | null; until: number | null } {
+  if (!flight.result || flight.runId === null) return { face: null, held: null, until: null };
   const stamp =
-    held && held.runId === outcome.runId && held.kind === outcome.kind
+    held && held.runId === flight.runId && held.result === flight.result
       ? held
-      : { runId: outcome.runId, kind: outcome.kind, at: now };
-  if (now - stamp.at >= holdMs) return { kind: null, held: stamp };
-  return { kind: outcome.kind, held: stamp };
+      : { runId: flight.runId, result: flight.result, at: now };
+  const elapsed = now - stamp.at;
+  if (elapsed >= holdMs) return { face: null, held: stamp, until: null };
+  if (stamp.result === "success") return { face: "celebrate", held: stamp, until: stamp.at + holdMs };
+  if (elapsed < beatMs) return { face: "surprised", held: stamp, until: stamp.at + beatMs };
+  return { face: "sad", held: stamp, until: stamp.at + holdMs };
 }

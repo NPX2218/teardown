@@ -1,44 +1,50 @@
 import { describe, expect, it } from "vitest";
-import { OUTCOME_FACE_MS, outcomeFace, type OutcomeStamp } from "@/lib/mascot/outcome";
+import { OUTCOME_FACE_MS, SURPRISE_BEAT_MS, outcomeFace, type ResultStamp } from "@/lib/mascot/outcome";
 
-const orbit = { runId: "run-1", outcome: { kind: "orbit" as const, runId: "run-1" } };
+const orbit = { runId: "run-1", result: "success" as const };
 
 describe("outcomeFace", () => {
   it("rests when there is no result", () => {
-    expect(outcomeFace({ runId: "run-1", outcome: null }, null, 0)).toEqual({ kind: null, held: null });
-    expect(outcomeFace({ runId: null, outcome: null }, null, 0)).toEqual({ kind: null, held: null });
+    expect(outcomeFace({ runId: "run-1", result: null }, null, 0)).toEqual({ face: null, held: null, until: null });
+    expect(outcomeFace({ runId: null, result: "success" }, null, 0)).toEqual({ face: null, held: null, until: null });
   });
 
-  it("shows orbit, a crash, and a failure while the hold is open", () => {
-    expect(outcomeFace(orbit, null, 1_000).kind).toBe("orbit");
-    expect(outcomeFace({ runId: "run-2", outcome: { kind: "crashed", runId: "run-2" } }, null, 0).kind).toBe("crashed");
-    expect(outcomeFace({ runId: "run-3", outcome: { kind: "failed", runId: "run-3" } }, null, 0).kind).toBe("failed");
+  it("celebrates an orbit for the whole hold", () => {
+    const first = outcomeFace(orbit, null, 1_000);
+    expect(first.face).toBe("celebrate");
+    expect(outcomeFace(orbit, first.held, 1_000 + OUTCOME_FACE_MS - 1).face).toBe("celebrate");
+  });
+
+  it("a crash or failure is surprised, then sad", () => {
+    const crash = outcomeFace({ runId: "run-2", result: "failure" }, null, 0);
+    expect(crash.face).toBe("surprised");
+    expect(crash.until).toBe(SURPRISE_BEAT_MS);
+    const later = outcomeFace({ runId: "run-2", result: "failure" }, crash.held, SURPRISE_BEAT_MS);
+    expect(later.face).toBe("sad");
+    expect(later.held).toBe(crash.held);
+    expect(outcomeFace({ runId: "run-2", result: "failure" }, crash.held, OUTCOME_FACE_MS - 1).face).toBe("sad");
   });
 
   it("drops the face after six seconds and does not restart it", () => {
     const first = outcomeFace(orbit, null, 0);
-    expect(first.kind).toBe("orbit");
+    expect(first.face).toBe("celebrate");
     const later = outcomeFace(orbit, first.held, OUTCOME_FACE_MS);
-    expect(later.kind).toBeNull();
+    expect(later.face).toBeNull();
     expect(later.held).toBe(first.held);
     const again = outcomeFace(orbit, later.held, OUTCOME_FACE_MS + 10_000);
-    expect(again.kind).toBeNull();
+    expect(again.face).toBeNull();
     expect(again.held).toBe(first.held);
   });
 
   it("clears immediately when a new run starts", () => {
-    const held: OutcomeStamp = { runId: "run-1", kind: "orbit", at: 0 };
-    expect(outcomeFace({ runId: "run-2", outcome: null }, held, 100)).toEqual({ kind: null, held: null });
-    expect(outcomeFace({ runId: "run-2", outcome: { kind: "orbit", runId: "run-1" } }, held, 100)).toEqual({
-      kind: null,
-      held: null,
-    });
+    const held: ResultStamp = { runId: "run-1", result: "success", at: 0 };
+    expect(outcomeFace({ runId: "run-2", result: null }, held, 100)).toEqual({ face: null, held: null, until: null });
   });
 
   it("a new result on a new run starts a fresh hold", () => {
-    const old: OutcomeStamp = { runId: "run-1", kind: "failed", at: 0 };
-    const next = outcomeFace({ runId: "run-2", outcome: { kind: "orbit", runId: "run-2" } }, old, 500);
-    expect(next.kind).toBe("orbit");
-    expect(next.held).toEqual({ runId: "run-2", kind: "orbit", at: 500 });
+    const old: ResultStamp = { runId: "run-1", result: "failure", at: 0 };
+    const next = outcomeFace({ runId: "run-2", result: "success" }, old, 500);
+    expect(next.face).toBe("celebrate");
+    expect(next.held).toEqual({ runId: "run-2", result: "success", at: 500 });
   });
 });

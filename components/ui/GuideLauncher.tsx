@@ -6,8 +6,9 @@ import { AnimatePresence, motion } from "motion/react";
 import { GrokMascot } from "@/components/ui/GrokMascot";
 import { useReducedMotion } from "@/components/ui/useReducedMotion";
 import { useMascotActivity } from "@/lib/mascot/activity";
+import { readFlightResult, readWarningLevel } from "@/lib/mascot/flight-cue";
 import { moodFor } from "@/lib/mascot/mood";
-import { OUTCOME_FACE_MS, outcomeFace, type OutcomeKind, type OutcomeStamp } from "@/lib/mascot/outcome";
+import { outcomeFace, type FlightFace, type ResultStamp } from "@/lib/mascot/outcome";
 import { motionPresets } from "@/lib/ui/motion";
 import { useScene } from "@/lib/store";
 import { useExhibit } from "@/lib/viewer/exhibit";
@@ -34,17 +35,17 @@ const ANSWERS = [
 export function GuideLauncher() {
   const attract = useExhibit((s) => s.phase === "attract");
   const runId = useScene((s) => s.flight.runId);
-  const outcomeKind = useScene((s) =>
-    s.flight.outcome && s.flight.outcome.runId === s.flight.runId ? s.flight.outcome.kind : null,
-  );
+  const result = useScene((s) => readFlightResult(s.flight));
+  const warning = useScene((s) => readWarningLevel(s.flight));
   const activity = useMascotActivity();
   const reducedMotion = useReducedMotion();
-  const shownOutcome = useHeldOutcome(runId, outcomeKind);
+  const flightFace = useHeldFace(runId, result);
   const mood = moodFor({
     attract,
     voice: activity.voice,
     agentBusy: activity.agentBusy,
-    outcome: shownOutcome,
+    flight: flightFace,
+    warning,
   });
   const [open, setOpen] = useState(false);
   const [answer, setAnswer] = useState<number | null>(null);
@@ -125,28 +126,25 @@ export function GuideLauncher() {
 }
 
 /**
- * Holds flight.outcome on the face for OUTCOME_FACE_MS, then rests.
+ * Holds a flight result on the face. A failure is surprised, then sad.
  * The clock starts when this launcher first sees that result. A new run clears it.
  */
-function useHeldOutcome(runId: string | null, kind: OutcomeKind | null): OutcomeKind | null {
-  const held = useRef<OutcomeStamp | null>(null);
-  const [shown, setShown] = useState<OutcomeKind | null>(null);
+function useHeldFace(runId: string | null, result: "success" | "failure" | null): FlightFace | null {
+  const held = useRef<ResultStamp | null>(null);
+  const [face, setFace] = useState<FlightFace | null>(null);
 
   useEffect(() => {
-    const now = Date.now();
-    const flight = { runId, outcome: kind && runId ? { kind, runId } : null };
-    const next = outcomeFace(flight, held.current, now);
-    held.current = next.held;
-    setShown(next.kind);
-    if (!next.held || next.kind === null) return;
-    const left = OUTCOME_FACE_MS - (now - next.held.at);
-    const timer = window.setTimeout(() => {
-      const again = outcomeFace(flight, held.current, Date.now());
-      held.current = again.held;
-      setShown(again.kind);
-    }, Math.max(0, left));
+    let timer = 0;
+    const apply = () => {
+      const next = outcomeFace({ runId, result }, held.current, Date.now());
+      held.current = next.held;
+      setFace(next.face);
+      if (next.until === null) return;
+      timer = window.setTimeout(apply, Math.max(0, next.until - Date.now()));
+    };
+    apply();
     return () => window.clearTimeout(timer);
-  }, [runId, kind]);
+  }, [runId, result]);
 
-  return shown;
+  return face;
 }

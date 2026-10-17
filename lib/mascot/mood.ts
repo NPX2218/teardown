@@ -1,27 +1,36 @@
 // lib/mascot/mood.ts — maps app state to a Grok Bot state + expression. Pure, testable. Owner: Neel.
 import type { ExpressionId } from "./bot/expressions";
+import type { FlightFace as ResultFace } from "./outcome";
 import type { StateId } from "./bot/states";
 
 export type MascotMood =
   | "rest" | "listening" | "talking" | "thinking"
-  | "celebrate" | "sad" | "surprised" | "sleeping";
+  | "celebrate" | "sad" | "surprised" | "sleeping"
+  | "worried" | "alarmed";
+
+export type FlightFace = ResultFace | null;
+export type WarningLevel = "none" | "caution" | "warning";
 
 export interface MoodInput {
   attract: boolean;          // kiosk attract / idle
   voice: "idle" | "listening" | "speaking";
   agentBusy: boolean;        // askAgent in flight
-  outcome: "orbit" | "crashed" | "failed" | null; // latest flight outcome, fresh only
+  /** Face already resolved from the flight result, including the surprise beat. */
+  flight?: FlightFace;
+  warning?: WarningLevel;    // missing means none
 }
 
-/** Priority: sleep > voice > thinking > outcome > rest. */
+/** Priority: sleep > voice > flight result > warning > thinking > rest. */
 export function moodFor(i: MoodInput): MascotMood {
   if (i.attract) return "sleeping";
   if (i.voice === "listening") return "listening";
   if (i.voice === "speaking") return "talking";
+  if (i.flight === "celebrate") return "celebrate";
+  if (i.flight === "surprised") return "surprised";
+  if (i.flight === "sad") return "sad";
+  if (i.warning === "warning") return "alarmed";
+  if (i.warning === "caution") return "worried";
   if (i.agentBusy) return "thinking";
-  if (i.outcome === "orbit") return "celebrate";
-  if (i.outcome === "crashed") return "surprised";
-  if (i.outcome === "failed") return "sad";
   return "rest";
 }
 
@@ -34,4 +43,6 @@ export const MOOD_VISUAL: Record<MascotMood, { state: StateId; expression: Expre
   sad: { state: "idle", expression: "triste" },
   surprised: { state: "idle", expression: "surpris" },
   sleeping: { state: "idle", expression: "somnolent" },
+  worried: { state: "idle", expression: "mefiant" },
+  alarmed: { state: "idle", expression: "effraye" },
 };

@@ -6,7 +6,11 @@ import { GuideLauncher } from "@/components/ui/GuideLauncher";
 import { resetMascotActivity, setAgentBusy, setVoiceState } from "@/lib/mascot/activity";
 import type { MascotMood } from "@/lib/mascot/mood";
 
-const MOODS: MascotMood[] = ["rest", "listening", "talking", "thinking", "celebrate", "surprised", "sad", "sleeping"];
+const MOODS: MascotMood[] = [
+  "rest", "listening", "talking", "thinking",
+  "celebrate", "surprised", "sad", "sleeping",
+  "worried", "alarmed",
+];
 
 afterEach(() => {
   resetMascotActivity();
