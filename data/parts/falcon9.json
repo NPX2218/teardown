@@ -1,0 +1,159 @@
+{
+  "model": "falcon9",
+  "glb": "/models/falcon9.glb",
+  "vehicle": {
+    "heightM": 70,
+    "diameterM": 3.7,
+    "liftoffMassKg": 549054,
+    "payloadLeoKg": 22800,
+    "merlinThrustSlKN": 845,
+    "merlinCount": 9
+  },
+  "groups": [
+    {
+      "id": "fairing",
+      "nodes": ["Fairing 1", "Fairing 2"],
+      "name": "Payload fairing",
+      "eyebrow": "Top of vehicle",
+      "role": "The fairing is the rocket's nose cone. It protects the satellite from wind and heat on the way up. High above the air, its two halves split open and fall away.",
+      "specs": { "Height": "13.1 m", "Diameter": "5.2 m", "Halves": "2, recoverable" },
+      "explode": { "up": 0.3, "radial": 0.14 },
+      "tourOrder": 1,
+      "say": "This is the fairing, the rocket's nose cone. It is 13.1 meters tall. It keeps the satellite safe, then splits in two.",
+      "source": "https://www.spacex.com/vehicles/falcon-9/"
+    },
+    {
+      "id": "stage2",
+      "nodes": ["Second Stage"],
+      "name": "Second stage",
+      "eyebrow": "Upper stage",
+      "role": "The second stage is the top part of the rocket. It takes over after the booster lets go. It carries the satellite into orbit, a path around the Earth.",
+      "specs": { "Engines": "1 Merlin Vacuum", "Vacuum thrust": "981 kN", "Published burn time": "397 s (varies by mission)" },
+      "explode": { "up": 0.2, "radial": 0 },
+      "tourOrder": 2,
+      "say": "This is the second stage. After the booster lets go, it takes over. It keeps burning until the satellite reaches orbit, a path around the Earth.",
+      "source": "https://www.spacex.com/vehicles/falcon-9/"
+    },
+    {
+      "id": "mvac",
+      "nodes": ["Merlin 1D Engine Center.001"],
+      "name": "Merlin Vacuum engine",
+      "eyebrow": "Second-stage engine",
+      "role": "This engine works where there is almost no air. Its giant bell lets the hot gas spread out and push harder in space.",
+      "specs": { "Thrust": "981 kN (vacuum)", "Propellant": "RP-1 / LOX", "Restarts": "Multiple" },
+      "explode": { "up": 0.135, "radial": 0 },
+      "tourOrder": 3,
+      "say": "This is the Merlin Vacuum engine. It makes 981 kilonewtons of push in space, where there is no air.",
+      "source": "https://www.spacex.com/vehicles/falcon-9/"
+    },
+    {
+      "id": "interstage",
+      "nodes": ["Interstage"],
+      "name": "Interstage",
+      "eyebrow": "Stage connector",
+      "role": "The interstage joins the booster to the second stage. Its pushers shove the booster away at stage separation, when it lets go.",
+      "specs": { "Structure": "Carbon fiber and aluminum honeycomb", "Separation": "Pneumatic pushers" },
+      "explode": { "up": 0.06, "radial": 0 },
+      "tourOrder": 4,
+      "say": "This is the interstage. It holds the booster and the second stage together until it is time to split.",
+      "source": "https://content.spacex.com/cms-assets/assets/falcon-users-guide-2025-05-09.pdf"
+    },
+    {
+      "id": "gridfins",
+      "nodes": ["Grid Fin Curve"],
+      "name": "Grid fins",
+      "eyebrow": "Steering back to Earth",
+      "role": "Grid fins look like waffles. They fold out when the booster falls back to Earth. They tilt to steer it through the air toward the landing spot.",
+      "specs": { "Count": "4", "Job": "Steer during reentry" },
+      "explode": { "up": 0.095, "radial": 0 },
+      "tourOrder": 5,
+      "say": "These are the grid fins. They look like waffles, and they steer the booster as it falls home.",
+      "source": "https://www.spacex.com/vehicles/falcon-9/"
+    },
+    {
+      "id": "rcs",
+      "nodes": ["Cold Gas Thrusters Rotator"],
+      "name": "Cold gas thrusters",
+      "eyebrow": "Turning the booster",
+      "role": "These small jets puff out gas to turn the booster around after it lets go. No fire, just a strong puff of gas.",
+      "specs": { "Gas": "Compressed gas", "Job": "Turn the booster" },
+      "explode": { "up": 0.075, "radial": 0 },
+      "tourOrder": null,
+      "say": "These are the cold gas thrusters. They puff gas to flip the booster around, with no fire at all.",
+      "source": "https://content.spacex.com/cms-assets/assets/falcon-users-guide-2025-05-09.pdf"
+    },
+    {
+      "id": "stage1",
+      "nodes": ["First Stage"],
+      "name": "First stage",
+      "eyebrow": "Reusable booster",
+      "role": "The first stage is the big booster at the bottom. It holds most of the fuel and does the hardest work at liftoff. Then it flies back and lands, so it can fly again.",
+      "specs": { "Engines": "9 Merlin", "Sea-level thrust": "7,607 kN", "Propellant": "RP-1 / LOX", "Reuse": "Lands and reflies" },
+      "explode": { "up": 0, "radial": 0 },
+      "tourOrder": 6,
+      "say": "This is the first stage, the booster. Its nine engines make 7,607 kilonewtons of push at liftoff. Then it flies back to land.",
+      "source": "https://web.archive.org/web/20200524024922/https://www.spacex.com/vehicles/falcon-9/"
+    },
+    {
+      "id": "octaweb",
+      "nodes": ["Engine Octaweb Rotator"],
+      "name": "Octaweb",
+      "eyebrow": "Engine frame",
+      "role": "The octaweb is the frame that holds the engines. It puts eight engines in a ring around one in the middle.",
+      "specs": { "Layout": "8 around 1", "Holds": "9 Merlin 1D" },
+      "explode": { "up": -0.08, "radial": 0 },
+      "tourOrder": 7,
+      "say": "This is the octaweb. It holds the engines: eight in a ring, one in the middle.",
+      "source": "https://content.spacex.com/cms-assets/assets/falcon-users-guide-2025-05-09.pdf"
+    },
+    {
+      "id": "merlins",
+      "nodes": ["Engine Rotator"],
+      "name": "Merlin 1D engines",
+      "eyebrow": "First-stage engines",
+      "role": "These are the booster's engines. They burn kerosene fuel and liquid oxygen to push the rocket off the ground.",
+      "specs": { "Count": "9", "Thrust each": "845 kN (sea level)", "Propellant": "RP-1 / LOX", "Cycle": "Gas generator (burning fuel spins a pump)" },
+      "explode": { "up": -0.17, "radial": 0 },
+      "tourOrder": 8,
+      "say": "These are the nine Merlin engines. Each one makes 845 kilonewtons of push at liftoff.",
+      "source": "https://www.spacex.com/vehicles/falcon-9/"
+    },
+    {
+      "id": "legs",
+      "nodes": [
+        "Landing Leg 1", "Landing Leg 2", "Landing Leg 3", "Landing Leg 4",
+        "Landing Leg Hydraulic Holder 1", "Landing Leg Hydraulic Holder 2",
+        "Landing Leg Hydraulic Holder 3", "Landing Leg Hydraulic Holder 4"
+      ],
+      "name": "Landing legs",
+      "eyebrow": "Landing gear",
+      "role": "The landing legs stay folded on the way up. Just before touchdown they swing out, so the booster can land standing up.",
+      "specs": { "Count": "4", "Material": "Carbon fiber and aluminum honeycomb", "Deploy": "Just before landing" },
+      "explode": { "up": -0.03, "radial": 0.11 },
+      "tourOrder": 9,
+      "say": "These are the landing legs. They stay folded on the way up. Just before touchdown they swing out, so the booster can land standing up and fly again.",
+      "source": "https://web.archive.org/web/20200524024922/https://www.spacex.com/vehicles/falcon-9/"
+    }
+  ],
+  "glossary": {
+    "payload": "The thing the rocket carries to space, like a satellite.",
+    "orbit": "Going around the Earth so fast that you keep falling around it instead of down.",
+    "thrust": "The push an engine makes to move the rocket.",
+    "kilonewton": "A unit for measuring how hard something pushes.",
+    "fairing": "The rocket's nose cone that protects the satellite.",
+    "stage": "A section of the rocket with its own engines and fuel.",
+    "interstage": "The part that holds the stages together.",
+    "stage separation": "The moment the booster lets go of the second stage.",
+    "MECO": "Main engine cutoff, when the booster's engines turn off.",
+    "max-Q": "The moment the air pushes hardest on the rocket as it speeds up.",
+    "boostback": "A burn that turns the booster around and sends it back toward land.",
+    "entry burn": "A burn that slows the booster down before it hits the thick air.",
+    "grid fins": "Waffle-shaped fins that steer the booster on the way down.",
+    "cold gas thrusters": "Small jets that puff gas to turn the rocket, with no fire.",
+    "droneship": "A floating landing pad out in the ocean.",
+    "RP-1": "A very clean kind of kerosene the rocket burns as fuel.",
+    "liquid oxygen (LOX)": "Oxygen made so cold it turns into a liquid, so the fuel can burn.",
+    "Merlin": "The name of the engines SpaceX builds for this rocket.",
+    "octaweb": "The frame at the bottom that holds the engines."
+  }
+}
