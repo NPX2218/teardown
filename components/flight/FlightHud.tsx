@@ -16,6 +16,8 @@ import {
   setPointerPitch,
   subscribeHeld,
 } from "@/lib/flight/local-controls";
+import { handoffPitchToLocal, resumeFlightExplicit } from "@/lib/flight/phone-pitch";
+import { zeroRocket } from "@/lib/rocket/useRocket";
 import { clearCameraNudge } from "./cameraNudge";
 import { useScene } from "@/lib/store";
 import type { FlightWarp } from "@/lib/types";
@@ -28,6 +30,7 @@ function useHeldPitch(): number {
 
 export function FlightHud() {
   const flight = useScene((s) => s.flight);
+  const phoneConnected = useScene((s) => s.rocket.connected);
   const view = useAppMode((s) => s.view);
   const heldPitch = useHeldPitch();
   const status = flight.status;
@@ -39,7 +42,7 @@ export function FlightHud() {
   const fuel = readout && flight.fuel ? fuelPercent(readout.propellantRemainingKg, flight.fuel.stages) : 100;
   const notice = hudFuelNotice(readout, status);
 
-  const mark = () => useScene.getState().markActivity(Date.now());
+  const mark = () => useScene.getState().markActivity(performance.now());
   const launch = () => {
     clearHeldAxes();
     useScene.getState().launchFlight();
@@ -51,7 +54,7 @@ export function FlightHud() {
     mark();
   };
   const resume = () => {
-    useScene.getState().resumeFlight();
+    resumeFlightExplicit();
     mark();
   };
   const pick = (id: string) => {
@@ -136,6 +139,24 @@ export function FlightHud() {
           {status === "paused" && (
             <button id="pause-flight" type="button" className="btn btn-accent" onClick={resume}>Resume</button>
           )}
+          {status === "paused" && !phoneConnected && (
+            <p className="hud__v hud__v--bad">Phone disconnected. Flight paused. Tap Resume to fly with the screen.</p>
+          )}
+          {flight.owners.pitch === "phone" && phoneConnected && (
+            <p className={styles.note}>The phone tilts the rocket. Engine power stays on this screen.</p>
+          )}
+          <div className={styles.actions}>
+            {phoneConnected && status !== "idle" && flight.owners.pitch !== "phone" && (
+              <button type="button" className="btn" onClick={() => { zeroRocket(); mark(); }}>
+                Use phone tilt
+              </button>
+            )}
+            {flight.owners.pitch === "phone" && (
+              <button id="handoff-pitch" type="button" className="btn" onClick={() => { handoffPitchToLocal(); mark(); }}>
+                Use screen tilt
+              </button>
+            )}
+          </div>
           <p className={styles.note}>0 tilt is straight up. A positive tilt turns downrange. Launch leaves the engines off until you set power.</p>
           <label className="range" htmlFor="pitch-control">
             Tilt

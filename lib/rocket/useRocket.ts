@@ -2,6 +2,7 @@
 // lib/rocket/useRocket.ts — phone frames drive explore orientation and optional flight pitch (11 Tasks 3–5).
 // Owner: Neel. Mounted once by PairRocket. Module state survives StrictMode remounts.
 import { useEffect } from "react";
+import { applyPairedPhonePitch } from "@/lib/flight/phone-pitch";
 import { getDetector, STILL_ACCEL } from "@/lib/gestures";
 import { onRocketMessage } from "@/lib/rocket/commands";
 import { pitchRadFromRelative } from "@/lib/rocket/pitch";
@@ -64,12 +65,9 @@ export function handleRocketMessage(m: RocketMessage, now: number): void {
 
     if (flight.status === "idle") {
       store.setOrientation(relativeOrientation(q0, m.q));
-    } else if (flight.status === "flying" && flight.runId && flight.owners.pitch === "phone") {
-      store.setFlightInput(
-        { pitchRad: pitchRadFromRelative(q0, m.q), calibrated: true },
-        "phone",
-        flight.runId,
-      );
+    } else {
+      // Live flight goes through submitPhonePitch. A paused or local-owned run ignores the frame.
+      applyPairedPhonePitch(pitchRadFromRelative(q0, m.q));
     }
 
     const det = getDetector();

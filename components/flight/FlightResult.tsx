@@ -13,7 +13,7 @@ export function FlightResult() {
   const retry = () => {
     clearHeldAxes();
     useScene.getState().retryFlight();
-    useScene.getState().markActivity(Date.now());
+    useScene.getState().markActivity(performance.now());
   };
   return (
     <motion.section
