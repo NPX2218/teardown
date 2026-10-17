@@ -1,54 +1,66 @@
-# Teardown
+<div align="center">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/media/hero-dark.svg" />
+  <img alt="Illustration of a black poster. The word Teardown, a simple Earth and rocket, and three modes marked not built. Not a screenshot." src="docs/media/hero-light.svg" width="100%" />
+</picture>
 
-**Bringing rocket science down to Earth.**
+<h1>Teardown</h1>
 
-> **Build status, 17 October 2026.** This branch is the story, the animated deck and the still PDF. Explore, Flight replay and Your mission are specified and **not built** here. Drawings are illustrations or labelled placeholders. No timing, score or emissions total is a measured result. Nothing has been submitted.
+<p><strong>Bringing rocket science down to Earth.</strong></p>
 
-![Illustration of Earth and a simple rocket. This is a drawing for the story, not a screenshot of the exhibit.](docs/media/illustration-title.svg)
+<p>
+  <a href="package.json"><img alt="Next.js 14.2.35" src="https://img.shields.io/badge/Next.js-14.2.35-0A0A0A?style=flat-square&amp;labelColor=000000&amp;logo=nextdotjs&amp;logoColor=F0F0FA" /></a>
+  <a href="package.json"><img alt="TypeScript 5.6" src="https://img.shields.io/badge/TypeScript-5.6.3-0A0A0A?style=flat-square&amp;labelColor=000000&amp;logo=typescript&amp;logoColor=F0F0FA" /></a>
+  <a href="package.json"><img alt="three.js 0.169" src="https://img.shields.io/badge/three.js-0.169.0-0A0A0A?style=flat-square&amp;labelColor=000000&amp;logo=threedotjs&amp;logoColor=F0F0FA" /></a>
+  <a href="package.json"><img alt="React Three Fiber 8.17" src="https://img.shields.io/badge/React%20Three%20Fiber-8.17.10-0A0A0A?style=flat-square&amp;labelColor=000000" /></a>
+  <a href="package.json"><img alt="Zustand 4.5" src="https://img.shields.io/badge/Zustand-4.5.7-0A0A0A?style=flat-square&amp;labelColor=000000" /></a>
+  <a href="package.json"><img alt="Motion 14.3" src="https://img.shields.io/badge/Motion-14.3.0-0A0A0A?style=flat-square&amp;labelColor=000000" /></a>
+  <a href="package.json"><img alt="Vitest 2.1" src="https://img.shields.io/badge/Vitest-2.1.9-0A0A0A?style=flat-square&amp;labelColor=000000&amp;logo=vitest&amp;logoColor=F0F0FA" /></a>
+  <a href="#what-is-not-built"><img alt="Exhibit status: not built" src="https://img.shields.io/badge/status-not%20built-FFB547?style=flat-square&amp;labelColor=000000" /></a>
+</p>
 
-Teardown is a walk-up Falcon 9 exhibit for a 10-year-old and for an engineer. A visitor should be able to take the rocket apart, watch a sourced past launch, and fly their own launch from the ground into a path around Earth.
+<p>Made by Neel Bansal and Anders Haroldson</p>
+<p>Student project. Not affiliated with SpaceX or xAI.</p>
+<p>
+  <a href="public/presentation/index.html">Presentation</a>
+  &middot;
+  <a href="docs/presentation/teardown.pdf">PDF</a>
+  &middot;
+  <a href="docs/presentation/story.md">Speaker notes</a>
+</p>
+</div>
 
-The app that does those things is the build described in `docs/specs/`. It is not this branch.
+---
 
-## What it is
+A walk-up Falcon 9 exhibit for a 10-year-old and for an engineer. Take the rocket apart, watch a sourced past launch, and fly your own from the ground into a path around Earth.
 
-Three modes, and nothing else in the navigation:
+**Build status, 17 October 2026.** The Next.js scaffold is on this branch. Explore, Flight replay, and Your mission are specified and **not built**. The home page mounts empty slots. Drawings on this page are illustrations or labelled placeholders. No timing, score, or emissions total is a measured result. Nothing has been submitted.
 
-- **Explore.** Turn a real Falcon 9 model, pull the parts apart, and read a plain-language fact. A hard word keeps a meaning in the same sentence.
-- **Flight replay.** Play published moments from a named launch, with the source and with what we do not know. It is not a live feed of speed and tilt.
-- **Your mission.** Launch from a pad on a round Earth. Pitch is how you tilt. Throttle is how hard the engines push. A miss is computed. Nothing types in a win.
+Navigation is those three modes and nothing else. Estimated emissions sit inside a flight. They are not their own destination. A phone is allowed to steer pitch, and the laptop has to be able to fly the whole mission without one. Neither control is wired up on this branch.
 
-Estimated emissions sit inside a flight. They are not their own destination. A phone can optionally steer pitch. The laptop can fly the whole mission without one.
+## Explore
 
-Made by Neel Bansal and Anders Haroldson.
+**Turn the model. Pull the parts apart. Read one plain fact.**
 
-## The problem
-
-A launch is easy to watch and hard to explain.
-
-- The facts are public, but they sit in different pages, videos and tables.
-- Watching those does not let a kid take a rocket apart, ask a question, or try to fly.
-- If a 10-year-old cannot follow a screen or a spoken line, the line gets rewritten. The engineer view adds depth. It does not replace the plain one.
-
-No audience size is claimed here.
-
-## Three modes
-
-### Explore
-
-Drag, pinch, or use the keys to turn the model. Pull the parts away, then tap one. The frame below is a **Placeholder**. It is not a screenshot.
+Drag, pinch, or use the keys. Tap a part. A hard word keeps a meaning in the same sentence. The viewer slot is empty, so this frame is a **Placeholder**. It is not a screenshot, and it is not the Falcon 9 model.
 
 ![Placeholder frame for Explore. Geometric stages, not the Falcon 9 model, and not a screenshot.](docs/media/placeholder-explore.svg)
 
-### Flight replay
+## Flight replay
 
-A replay is a list of published moments, a source, and the limits. Sample times in the specs are labelled sample. They are not a flown mission. This frame is a **Placeholder**.
+**Play published moments from a named launch. Show the source. Show what we do not know.**
+
+A replay is not a live feed of speed and tilt. Sample times in the specs are labelled sample. They are not a flown mission. This frame is a **Placeholder**.
 
 ![Placeholder frame for Flight replay. Not a screenshot, and not a named launch.](docs/media/placeholder-replay.svg)
 
-### Your mission
+## Your mission
 
-You start on the ground, with space behind Earth. Go straight up, or turn too hard, and the path falls back. The game goal is a path around Earth: lowest point at least 200 km up, highest point no more than 2,000 km up, and the engines off for ten seconds. Those are settings for the game, not a rating of a real rocket. Altitude alone never wins.
+**Launch from a pad on a round Earth. A miss is computed. Nothing types in a win.**
+
+Pitch is how you tilt. Throttle is how hard the engines push. Go straight up, or turn too hard, and the path falls back.
+
+The game goal is a path around Earth: lowest point at least 200 km up, highest point no more than 2,000 km up, and the engines off for ten seconds. Those are settings for the game, not a rating of a real rocket. Altitude alone never wins.
 
 Periapsis means the lowest part of the path. Apoapsis means the highest part. Ten quiet seconds are not a promise that the path lasts. Low Earth orbit still feels drag.
 
@@ -56,55 +68,62 @@ The picture below is a **Placeholder** drawing. It is not a flown path and not a
 
 ![Placeholder drawing of a path that falls back and a path around Earth. Not a flown result.](docs/media/placeholder-mission.svg)
 
-## Phone controller
+## Phone rocket
 
-Mouse, touch and keyboard fly the whole mission with no phone.
+**Mouse, touch, and keyboard fly the whole mission with no phone.**
 
-A phone is optional, and only over HTTPS: scan a code, allow motion, hold still to set zero, then tilt to set pitch. If the phone drops away, the flight pauses. Old wiggles are thrown out. You choose to go on with the laptop.
+A phone is optional, and only over HTTPS. Scan a code, allow motion, hold still to set zero, then tilt to set pitch. If the phone drops away, the flight pauses. Old wiggles are thrown out. You choose to go on with the laptop.
 
 There is no handset photo on this branch. The frame is a **Placeholder**.
 
-![Placeholder for the phone controller. The steps Scan, Allow, Zero and Tilt. Not a photograph.](docs/media/placeholder-phone.svg)
+![Placeholder for the phone rocket. The steps Scan, Allow, Zero and Tilt. Not a photograph.](docs/media/placeholder-phone.svg)
 
-Organizers said a phone accelerometer and speaker can count for Hardware for Good. This branch has not shown that on a device. Sounds are not in the tree yet. When they arrive they have to be CC0 or public domain and listed in `public/sounds/CREDITS.md`. That file is not here.
+Organizers said a phone accelerometer and speaker can count for Hardware for Good. This branch has not shown that on a device.
 
-## Estimated emissions
+## Grok voice guide
 
-The carbon line is an estimate of direct engine carbon dioxide (CO₂) from fuel the simulation burned. It is not a measurement, not the rocket’s whole life, and not a soot score.
+**The guide can explain the screen. It cannot steer, and it cannot award a win.**
 
-A past launch and your flight do not share one total. Historical fuel use is not measured telemetry. If a number is missing, the screen should say so. No tonne figure is stated here, because the calculator is not in this branch.
+Grok text, voice, and pictures need `XAI_API_KEY` in `.env.local`, read only on the server. The key is never sent to the browser, and never committed. If Grok cannot be reached, the flight still runs, and the screen says it could not reach Grok. No live call has been made from this branch. The voice slot on the home page is empty.
 
-## How it works
+## Emissions
 
-Your hands set pitch and throttle. One owner at a time for each control. A physics helper is the only thing that moves the rocket. The picture cannot invent the path. The guide can explain the screen. It cannot steer, and it cannot award a win.
+**An estimate of direct engine carbon dioxide (CO₂) from fuel the simulation burned.**
 
-Grok text, voice and pictures need `XAI_API_KEY` in `.env.local`, read only on the server. The key is never `NEXT_PUBLIC`, never sent to the browser, and never committed. If Grok cannot be reached, the flight still runs, and the screen says it could not reach Grok. No live call has been made from this branch.
+It is not a measurement, not the rocket’s whole life, and not a soot score. A past launch and your flight do not share one total. Historical fuel use is not measured telemetry. If a number is missing, the screen should say so. No tonne figure is stated here, because the calculator is not in this branch.
+
+## Architecture
+
+The intended path is short. Hands set pitch and throttle, one owner at a time for each control. A physics helper is the only thing that may move the rocket. The picture cannot invent the path. That flight is not running on this branch.
 
 ```mermaid
 flowchart LR
-  Local[Mouse / touch / keyboard] --> Input[Per-axis input ownership]
-  Phone[Optional calibrated phone pitch] --> Input
-  Input --> Flight[Pure flight helper]
-  Flight --> Scene[Earth / rocket]
-  Flight --> HUD[Controls and estimated CO2]
-  History[Sourced past moments] --> Replay[Replay clock]
+  Local["Mouse, touch, keyboard"] --> Input["One owner per control"]
+  Phone["Optional phone pitch"] --> Input
+  Input --> Flight["Pure flight helper"]
+  Flight --> Scene["Earth and rocket"]
+  Flight --> HUD["Controls and estimated CO2"]
+  History["Sourced past moments"] --> Replay["Replay clock"]
   Replay --> Scene
-  Guide[Guide] --> Explain[Explain only]
+  Guide["Grok voice guide"] --> Explain["Explain only"]
 ```
 
-## Setup
+## Quick start
 
-The Next.js scaffold is not on `main` (Neel’s 01). There is no `package.json` here, so there is no verified `npm ci`, `npm test` or `npm run dev` for the exhibit.
+Scripts in `package.json`:
 
-What does run today, with no key and no network:
+```bash
+npm ci
+npm run dev
+```
 
-- Open `public/presentation/index.html` in a browser. That is the animated deck.
-- Read `docs/presentation/story.md` for the speaker script.
-- Open `docs/presentation/teardown.pdf` for the still copy. One slide per page, with every line visible. It does not need the network.
+The home page is a black stage. Its slots for the viewer, the mission, the phone pair, the guide, pictures, and emissions are empty. That is the shell, not a working exhibit.
 
-When the scaffold lands, the same deck is the route `/presentation`. It is not a fourth product mode. The deck’s own keys are arrows, Page Up, Page Down, Space, Home, End, F, N and Escape. They are removed when you leave the route. They are not the flight keys.
+The animated deck does not need that install. Open `public/presentation/index.html` in a browser. Read `docs/presentation/story.md` for the speaker script. Open `docs/presentation/teardown.pdf` for the still copy: one slide per page, every line visible, no network.
 
-Shared Motion presets are not on `main`. The deck animates with the marked stand-in in `components/presentation/motion-fixture.ts`, using the theme timings. Swap that import for Neel’s presets when they exist. Do not install a second animation package beside `motion`.
+When the dev server is running, the same deck is the route `/presentation`. It is not a fourth product mode. Deck keys are arrows, Page Up, Page Down, Space, Home, End, F, N, and Escape. They are removed when you leave the route. They are not the flight keys.
+
+Shared Motion presets are in `lib/ui/motion.ts`. The deck still animates with the marked stand-in in `components/presentation/motion-fixture.ts`, using the same timings, until that import is swapped. Do not install a second animation package beside `motion`.
 
 ## Presentation
 
@@ -132,9 +151,9 @@ On purpose, and not hiding somewhere else:
 - No docking, and no space stations.
 - No booster-landing game.
 - No trips to the Moon or other planets.
-- The old checkpoint mission, coach hints and star scores are retired.
+- The old checkpoint mission, coach hints, and star scores are retired.
 
-Also not in this branch: the viewer, the flight helper, parts data, mission files, the guide, voice, image generation, the phone page, and the emissions calculator.
+Also not running on this branch: pulling the model apart, playing a named launch, flying a path, the phone page, the guide, and the emissions line. The Falcon 9 file is in the repo. The viewer does not show it yet.
 
 ## Evidence still to capture
 
@@ -156,7 +175,8 @@ Editor usage pictures are not included. If they are added later, remove email ad
 
 - Made by Neel Bansal and Anders Haroldson.
 - Student project. Not affiliated with SpaceX or xAI.
-- 3D model, when the file is added at `public/models/falcon9.glb`: “[Falcon 9 - SpaceX](https://sketchfab.com/3d-models/falcon-9-spacex-394f7cf52d124bbd9db69f24d1ff2f08)” by Stanley Creative, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The file is not in this branch. The licence and the student line are separate from the author line.
-- Type on the deck: Barlow and Barlow Semi Condensed, and Roboto Mono, SIL Open Font License. See `components/presentation/fonts/NOTICE.txt`. These stand in for measured faces we do not ship. No SpaceX or xAI font, logo, wordmark or photo is included.
-- No NASA model is used. The public idea of an orbit is explained by NASA; our game cut-offs are not NASA’s numbers.
-- Voice, text and pictures, once a key is configured on the server: Grok (xAI). Not configured here.
+- 3D model at `public/models/falcon9.glb`: “[Falcon 9 - SpaceX](https://sketchfab.com/3d-models/falcon-9-spacex-394f7cf52d124bbd9db69f24d1ff2f08)” by Stanley Creative, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The licence and the student line are separate from the author line. The viewer does not load the file yet.
+- Sounds, when they are added under `public/sounds/`, have to be CC0 or public domain and listed in `public/sounds/CREDITS.md`. That credits file is not here. No sound files are in the tree.
+- Type on the deck: Barlow and Barlow Semi Condensed, and Roboto Mono, SIL Open Font License. See `components/presentation/fonts/NOTICE.txt`. These stand in for measured faces we do not ship. No SpaceX or xAI font, logo, wordmark, or photo is included.
+- No NASA model is used. The public idea of an orbit is explained by NASA. Our game cut-offs are not NASA’s numbers.
+- Voice, text, and pictures, once a key is configured on the server: Grok (xAI). Not configured here.

@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 640" role="img" aria-labelledby="title desc">
+  <title id="title">Teardown</title>
+  <desc id="desc">Illustration of a black poster. The word Teardown, a simple Earth and rocket, and three modes marked not built. Not a screenshot of the exhibit.</desc>
+  <rect width="1440" height="640" fill="#000000"/>
+  <g fill="#F0F0FA">
+    <circle cx="1088" cy="118" r="1.4" opacity="0.55"/>
+    <circle cx="1312" cy="86" r="1.2" opacity="0.4"/>
+    <circle cx="1384" cy="168" r="1.5" opacity="0.5"/>
+    <circle cx="996" cy="156" r="1.1" opacity="0.45"/>
+    <circle cx="1368" cy="392" r="1.3" opacity="0.4"/>
+    <circle cx="1216" cy="548" r="1.2" opacity="0.35"/>
+    <circle cx="1404" cy="286" r="1.1" opacity="0.45"/>
+  </g>
+  <g fill="none" stroke="#F0F0FA" stroke-width="2">
+    <circle cx="1168" cy="292" r="196"/>
+    <ellipse cx="1168" cy="292" rx="196" ry="62"/>
+    <path d="M1168 96 A196 196 0 0 1 1168 488"/>
+  </g>
+  <path fill="none" stroke="#F0F0FA" stroke-width="2.5" stroke-linejoin="miter" d="M1032 78 L1008 188 L1008 292 L992 292 L992 438 L944 508 L992 492 L1008 528 L1056 528 L1072 492 L1120 508 L1072 438 L1072 292 L1056 292 L1056 188 Z"/>
+  <path fill="none" stroke="#F0F0FA" stroke-width="2" d="M1008 292 L1056 292"/>
+  <path fill="#FF6308" d="M1016 528 L1032 586 L1048 528 Z"/>
+  <line x1="72" y1="96" x2="860" y2="96" stroke="rgba(240,240,250,0.35)" stroke-width="1"/>
+  <text x="72" y="78" fill="rgba(240,240,250,0.7)" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="16" letter-spacing="3.4">HACKHARVARD</text>
+  <text x="860" y="78" fill="rgba(240,240,250,0.7)" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="16" letter-spacing="3.4" text-anchor="end">STUDENT PROJECT</text>
+  <text x="72" y="220" fill="#F0F0FA" font-family="Arial Narrow, Arial, Helvetica, sans-serif" font-size="104" font-weight="700" letter-spacing="-1.5">TEARDOWN</text>
+  <text x="72" y="276" fill="rgba(240,240,250,0.9)" font-family="Arial Narrow, Arial, Helvetica, sans-serif" font-size="22" font-weight="700" letter-spacing="1.8">BRINGING ROCKET SCIENCE DOWN TO EARTH.</text>
+  <line x1="72" y1="316" x2="560" y2="316" stroke="#F0F0FA" stroke-width="2"/>
+  <g font-family="ui-monospace, Menlo, Consolas, monospace">
+    <text x="72" y="412" fill="rgba(240,240,250,0.6)" font-size="16" letter-spacing="2">01</text>
+    <text x="300" y="412" fill="rgba(240,240,250,0.6)" font-size="16" letter-spacing="2">02</text>
+    <text x="660" y="412" fill="rgba(240,240,250,0.6)" font-size="16" letter-spacing="2">03</text>
+  </g>
+  <g fill="#F0F0FA" font-family="Arial Narrow, Arial, Helvetica, sans-serif" font-size="28" font-weight="700" letter-spacing="0.6">
+    <text x="72" y="452">EXPLORE</text>
+    <text x="300" y="452">FLIGHT REPLAY</text>
+    <text x="660" y="452">YOUR MISSION</text>
+  </g>
+  <g fill="#FFB547" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="16" letter-spacing="1.6">
+    <text x="72" y="486">NOT BUILT</text>
+    <text x="300" y="486">NOT BUILT</text>
+    <text x="660" y="486">NOT BUILT</text>
+  </g>
+  <text x="72" y="588" fill="#FFB547" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="16" letter-spacing="2">ILLUSTRATION · NOT A SCREENSHOT</text>
+</svg>
