@@ -46,7 +46,7 @@ function CornerLabel({ label, index }: { label: MapLabel; index: number }) {
       zIndexRange={[40, 0]}
       style={{ pointerEvents: "none" }}
     >
-      <span className={styles.quiet}>{label.text}</span>
+      <span className={styles.quiet} data-map-marker="true">{label.text}</span>
     </Html>
   );
 }
@@ -76,8 +76,8 @@ function RocketMarker({ position, text }: { position: readonly [number, number, 
         <meshBasicMaterial color="white" transparent opacity={0.6} toneMapped={false} depthWrite={false} side={DoubleSide} />
       </mesh>
       {text ? (
-        <Html center zIndexRange={[40, 0]} distanceFactor={8} style={{ pointerEvents: "none" }}>
-          <span className={styles.primary}>{text}</span>
+        <Html center zIndexRange={[40, 0]} style={{ pointerEvents: "none" }}>
+          <span className={styles.primary} data-map-marker="true">{text}</span>
         </Html>
       ) : null}
     </group>

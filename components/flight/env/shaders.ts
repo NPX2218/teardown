@@ -18,7 +18,7 @@ ${logVertex}
 void main() {
   vec4 worldPos = modelMatrix * vec4(position, 1.0);
   vWorldPos = worldPos.xyz;
-  gl_Position = projectionMatrix * viewMatrix * worldPos;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   #include <logdepthbuf_vertex>
 }
 `;
@@ -163,10 +163,11 @@ varying vec3 vNormalW;
 varying vec2 vLocal;
 ${logVertex}
 void main() {
-  vec4 worldPos = modelMatrix * vec4(position, 1.0);
   vNormalW = normalize(mat3(modelMatrix) * normal);
   vLocal = position.xz;
-  gl_Position = projectionMatrix * viewMatrix * worldPos;
+  // Keep metre detail in camera space: a Float32 world position at Earth
+  // radius loses enough precision to move pad vertices by several pixels.
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   #include <logdepthbuf_vertex>
 }
 `;
@@ -271,13 +272,12 @@ void main() {
     objectNormal /= vec3(dot(im[0], im[0]), dot(im[1], im[1]), dot(im[2], im[2]));
     objectNormal = im * objectNormal;
   #endif
-  vec4 worldPos = modelMatrix * vec4(transformed, 1.0);
   vNormalW = normalize(mat3(modelMatrix) * objectNormal);
   vColor = vec3(0.75);
   #ifdef USE_INSTANCING_COLOR
     vColor = instanceColor;
   #endif
-  gl_Position = projectionMatrix * viewMatrix * worldPos;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(transformed, 1.0);
   #include <logdepthbuf_vertex>
 }
 `;

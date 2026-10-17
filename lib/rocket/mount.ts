@@ -183,25 +183,21 @@ export function toDevice(basis: RocketBasis, v: Vec3): Vec3 {
 
 /**
  * Gravity in the rocket frame for a nose leaned `pitchDeg` toward the screen
- * and `yawDeg` toward rocket +x. Upright is [0, -g, 0].
+ * and positive `yawDeg` about rocket +z (nose toward -x). Upright is [0, -g, 0].
  */
 export function rocketGravity(pitchDeg: number, yawDeg = 0, g = G): Vec3 {
-  const p = pitchDeg * DEG;
-  const y = yawDeg * DEG;
-  const cp = Math.cos(p);
-  const sp = Math.sin(p);
-  const cy = Math.cos(y);
-  const sy = Math.sin(y);
-  return [-g * sy * cp, -g * cy * cp, g * sp];
+  const pose = tiltQuat(pitchDeg, yawDeg);
+  const down = quatMul(quatMul(quatConj(pose), [0, 0, -g, 0]), pose);
+  return [down[1], down[2], down[3]];
 }
 
-/** Pitch about rocket x, then yaw about rocket z, as a quaternion in the rocket frame. */
+/** One pose convention: pitch times yaw; inverse pose supplies simulated gravity. */
 export function tiltQuat(pitchDeg: number, yawDeg = 0): Quat {
   const hp = (pitchDeg * DEG) / 2;
   const hy = (yawDeg * DEG) / 2;
   const pitch: Quat = [Math.cos(hp), Math.sin(hp), 0, 0];
   const yaw: Quat = [Math.cos(hy), 0, 0, Math.sin(hy)];
-  return quatNormalize(quatMul(yaw, pitch));
+  return quatNormalize(quatMul(pitch, yaw));
 }
 
 /** Signed fore/aft and left/right lean from gravity. Ignores the orientation quaternion on purpose. */

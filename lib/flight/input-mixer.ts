@@ -1,6 +1,7 @@
 // lib/flight/input-mixer.ts — one mixer for pitch and throttle (07 §3, §6).
 // Owner: Neel. This file does not integrate physics and does not write position or fuel.
-import type { ControlAxis, ControlSource, FlightArmed, FlightAxisCommand, FlightInput, FlightSession } from "@/lib/types";
+import type { ControlAxis, ControlSource, FlightArmed, FlightAxisCommand, FlightInput, FlightSession, Quat } from "@/lib/types";
+import { quatNormalize } from "@/lib/rocket/orient";
 
 /** Pitch commands are clamped to a half-turn either side of local vertical. */
 export const PITCH_LIMIT_RAD = Math.PI / 2;
@@ -8,7 +9,7 @@ export const PITCH_LIMIT_RAD = Math.PI / 2;
 /** A sample inside this band counts as neutral after an owner change. */
 export const NEUTRAL_PITCH_RAD = 0.02;
 
-export const NEUTRAL_FLIGHT_INPUT: FlightInput = { pitchRad: 0, throttle: 0 };
+export const NEUTRAL_FLIGHT_INPUT: FlightInput = { pitchRad: 0, yawRad: 0, throttle: 0 };
 
 export function clampPitchRad(value: unknown): number | null {
   if (typeof value !== "number" || !Number.isFinite(value)) return null;
@@ -20,6 +21,19 @@ export function clampThrottle(value: unknown): number | null {
   return Math.min(1, Math.max(0, value));
 }
 
+function normalizedAttitude(value: unknown): Quat | null {
+  if (!Array.isArray(value) || value.length !== 4 || !value.every((part) => typeof part === "number" && Number.isFinite(part))) return null;
+  const norm = Math.hypot(...value);
+  if (!Number.isFinite(norm) || norm === 0) return null;
+  return quatNormalize(value as Quat);
+}
+
+function withoutAttitude(input: FlightInput): FlightInput {
+  const rest = { ...input };
+  delete rest.attitudeQuat;
+  return rest;
+}
+
 export interface MixResult {
   ok: boolean;
   error?: string;
@@ -28,8 +42,12 @@ export interface MixResult {
   ignoredAxes: ControlAxis[];
 }
 
-function isNeutral(axis: ControlAxis, value: number): boolean {
-  return axis === "pitch" ? Math.abs(value) <= NEUTRAL_PITCH_RAD : value === 0;
+function isNeutral(axis: ControlAxis, value: number, source: ControlSource): boolean {
+  if (axis !== "pitch") return value === 0;
+  // Phone pitch is the rocket's absolute lean, which the drawn rocket already shows,
+  // so it steers at once. A hand-held lean often never passes near upright.
+  if (source === "phone") return true;
+  return Math.abs(value) <= NEUTRAL_PITCH_RAD;
 }
 
 /**
@@ -39,7 +57,7 @@ function isNeutral(axis: ControlAxis, value: number): boolean {
  */
 export function mixFlightInput(flight: FlightSession, command: FlightAxisCommand, source: ControlSource): MixResult {
   const submitted: ControlAxis[] = [];
-  if (command.pitchRad !== undefined) submitted.push("pitch");
+  if (command.pitchRad !== undefined || command.yawRad !== undefined || command.attitudeQuat !== undefined) submitted.push("pitch");
   if (command.throttle !== undefined) submitted.push("throttle");
   if (submitted.length === 0) {
     return { ok: false, error: "empty flight input", input: flight.input, armed: flight.armed, ignoredAxes: [] };
@@ -56,23 +74,28 @@ export function mixFlightInput(flight: FlightSession, command: FlightAxisCommand
       unowned.push(axis);
       continue;
     }
-    const clamped = axis === "pitch" ? clampPitchRad(command.pitchRad) : clampThrottle(command.throttle);
-    if (clamped === null) {
+    const clamped = axis === "pitch" ? clampPitchRad(command.pitchRad === undefined ? flight.input.pitchRad : command.pitchRad) : clampThrottle(command.throttle);
+    const yaw = axis === "pitch" ? clampPitchRad(command.yawRad === undefined ? 0 : command.yawRad) : 0;
+    const attitude = axis === "pitch" && command.attitudeQuat !== undefined ? normalizedAttitude(command.attitudeQuat) : undefined;
+    if (clamped === null || yaw === null || attitude === null) {
       invalid.push(axis);
       continue;
     }
     const key = axis === "pitch" ? "pitchRad" : "throttle";
     if (!armed[axis]) {
       const phoneReady = source !== "phone" || command.calibrated === true;
-      if (phoneReady && isNeutral(axis, clamped)) {
+      if (phoneReady && isNeutral(axis, clamped, source) && (axis !== "pitch" || isNeutral(axis, yaw, source))) {
         armed = { ...armed, [axis]: true };
-        input = { ...input, [key]: clamped };
       } else {
         waiting.push(axis);
+        continue;
       }
-      continue;
     }
-    input = { ...input, [key]: clamped };
+    input = {
+      ...(axis === "pitch" ? withoutAttitude(input) : input),
+      [key]: clamped,
+      ...(axis === "pitch" ? { yawRad: yaw, ...(attitude ? { attitudeQuat: attitude } : {}) } : {}),
+    };
   }
 
   const ignoredAxes = [...unowned, ...invalid, ...waiting];
@@ -95,6 +118,6 @@ export function assignAxisOwner(flight: FlightSession, axis: ControlAxis, source
     ...flight,
     owners: { ...flight.owners, [axis]: source },
     armed: { ...flight.armed, [axis]: false },
-    input: { ...flight.input, [key]: 0 },
+    input: { ...(axis === "pitch" ? withoutAttitude(flight.input) : flight.input), [key]: 0, ...(axis === "pitch" ? { yawRad: 0 } : {}) },
   };
 }

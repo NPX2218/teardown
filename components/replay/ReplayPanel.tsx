@@ -3,11 +3,12 @@ import { motion } from "motion/react";
 import { motionPresets } from "@/lib/ui/motion";
 import { MISSIONS } from "@/data/missions/index";
 import { useAppMode } from "@/lib/flight/app-mode";
-import { formatClock } from "@/lib/flight/format";
+import { formatClock, formatKm } from "@/lib/flight/format";
 import { historicalMissions } from "@/lib/flight/mission-select";
 import { replayDataCaption, replayDuration, replayPose, referenceTrajectoryNote } from "@/lib/replay";
 import { useScene } from "@/lib/store";
 import type { Mission } from "@/lib/types";
+import { clearHeldAxes } from "@/lib/flight/local-controls";
 import { EmissionsPlacement } from "@/components/flight/EmissionsPlacement";
 import styles from "@/components/flight/flight.module.css";
 
@@ -17,13 +18,17 @@ function isSample(mission: Mission): boolean {
 
 export function ReplayPanel() {
   const replay = useScene((s) => s.replay);
+  const flight = useScene((s) => s.flight);
+  const steering = flight.status !== "idle";
   const id = replay.missionId;
   const mission = id && Object.prototype.hasOwnProperty.call(MISSIONS, id) ? MISSIONS[id] : null;
   const duration = mission ? replayDuration(mission) : 0;
   const pose = mission ? replayPose(mission, replay.t) : null;
 
   const choose = (missionId: string) => {
+    clearHeldAxes();
     const scene = useScene.getState();
+    scene.stopFlight();
     scene.startReplay(missionId);
     scene.pauseReplay();
     useAppMode.getState().restartHeard();
@@ -35,11 +40,15 @@ export function ReplayPanel() {
     else scene.resumeReplay();
   };
   const seek = (time: number) => {
+    clearHeldAxes();
+    useScene.getState().stopFlight();
     useAppMode.getState().noteSeek(time);
     useScene.getState().setReplayTime(time);
   };
   const restart = () => {
+    clearHeldAxes();
     const scene = useScene.getState();
+    scene.stopFlight();
     scene.setReplayTime(0);
     scene.resumeReplay();
     useAppMode.getState().restartHeard();
@@ -49,7 +58,14 @@ export function ReplayPanel() {
     <motion.section initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={motionPresets.out} className={`hud ${styles.readout}`} aria-label="Flight replay">
       <div className={styles.stack}>
         <p className="hud__k">Flight replay</p>
-        <h2>Illustrated motion, not a recording.</h2>
+        <h2>{steering ? "Your flight against the reference." : "Illustrated motion, not a recording."}</h2>
+        {steering && <button type="button" className="btn" onClick={() => { clearHeldAxes(); useScene.getState().stopFlight(); }}>Return to replay</button>}
+        {steering && <div aria-label="Live flight progress" aria-live="polite">
+          <p>Height {formatKm(flight.readout?.altitudeM ?? null)} · tilt {Math.round(flight.input.pitchRad * 180 / Math.PI)}°</p>
+          {flight.guide?.banner && <p data-banner={flight.guide.warningLevel}>{flight.guide.banner}</p>}
+          {flight.guide?.deviation?.correction && <p>{flight.guide.deviation.correction}</p>}
+          {flight.guide?.countdownS != null && <p>Return within {flight.guide.countdownS.toFixed(1)} s</p>}
+        </div>}
         <div className={styles.actions}>
           {Object.entries(MISSIONS).map(([missionId, item]) => (
             <button key={missionId} type="button" className="btn" aria-pressed={missionId === id} onClick={() => choose(missionId)}>
@@ -69,7 +85,7 @@ export function ReplayPanel() {
             <div className={styles.actions}>
               <button type="button" className="btn btn-accent" onClick={toggle}>{replay.playing ? "Pause" : "Play"}</button>
               <button type="button" className="btn" onClick={restart}>Restart</button>
-              <button type="button" className="btn" onClick={() => { useScene.getState().stopReplay(); useAppMode.getState().restartHeard(); }}>Stop</button>
+              <button type="button" className="btn" onClick={() => { clearHeldAxes(); useScene.getState().stopReplay(); useScene.getState().stopFlight(); useAppMode.getState().restartHeard(); }}>Stop</button>
             </div>
             <label className="range">
               Mission time

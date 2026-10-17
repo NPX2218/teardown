@@ -57,6 +57,18 @@ export function AboutSheet({
           ))}
         </section>
 
+        <section className={styles.section} aria-labelledby="about-flight-data">
+          <h3 id="about-flight-data">{ABOUT.flightData.title}</h3>
+          {ABOUT.flightData.paragraphs.map((line) => (
+            <p key={line}>{line}</p>
+          ))}
+          <p>
+            <a href={ABOUT.flightData.sourceHref} target="_blank" rel="noopener noreferrer">
+              {ABOUT.flightData.sourceLabel}
+            </a>
+          </p>
+        </section>
+
         <details className={styles.more}>
           <summary>{"Read SpaceX's words"}</summary>
           {ABOUT.quotes.map((quote) => (

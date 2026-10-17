@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { quatMul, quatNormalize } from "@/lib/rocket/orient";
+import { quatConj, quatMul, quatNormalize } from "@/lib/rocket/orient";
 import {
   G,
   MOUNT_IDS,
@@ -27,6 +27,17 @@ function devicePitchRad(q: Quat): number {
 }
 
 describe("rocket mount", () => {
+  it("M1: diagonal fixtures derive gravity from the inverse phone pose (report 2026-10-17)", () => {
+    // REGRESSION GUARD: old diagonal gravity and pose used different rotation orders.
+    for (const [pitch, yaw] of [[30, 40], [-40, 35], [25, -50]]) {
+      const pose = tiltQuat(pitch, yaw);
+      const gravity = quatMul(quatMul(quatConj(pose), [0, 0, -G, 0]), pose);
+      const actual = rocketGravity(pitch, yaw);
+      expect(actual[0]).toBeCloseTo(gravity[1], 12);
+      expect(actual[1]).toBeCloseTo(gravity[2], 12);
+      expect(actual[2]).toBeCloseTo(gravity[3], 12);
+    }
+  });
   it("the same physical tilt is the same rocket pitch in every mount", () => {
     for (const mount of MOUNT_IDS) {
       const basis = presetBasis(mount);

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { AboutButton } from "@/components/about/AboutButton";
 import { AboutSheet } from "@/components/about/AboutSheet";
 import { ABOUT } from "@/components/about/copy";
+import sentinel from "@/data/missions/sentinel-6-michael-freilich.json";
 
 describe("about copy", () => {
   it("paraphrases SpaceX's stated mission and cites the mission page", () => {
@@ -58,6 +59,17 @@ describe("AboutSheet", () => {
   it("does not include a SpaceX logo", () => {
     expect(html).not.toMatch(/<img\b/i);
     expect(html).not.toMatch(/spacex[-_ ]?logo/i);
+  });
+
+  it("D1: explains the globe mapping and identifies simulated and missing trajectory data (2026-10-17 request)", () => {
+    expect(html).toContain('id="about-flight-data"');
+    expect(html).toContain("How flight paths reach the globe");
+    expect(html).toContain("distance from Earth&#x27;s center");
+    expect(html).toContain("launch site and heading");
+    expect(html).toContain("Practice uses a simulated reference");
+    expect(html).toContain("no reusable measured trajectory");
+    expect(html).toContain(`href="${sentinel.launchSite.source}"`);
+    expect(html).toContain("Sentinel-6 launch timeline — ESA");
   });
 });
 

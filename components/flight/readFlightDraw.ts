@@ -64,7 +64,7 @@ export function readFlightDraw(): FlightDraw {
   const mission = replayMission ?? tracked;
   const site = launchSiteFor({ missionId: mission?.id ?? null, launchSiteText: siteText(mission) });
 
-  const steered = scene.flight.status === "flying" || scene.flight.status === "paused";
+  const steered = scene.flight.status !== "idle";
   if (replayMission && !steered) {
     const pose = replayPose(replayMission, scene.replay.t);
     const sep = replayMission.events.find((event) => event.id === "stage_sep" || event.id === "staging");
@@ -89,7 +89,7 @@ export function readFlightDraw(): FlightDraw {
   const flight = scene.flight;
   const state = flight.state;
   const scenario = scenarioFor(flight.scenarioId);
-  let path: { x: number; y: number }[] | null = null;
+  let path: { x: number; y: number; z?: number }[] | null = null;
   let pathClosed = false;
   let pathHitsEarth = false;
   let elements = EMPTY_ELEMENTS;
@@ -112,6 +112,8 @@ export function readFlightDraw(): FlightDraw {
     site,
     positionM: state?.positionM ?? null,
     pitchRad: state?.pitchRad ?? flight.input.pitchRad,
+    yawRad: state?.yawRad ?? flight.input.yawRad ?? 0,
+    attitudeQuat: state?.attitudeQuat,
     throttle: state?.throttle ?? flight.input.throttle,
     airborne: state?.airborne ?? false,
     altitudeM: flight.readout?.altitudeM ?? null,

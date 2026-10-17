@@ -8,6 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
+    "test:e2e": "playwright test --config e2e/kerbal/playwright.config.ts",
+    "test:e2e:install": "playwright install chromium",
+    "test:rendering": "node e2e/rendering/run-depth-check.mjs",
     "relay:dev": "tsx scripts/dev-relay.ts",
     "tunnel": "tsx scripts/tunnel.ts",
     "sim:phone": "tsx scripts/sim-phone.ts",
@@ -28,6 +31,7 @@
     "zustand": "4.5.7"
   },
   "devDependencies": {
+    "@playwright/test": "1.55.1",
     "@types/node": "^20",
     "@types/qrcode": "^1.5.6",
     "@types/react": "18.3.12",

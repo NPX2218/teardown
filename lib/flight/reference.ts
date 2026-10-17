@@ -72,7 +72,6 @@ export function sampleReference(reference: MissionReference | null | undefined, 
     event: left.event ?? null,
   };
 }
-
 /** Planar position from altitude and downrange. Null when downrange was not published. */
 export function referencePoint(altM: number, downrangeM: number | null): { x: number; y: number } | null {
   if (!Number.isFinite(altM) || !Number.isFinite(downrangeM ?? NaN)) return null;
@@ -92,36 +91,4 @@ export function referencePath(reference: MissionReference | null | undefined): {
     points.push(point);
   }
   return points;
-}
-
-/** Altitude ribbon around a kinematic path. Null when the path itself cannot be drawn. */
-export function corridorEdges(
-  reference: MissionReference | null | undefined,
-  altToleranceM: number,
-): { inner: { x: number; y: number }[]; outer: { x: number; y: number }[] } | null {
-  const path = referencePath(reference);
-  if (!path || !(altToleranceM > 0)) return null;
-  const shift = (point: { x: number; y: number }, delta: number) => {
-    const radius = Math.hypot(point.x, point.y) || 1;
-    const next = radius + delta;
-    return { x: (point.x / radius) * next, y: (point.y / radius) * next };
-  };
-  return {
-    inner: path.map((point) => shift(point, -altToleranceM)),
-    outer: path.map((point) => shift(point, altToleranceM)),
-  };
-}
-
-/** Pitch and throttle that follow a kinematic sample. Null when there is nothing to follow. */
-export function autopilotInput(
-  reference: MissionReference | null | undefined,
-  time: number,
-  speedMs: number,
-): { pitchRad: number; throttle: number } | null {
-  const sample = sampleReference(reference, time);
-  if (!sample || sample.pitchRad === null) return null;
-  let throttle = 0.7;
-  if (speedMs < sample.velMs - 200) throttle = 1;
-  else if (speedMs > sample.velMs + 200) throttle = 0;
-  return { pitchRad: sample.pitchRad, throttle };
 }

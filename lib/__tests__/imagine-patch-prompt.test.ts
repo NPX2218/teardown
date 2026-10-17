@@ -88,6 +88,14 @@ describe("mission patch prompt", () => {
     expect(buildPatchPrompt("failed")).not.toContain(card.title);
   });
 
+  it("shows the CO₂ estimate with the emissions readout's rounding, and says when there is none", () => {
+    expect(buildPatchCard(outcome(), "Classroom", 1, 15_590).co2).toBe("15.59 t CO₂");
+    expect(buildPatchCard(outcome(), "Classroom", 1, 420).co2).toBe("420 kg CO₂");
+    expect(buildPatchCard(outcome(), "Classroom", 1, null).co2).toBe("Not available");
+    expect(buildPatchCard(outcome(), "Classroom", 1, Number.NaN).co2).toBe("Not available");
+    expect(buildPatchPrompt("crashed")).not.toContain("CO₂");
+  });
+
   it("uses the higher of altitude and apoapsis, and names an orbit without the breakup joke", () => {
     expect(maxAltitudeMetres(readout({ altitudeM: 200_000, apoapsisAltitudeM: 250_000 }))).toBe(250_000);
     expect(formatMaxAltitude(250_000)).toBe("250 km");

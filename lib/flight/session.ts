@@ -9,6 +9,7 @@ import type {
   StageFuelSnapshot,
 } from "@/lib/types";
 import { NEUTRAL_FLIGHT_INPUT } from "@/lib/flight/input-mixer";
+import { FLIGHT_PACING } from "@/lib/flight/pacing.helpers";
 
 export const EMISSIONS_FACTOR_UNAVAILABLE = "Combustion factor is not loaded.";
 
@@ -18,7 +19,7 @@ export function idleFlight(): FlightSession {
     runId: null,
     scenarioId: null,
     simulatedTimeS: 0,
-    warp: 1,
+    warp: FLIGHT_PACING.presentation,
     owners: { pitch: "local", throttle: "local" },
     armed: { pitch: true, throttle: true },
     input: { ...NEUTRAL_FLIGHT_INPUT },
@@ -77,7 +78,7 @@ export function createPadSession(scenario: FlightScenario, runId: string): Fligh
     runId,
     scenarioId: scenario.id,
     simulatedTimeS: 0,
-    warp: 1,
+    warp: FLIGHT_PACING.presentation,
     owners: { pitch: "local", throttle: "local" },
     armed: { pitch: true, throttle: true },
     input: { ...NEUTRAL_FLIGHT_INPUT },

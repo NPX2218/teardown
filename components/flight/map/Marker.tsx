@@ -47,7 +47,8 @@ export function Marker({
           <meshBasicMaterial color="white" transparent opacity={tone === "quiet" ? 0.3 : 0.6} toneMapped={false} depthWrite={false} />
         </mesh>
       )}
-      <Html center zIndexRange={[40, 0]} style={{ pointerEvents: "none" }} distanceFactor={9}>
+      {/* No distanceFactor: it scales by 1/distance, so a camera on the pad blew labels up to millions of px and starved page painting. */}
+      <Html center zIndexRange={[40, 0]} style={{ pointerEvents: "none" }}>
         <Label text={label} tone={tone} />
       </Html>
     </group>
@@ -60,13 +61,13 @@ function Label({ text, tone }: { text: string; tone: "split" | "primary" | "quie
     const name = space === -1 ? text : text.slice(0, space);
     const value = space === -1 ? "" : text.slice(space + 1);
     return (
-      <span className={styles.label}>
+      <span className={styles.label} data-map-marker="true">
         <span className={styles.name}>{name}</span>
         {value ? <span className={styles.value}>{value}</span> : null}
       </span>
     );
   }
-  return <span className={tone === "primary" ? styles.primary : styles.quiet}>{text}</span>;
+  return <span className={tone === "primary" ? styles.primary : styles.quiet} data-map-marker="true">{text}</span>;
 }
 
 const markerWorld = new Vector3();

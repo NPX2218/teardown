@@ -10,8 +10,10 @@ import { decimatePath, finiteVec, type MapVec2 } from "@/lib/flight/map/trail";
 export interface StateVector {
   x: number;
   y: number;
+  z?: number;
   vx: number;
   vy: number;
+  vz?: number;
 }
 
 export type PathKind = "ellipse" | "ballistic" | "escape" | "radial" | "none";
@@ -85,8 +87,10 @@ export function vectorFromFlightState(state: FlightState | null | undefined): St
   const position = state?.positionM;
   const velocity = state?.velocityMps;
   if (!position || !velocity) return null;
-  const vector = { x: position.x, y: position.y, vx: velocity.x, vy: velocity.y };
-  if (!Number.isFinite(vector.x) || !Number.isFinite(vector.y) || !Number.isFinite(vector.vx) || !Number.isFinite(vector.vy)) {
+  const vector: StateVector = { x: position.x, y: position.y, vx: velocity.x, vy: velocity.y,
+    ...(position.z !== undefined ? { z: position.z } : {}),
+    ...(velocity.z !== undefined ? { vz: velocity.z } : {}) };
+  if (![vector.x, vector.y, vector.z ?? 0, vector.vx, vector.vy, vector.vz ?? 0].every(Number.isFinite)) {
     return null;
   }
   return vector;
@@ -99,6 +103,15 @@ export function predictFromFlight(state: FlightState | null | undefined): OrbitP
 
 /** Ellipse, ballistic arc, or escape branch from a state vector. */
 export function predictOrbit(state: StateVector): OrbitPrediction {
+  if ((state.z ?? 0) !== 0 || (state.vz ?? 0) !== 0) {
+    const plane = orbitalPlane(state);
+    if (!plane) return EMPTY;
+    const prediction = predictOrbit(plane.state);
+    const liftMark = (mark: ApsisMark | null): ApsisMark | null => mark && { ...mark, position: plane.lift(mark.position) };
+    return { ...prediction, predicted: prediction.predicted.map(plane.lift),
+      impact: prediction.impact && plane.lift(prediction.impact),
+      apoapsis: liftMark(prediction.apoapsis), periapsis: liftMark(prediction.periapsis) };
+  }
   if (!Number.isFinite(state.x) || !Number.isFinite(state.y) || !Number.isFinite(state.vx) || !Number.isFinite(state.vy)) {
     return EMPTY;
   }
@@ -119,6 +132,10 @@ export function predictOrbit(state: StateVector): OrbitPrediction {
  * position. Used for the solid flown line in a still frame.
  */
 export function traceBehind(state: StateVector, angleRad: number, samples: number): MapVec2[] {
+  if ((state.z ?? 0) !== 0 || (state.vz ?? 0) !== 0) {
+    const plane = orbitalPlane(state);
+    return plane ? traceBehind(plane.state, angleRad, samples).map(plane.lift) : [];
+  }
   if (!Number.isFinite(angleRad) || angleRad <= 0 || !Number.isFinite(samples)) return [];
   const radius = Math.hypot(state.x, state.y);
   if (radius < 1) return [];
@@ -140,6 +157,35 @@ export function traceBehind(state: StateVector, angleRad: number, samples: numbe
 /** Elements the map shares with the HUD. Exposed so tests can compare both oracles. */
 export function mapElements(state: StateVector): OrbitElements {
   return orbitFromState(state);
+}
+
+/** The central-gravity coast lies in r/v's plane; keep one planar conic solver. */
+function orbitalPlane(state: StateVector): { state: StateVector; lift: (point: MapVec2) => MapVec2 } | null {
+  const { x, y, vx, vy } = state;
+  const z = state.z ?? 0;
+  const vz = state.vz ?? 0;
+  if (![x, y, z, vx, vy, vz].every(Number.isFinite)) return null;
+  const radius = Math.hypot(x, y, z);
+  if (radius < 1) return null;
+  const radial = [x / radius, y / radius, z / radius];
+  const radialSpeed = vx * radial[0] + vy * radial[1] + vz * radial[2];
+  const tangent = [vx - radialSpeed * radial[0], vy - radialSpeed * radial[1], vz - radialSpeed * radial[2]];
+  const tangentSpeed = Math.hypot(...tangent);
+  let across: number[];
+  if (tangentSpeed > 1e-9) across = tangent.map((value) => value / tangentSpeed);
+  else {
+    // A radial trajectory has no preferred plane; this perpendicular never affects its path.
+    const axis = Math.abs(radial[0]) < 0.9 ? [1, 0, 0] : [0, 1, 0];
+    const dot = axis[0] * radial[0] + axis[1] * radial[1] + axis[2] * radial[2];
+    const projected = axis.map((value, i) => value - dot * radial[i]);
+    const length = Math.hypot(...projected);
+    across = projected.map((value) => value / length);
+  }
+  return {
+    state: { x: radius, y: 0, vx: radialSpeed, vy: tangentSpeed },
+    lift: (point) => ({ x: point.x * radial[0] + point.y * across[0],
+      y: point.x * radial[1] + point.y * across[1], z: point.x * radial[2] + point.y * across[2] }),
+  };
 }
 
 function ellipsePrediction(kepler: Kepler): OrbitPrediction {
