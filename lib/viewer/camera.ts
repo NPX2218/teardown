@@ -9,7 +9,9 @@ export function viewOffsetX(selected: boolean, widthPx: number): number {
 
 export const HOME_DIST_K = 2.25;
 export const EXPLODE_PULL = 0.5;
-export const HOME_TARGET_K = 0.07;
+// Camera aim height as a share of the rocket's display height. Negative aims above centre, so the rocket sits
+// lower on screen. Was 0.07 (aim below centre); the rocket read too high under the header (2026-10-17 feedback).
+export const HOME_TARGET_K = -0.02;
 export const PART_DIST_K = 2.6;
 export const PART_MIN_K = 0.3;
 export const CAMERA_LERP = 0.06;

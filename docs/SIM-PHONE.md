@@ -6,11 +6,11 @@ Steer the exhibit without a handset. The script joins channel `rocket-<CODE>` as
 
 | Situation | What to set |
 |---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are set, and `NEXT_PUBLIC_ROCKET_RELAY` is unset | Supabase, the same path as production. Nothing else is required. |
-| No keys, or you want two processes on one machine | `NEXT_PUBLIC_ROCKET_RELAY=local` on the Next app and the simulator. Start `npm run relay:dev` first. |
+| Real phone, or two machines | `npm run tunnel`. It starts the relay, opens cloudflared quick tunnels for the app and the relay, and writes `NEXT_PUBLIC_ROCKET_ORIGIN`, `NEXT_PUBLIC_ROCKET_RELAY=local` and `NEXT_PUBLIC_ROCKET_RELAY_URL=wss://<relay tunnel>` into the local env file. Scan the QR only after it prints READY. |
+| Two processes on one machine | `NEXT_PUBLIC_ROCKET_RELAY=local` on the Next app and the simulator. Start `npm run relay:dev` first. |
 | Two tabs in one browser, no server | `NEXT_PUBLIC_ROCKET_RELAY=broadcast`. A separate Node process cannot see that channel. |
 
-Dev and test builds with no keys and no override use BroadcastChannel inside the app. The simulator is a separate process, so it defaults to the local relay when the keys are missing. Point the app at that same relay:
+The simulator is a separate process, so it uses the local relay. Point the app at that same relay:
 
 ```bash
 npm run relay:dev

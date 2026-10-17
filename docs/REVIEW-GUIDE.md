@@ -85,7 +85,7 @@ The home page was not updated by those PRs. It still mounts the seam fixtures. S
 
 ## Run the demo on one machine
 
-No Supabase keys. Two processes plus the simulator:
+No accounts or keys. Two processes plus the simulator (for a real phone, run `npm run tunnel` instead; it starts the relay and the cloudflared tunnels and prints READY when the phone can scan):
 
 ```bash
 npm ci
@@ -98,7 +98,7 @@ In a second terminal:
 NEXT_PUBLIC_ROCKET_RELAY=local npm run dev
 ```
 
-Open `http://localhost:3000/?demo=1`. Read the 4-character code. In a third terminal, with the same relay (the simulator picks `local` when the Supabase keys are absent):
+Open `http://localhost:3000/?demo=1`. Read the 4-character code. In a third terminal, with the same relay:
 
 ```bash
 npm run sim:phone -- ABCD --mount s24fe

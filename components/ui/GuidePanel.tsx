@@ -34,6 +34,7 @@ export function GuidePanel({
   draft,
   busy,
   voiceError,
+  kiosk = false,
   onText,
   onVoice,
   onBack,
@@ -49,6 +50,8 @@ export function GuidePanel({
   draft: string;
   busy: boolean;
   voiceError: string | null;
+  /** Exhibit kiosk: no typing, the suggestion chips stay. */
+  kiosk?: boolean;
   onText: () => void;
   onVoice: () => void;
   onBack: () => void;
@@ -92,7 +95,7 @@ export function GuidePanel({
             ))}
             {busy && <p className="small">Thinking…</p>}
           </div>
-          <form className={styles.ask} onSubmit={submit}>
+          {!kiosk && <form className={styles.ask} onSubmit={submit}>
             <label className="sr-only" htmlFor={inputId}>Ask the guide</label>
             <input
               id={inputId}
@@ -104,7 +107,7 @@ export function GuidePanel({
               disabled={busy}
             />
             <button type="submit" className="btn" disabled={busy || draft.trim() === ""}>Send</button>
-          </form>
+          </form>}
           <div className={styles.questions}>
             {GUIDE_SUGGESTIONS.map((item) => (
               <button key={item.label} type="button" className="chip" onClick={() => onSend(item.text)} disabled={busy}>

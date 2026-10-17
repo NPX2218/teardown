@@ -11,6 +11,18 @@ export function parseTunnelUrl(line: string): string | null {
   return line.match(TUNNEL_URL)?.[0] ?? null;
 }
 
+/**
+ * Public env for a phone on any network, with no Supabase: the QR opens the app tunnel, and both the laptop
+ * and the phone join the local dev relay (`npm run relay:dev`) through its own tunnel. Keys match relay-mode.ts.
+ */
+export function tunnelEnv(appUrl: string, relayUrl: string): Record<string, string> {
+  return {
+    [ORIGIN_KEY]: appUrl,
+    NEXT_PUBLIC_ROCKET_RELAY: "local",
+    NEXT_PUBLIC_ROCKET_RELAY_URL: relayUrl.replace(/^https:/, "wss:"),
+  };
+}
+
 /** Sets `key=value` in dotenv text: replaces the existing line, else appends. Other lines are untouched. */
 export function upsertEnvLine(text: string, key: string, value: string): string {
   const line = `${key}=${value}`;

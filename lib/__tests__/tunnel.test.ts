@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { ORIGIN_KEY, parseTunnelUrl, upsertEnvLine } from "@/lib/rocket/tunnel";
+import { ORIGIN_KEY, parseTunnelUrl, tunnelEnv, upsertEnvLine } from "@/lib/rocket/tunnel";
+
+describe("tunnelEnv", () => {
+  it("R1: points the QR at the app tunnel and the link at the relay tunnel over wss (no Supabase)", () => {
+    expect(tunnelEnv("https://app-a.trycloudflare.com", "https://relay-b.trycloudflare.com")).toEqual({
+      NEXT_PUBLIC_ROCKET_ORIGIN: "https://app-a.trycloudflare.com",
+      NEXT_PUBLIC_ROCKET_RELAY: "local",
+      NEXT_PUBLIC_ROCKET_RELAY_URL: "wss://relay-b.trycloudflare.com",
+    });
+  });
+});
 
 describe("parseTunnelUrl", () => {
   it("T1: finds the quick-tunnel URL in a cloudflared log line", () => {

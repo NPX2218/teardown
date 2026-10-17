@@ -1,5 +1,7 @@
 # 11 · Rocket Link + Gestures Implementation Plan
 
+Note (2026-10-17): Supabase was later removed; the link now runs over the local relay through a cloudflared tunnel (npm run tunnel).
+
 **Scope revision — 2026-10-17:** the [current stage spec](../specs/11-rocket-link.spec.md) and [07 migration contract](../specs/07-replay.spec.md#6-cross-stage-migration-contract) supersede conflicting instructions below for optional continuous pitch and disconnect pause. The former checkpoint/stars mission and standalone Engines/Emissions surfaces are retired. Follow the revised [07 execution plan](07-replay.md); do not build legacy snippets verbatim.
 
 > **For agentic workers (Cursor Agent):** implement one task at a time, run the tests, stop for review. Steps use `- [ ]` checkboxes.

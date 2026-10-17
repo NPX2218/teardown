@@ -772,7 +772,6 @@ dialog.overlay::backdrop { background: rgba(0, 0, 0, 0.72); }
 @media (max-width: 720px) {
   body[data-pair-open="1"] [data-explore-rail],
   body[data-pair-open="1"] .legal,
-  body[data-pair-open="1"] [data-slot="voice"],
   body[data-pair-open="1"] [data-guide] { visibility: hidden; }
 }
 

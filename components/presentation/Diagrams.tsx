@@ -161,7 +161,7 @@ function Pipeline({ reveal }: { reveal: number }) {
     { at: 2, name: "Split", detail: "gravity (low-pass 0.8) | your movement" },
     { at: 3, name: "Zero", detail: "2 s still → rocket frame, +y = nose" },
     { at: 4, name: "Pitch", detail: "atan2(g_z, √(g_x² + g_y²)) · clamp ±90°" },
-    { at: 4, name: "Relay → laptop", detail: "{q, lin, grav} · Supabase Realtime · 4-letter code" },
+    { at: 4, name: "Relay → laptop", detail: "{q, lin, grav} · local relay (tunnel) · 4-letter code" },
     { at: 4, name: "Store → physics", detail: "one owner per control · pause if silent 2 s" },
   ];
   return (

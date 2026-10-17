@@ -210,7 +210,7 @@ Run `npm test` for the unit tests and `npm run smoke` for the paired laptop + ph
 | **3D** | three.js · React Three Fiber · drei |
 | **STATE** | Zustand |
 | **MOTION** | Motion |
-| **PHONE LINK** | Supabase Realtime, or a local WebSocket relay for development |
+| **PHONE LINK** | Local WebSocket relay, exposed to the phone with a cloudflared tunnel (`npm run tunnel`) |
 | **AI** | xAI Grok: chat with tools, voice, transcription, Imagine |
 | **TESTS** | Vitest · scripted smoke run |
 

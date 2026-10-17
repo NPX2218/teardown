@@ -60,6 +60,9 @@ export function startDevRelay(port = 0): Promise<DevRelay> {
   });
 
   return new Promise((resolve, reject) => {
+    // ws re-emits the http server's listen error on the WebSocketServer; without a listener that throws and
+    // kills the process instead of rejecting (EADDRINUSE when a relay is already running).
+    wss.on("error", () => {});
     http.once("error", reject);
     http.listen(port, "127.0.0.1", () => {
       const address = http.address();

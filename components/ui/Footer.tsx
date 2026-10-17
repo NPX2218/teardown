@@ -6,7 +6,7 @@ import { Credits } from "./Credits";
 // Credits overlap the bottom dock, so on mouse devices they stay hidden until the pointer nears the bottom edge.
 // Band height is arbitrary: roughly the credits' own height plus a little reach.
 const REVEAL_BAND_PX = 96;
-const DOCKS = '[data-guide], [data-slot="voice"]';
+const DOCKS = "[data-guide]";
 
 export function Footer() {
   const path = usePathname();
@@ -15,7 +15,7 @@ export function Footer() {
   useEffect(() => {
     if (hidden) return;
     const onMove = (e: PointerEvent) => {
-      // The Grok guide and the voice dock live in the same band; hovering them is about them, not the credits.
+      // The Grok guide lives in the same band; hovering it is about it, not the credits.
       const onDock = e.target instanceof Element && e.target.closest(DOCKS) !== null;
       // Only over the credits' own text, so heading for the guide in the right corner doesn't reveal them.
       const legal = document.querySelector(".legal");

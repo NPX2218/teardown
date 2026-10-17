@@ -422,7 +422,7 @@ export const SLIDES: readonly Slide[] = [
       },
     ],
     notes: [
-      "Stack: Next.js 14, TypeScript strict, three.js with React Three Fiber, Zustand, Supabase Realtime for the phone link (a local WebSocket relay in development), xAI Grok.",
+      "Stack: Next.js 14, TypeScript strict, three.js with React Three Fiber, Zustand, a local WebSocket relay behind a cloudflared tunnel for the phone link, xAI Grok.",
       "docs/SMOKE.md, 17 October: vitest 703 passed, 1 skipped. The Playwright smoke covers calibrate, lift to launch, tilt steering, flick to stage, nose-down abort, a crash, a mission drift warning, Sentinel-6 milestones and the mascot voice states.",
     ],
   },

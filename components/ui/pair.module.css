@@ -219,3 +219,13 @@
   border-radius: var(--radius-pill);
   background: var(--ok);
 }
+
+/* The Grok guide opens in the same right-hand column. While it is open the pairing card steps aside,
+   then fades back when the guide closes. The card stays mounted, so pairing keeps running underneath. */
+.center { transition: opacity var(--dur-2) var(--ease-ui), visibility 0s; }
+/* visibility flips after the fade, so the hidden card is out of the tab order too. */
+:global(body:has([data-guide] [role="dialog"])) .center {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--dur-2) var(--ease-ui), visibility 0s linear var(--dur-2);
+}
