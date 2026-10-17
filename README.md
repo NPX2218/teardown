@@ -14,6 +14,7 @@
 <p><b>NEEL BANSAL &nbsp;·&nbsp; ANDERS HAROLDSON</b></p>
 
 <p>
+  <a href="https://npx2218.github.io/hackharvard-teardown/"><b>LIVE DEMO</b></a> &nbsp;&nbsp;|&nbsp;&nbsp;
   <a href="#quick-start"><b>RUN IT</b></a> &nbsp;&nbsp;|&nbsp;&nbsp;
   <a href="public/presentation/index.html"><b>PRESENTATION</b></a> &nbsp;&nbsp;|&nbsp;&nbsp;
   <a href="docs/presentation/teardown.pdf"><b>PDF</b></a> &nbsp;&nbsp;|&nbsp;&nbsp;
