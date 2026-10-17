@@ -1,7 +1,5 @@
 "use client";
-import { motion } from "motion/react";
 import { useAppMode } from "@/lib/flight/app-mode";
-import { motionPresets } from "@/lib/ui/motion";
 import { useScene } from "@/lib/store";
 import { vehicleStats } from "@/lib/viewer/stats";
 import styles from "@/components/viewer/viewer.module.css";
@@ -23,9 +21,9 @@ export function Header() {
     if (id === "mission") app.openMission();
   };
   return (
-    <header className={`nav scrim-top ${styles.header}`}>
-      <div className={styles.headerText}>
-        <p className="nav__brand">Teardown</p>
+    <header className={`nav ${styles.header}`}>
+      <div className={styles.bar}>
+        <h1 className={styles.wordmark}>Teardown</h1>
         <nav className={styles.modeNav} aria-label="Modes">
           {MODES.map((item) => (
             <button
@@ -39,25 +37,20 @@ export function Header() {
             </button>
           ))}
         </nav>
-        {mode === "explore" && (
-          <>
-            <h1>Falcon 9</h1>
-            <motion.p className={`lead ${styles.motto}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={motionPresets.out}>
-              Bringing rocket science down to Earth.
-            </motion.p>
-            {vehicle && (
-              <ul className={styles.stats} aria-label="Falcon 9 numbers">
-                {vehicleStats(vehicle).map((st) => (
-                  <li key={st.label} className="stat">
-                    <span className="stat__value">{st.value}<span className="stat__unit">{st.unit}</span></span>
-                    <span className="stat__label">{st.label}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <div className={styles.headerControls}><LevelSwitch /></div>
-          </>
+        {mode === "explore" && vehicle && (
+          <ul className={styles.inlineStats} aria-label="Falcon 9 numbers">
+            {vehicleStats(vehicle).map((st) => (
+              <li key={st.label}>
+                <span className={styles.inlineValue}>{st.value}</span>
+                <span className={styles.inlineUnit}>{st.unit}</span>
+                <span className="sr-only">{st.label}</span>
+              </li>
+            ))}
+          </ul>
         )}
+        <div className={styles.barEnd}>
+          {mode === "explore" && <LevelSwitch />}
+        </div>
       </div>
     </header>
   );

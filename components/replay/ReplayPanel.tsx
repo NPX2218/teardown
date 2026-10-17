@@ -48,7 +48,6 @@ export function ReplayPanel() {
       <div className={styles.stack}>
         <p className="hud__k">Flight replay</p>
         <h2>Illustrated motion, not a recording.</h2>
-        <p className={styles.note}>Drawn height, not a measured height. The flame is a drawing, not a measured burn.</p>
         <div className={styles.actions}>
           {Object.entries(MISSIONS).map(([missionId, item]) => (
             <button key={missionId} type="button" className="btn" aria-pressed={missionId === id} onClick={() => choose(missionId)}>
@@ -65,7 +64,6 @@ export function ReplayPanel() {
         {mission && pose && (
           <>
             <p className="hud__v hud__v--clock" aria-label="Mission clock">{formatClock(replay.t)} / {formatClock(duration)}</p>
-            <p>{pose.label}</p>
             <div className={styles.actions}>
               <button type="button" className="btn btn-accent" onClick={toggle}>{replay.playing ? "Pause" : "Play"}</button>
               <button type="button" className="btn" onClick={restart}>Restart</button>
@@ -83,6 +81,9 @@ export function ReplayPanel() {
                 onChange={(event) => seek(Number(event.target.value))}
               />
             </label>
+            <details className={styles.more}>
+              <summary>Milestones</summary>
+              <p className={styles.note}>Drawn height, not a measured height. The flame is a drawing, not a measured burn.</p>
             <ol className={styles.events}>
               {mission.events.map((event) => (
                 <li key={`${event.id}-${event.t}`} className={styles.event} aria-current={pose.eventId === event.id && pose.t >= event.t ? "true" : undefined}>
@@ -96,6 +97,7 @@ export function ReplayPanel() {
                 </li>
               ))}
             </ol>
+            </details>
           </>
         )}
       </div>

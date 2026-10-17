@@ -1,0 +1,76 @@
+/* Kiosk attract. SpaceX layer: full-bleed scene, copy pinned bottom-left. */
+
+.stage {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-overlay);
+  pointer-events: none;
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.2) 46%, transparent 68%),
+    linear-gradient(180deg, transparent 40%, #000 100%);
+  pointer-events: none;
+}
+
+.copy {
+  position: absolute;
+  left: 60px;
+  right: 24px;
+  bottom: 96px;
+  display: grid;
+  justify-items: start;
+  gap: 16px;
+  max-width: 520px;
+  pointer-events: auto;
+}
+
+.kicker {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(240, 240, 250, 0.7);
+}
+
+.title {
+  margin: 0;
+  max-width: 11ch;
+  font-family: var(--font-display-sx);
+  font-size: clamp(2.5rem, 5.2vw, 4.5rem);
+  font-weight: 700;
+  line-height: 0.92;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #f0f0fa;
+}
+
+.body {
+  margin: 0;
+  max-width: 26rem;
+  font-family: var(--font-display-sx);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  color: rgba(240, 240, 250, 0.85);
+}
+
+.note {
+  margin: 0;
+  max-width: 28rem;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+@media (max-width: 720px) {
+  .copy { left: 20px; right: 20px; bottom: 72px; }
+  .title { font-size: 2.25rem; }
+}

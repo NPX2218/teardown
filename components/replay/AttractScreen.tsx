@@ -8,6 +8,7 @@ import { motionPresets } from "@/lib/ui/motion";
 import { replayPose } from "@/lib/replay";
 import { useScene } from "@/lib/store";
 import { ATTRACT_RESTART_MS, OFFER_MS, attractNeedsStart, useExhibit } from "@/lib/viewer/exhibit";
+import styles from "./attract.module.css";
 
 const OVERLAY = { position: "absolute", inset: 0, zIndex: "var(--z-overlay)" } as const;
 
@@ -84,19 +85,20 @@ export function AttractScreen() {
   }
 
   return (
-    <div className="overlay" style={OVERLAY}>
+    <div className={styles.stage} style={OVERLAY}>
+      <div className={styles.scrim} aria-hidden="true" />
       <motion.div
-        className="stack"
-        style={{ position: "absolute", left: "var(--gutter)", right: "var(--gutter)", bottom: "var(--sp-6)" }}
+        className={styles.copy}
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={motionPresets.slow}
       >
-        <p className="display display--sentence">Bringing rocket science down to Earth.</p>
-        <p className="display display--sentence">Pick up the rocket to fly</p>
-        {sample && <p className="caption">Practice sample. This drawing is not a real flight.</p>}
-        {caption && <p className="caption" aria-live="polite">{caption}</p>}
-        <button className="btn btn-accent btn-lg attract" type="button" onClick={() => useExhibit.getState().wake("touch")}>
+        <p className={styles.kicker}>Falcon 9</p>
+        <p className={styles.title}>Bringing rocket science down to Earth.</p>
+        <p className={styles.body}>Pick up the rocket to fly.</p>
+        {sample && <p className={styles.note}>Practice sample. This drawing is not a real flight.</p>}
+        {caption && <p className={styles.note} aria-live="polite">{caption}</p>}
+        <button className="btn btn-sx attract" type="button" onClick={() => useExhibit.getState().wake("touch")}>
           Touch to explore
         </button>
       </motion.div>

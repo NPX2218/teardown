@@ -313,7 +313,7 @@ export default function RocketPage() {
 
   return (
     <main className={`phone ${css.shell}`} data-camera={camera} data-level={level}>
-      <header className="card row" aria-live="polite">
+      <header className={css.edge} aria-live="polite">
         {linkState === "connected" && <span className="chip chip--ok">Connected to exhibit {code}</span>}
         {linkState === "connecting" && <span className="chip">Connecting…</span>}
         {linkState === "offline" && <span className="chip chip--bad">OFFLINE · Can&apos;t reach the exhibit. Check Wi-Fi.</span>}

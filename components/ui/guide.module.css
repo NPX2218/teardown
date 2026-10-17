@@ -1,94 +1,78 @@
-/* Corner guide. The launcher is the Grok Bot face, at least a 48px target. Tokens only. */
+/* Corner mascot. A 56px frame, bottom-right, out of the steering. */
+
 .wrap {
   position: fixed;
   z-index: var(--z-overlay);
-  top: max(var(--sp-3), env(safe-area-inset-top));
-  right: var(--gutter);
-  display: grid;
-  justify-items: end;
-  gap: var(--sp-3);
+  top: auto;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-end;
+  gap: 12px;
   pointer-events: none;
 }
 
 .launch,
-.panel {
-  pointer-events: auto;
-}
+.panel { pointer-events: auto; }
 
 button.launch {
-  width: 96px;
-  height: 96px;
-  min-width: var(--target);
-  min-height: var(--target);
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  min-height: 56px;
   padding: 0;
-  border: none;
-  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  background: #1a1a1a;
   color: var(--text);
   line-height: 0;
+  overflow: hidden;
 }
 
 button.launch:hover,
 button.launch:active,
 button.launch[aria-expanded="true"] {
-  background: transparent;
-  border-color: transparent;
+  background: #202020;
+  border-color: rgba(255, 255, 255, 0.16);
   color: var(--text);
   transform: none;
 }
 
 .face {
-  display: block;
-  width: 96px;
-  height: 96px;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
 }
 
 .face svg {
   display: block;
-  width: 100%;
-  height: 100%;
+  width: 48px;
+  height: 48px;
 }
 
-/* Attract hides [data-guide]. The sleeping face stays; the open panel does not. */
-:global(body[data-exhibit-phase="attract"]) .launch {
-  visibility: visible;
-}
+:global(body[data-exhibit-phase="attract"]) .launch { visibility: visible; }
+:global(body[data-exhibit-phase="attract"]) .panel { visibility: hidden; }
 
-:global(body[data-exhibit-phase="attract"]) .panel {
-  visibility: hidden;
-}
+.panel h2 { font-size: 20px; letter-spacing: -0.01em; }
 
 .panel {
   position: relative;
-  width: min(22rem, calc(100vw - 2 * var(--gutter) - var(--target)));
-  max-height: min(78dvh, 40rem);
+  width: min(22rem, calc(100vw - 32px));
+  max-height: min(42dvh, 22rem);
   overflow: auto;
   overscroll-behavior: contain;
   text-align: left;
+  margin-bottom: 0;
 }
 
-.close { position: absolute; top: var(--sp-3); right: var(--sp-3); }
+.close { position: absolute; top: 10px; right: 10px; }
 
-.questions {
-  display: grid;
-  gap: var(--sp-3);
-}
-
-.questions > button {
-  width: 100%;
-  justify-content: flex-start;
-}
+.questions { display: grid; gap: 8px; }
+.questions > button { width: 100%; justify-content: flex-start; }
 
 @media (max-width: 720px) {
-  .panel {
-    width: min(22rem, calc(100vw - 2 * var(--gutter)));
-    max-height: 46dvh;
-  }
-}
-
-@media (min-width: 1280px) {
-  .wrap { top: var(--sp-4); }
-}
-
-@media (min-width: 1920px) {
-  .panel { width: min(24rem, calc(100vw - 2 * var(--gutter))); }
+  .wrap { right: 12px; bottom: 12px; }
+  .panel { max-height: 42dvh; }
 }
