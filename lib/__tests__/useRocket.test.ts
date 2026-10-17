@@ -12,7 +12,9 @@ import {
 } from "@/lib/rocket/useRocket";
 import { attachLink, checkRocketTimeout, receiveRocketMessage } from "@/lib/rocket/commands";
 import { useScene } from "@/lib/store";
+import type { MountId } from "@/lib/rocket/mount";
 import type { Quat, RocketMessage } from "@/lib/types";
+import { frameFor } from "../../scripts/sim-phone";
 
 const SCENARIO_ID = "use-rocket-fixture";
 const initial = useScene.getState();
@@ -149,6 +151,58 @@ describe("useRocket frame handling (11)", () => {
     const tilt: Quat = [Math.cos(Math.PI / 8), Math.sin(Math.PI / 8), 0, 0];
     handleRocketMessage(frame(tilt), base + 100);
     expect(useScene.getState().flight.input.pitchRad).not.toBe(0);
+  });
+
+  it("H16 a hard shake does not start or score a flight", () => {
+    expect(useScene.getState().flight.status).toBe("idle");
+    handleRocketMessage(frame([1, 0, 0, 0], [20, 0, 0]), base + 30000);
+    handleRocketMessage(frame([1, 0, 0, 0], [0, 0, 0]), base + 30120);
+    handleRocketMessage(frame([1, 0, 0, 0], [20, 0, 0]), base + 30240);
+    handleRocketMessage(frame([1, 0, 0, 0], [0, 0, 0]), base + 30360);
+    handleRocketMessage(frame([1, 0, 0, 0], [20, 0, 0]), base + 30480);
+    expect(useScene.getState().flight.status).toBe("idle");
+    expect(useScene.getState().flight.outcome).toBeNull();
+  });
+
+  it("H17 calibrated pitch matches across portrait and the S24 FE, and noise does not launch", () => {
+    const pitchAfter = (mount: MountId): number => {
+      useScene.setState(initial, true);
+      resetRocketState();
+      readyRun();
+      useScene.getState().setRocket({ connected: true, code: "AB2C" });
+      useScene.getState().setFlightAxisOwner("pitch", "phone");
+      expect(useScene.getState().launchFlight().ok).toBe(true);
+      for (let t = 0; t <= 2000; t += 50) {
+        handleRocketMessage(frameFor(0, [0, 0, 0], mount), base + t);
+      }
+      handleRocketMessage(frameFor(20, [0, 0, 0], mount), base + 2100);
+      return useScene.getState().flight.input.pitchRad;
+    };
+    const portrait = pitchAfter("portrait");
+    const s24 = pitchAfter("s24fe");
+    expect(portrait).toBeCloseTo((20 * Math.PI) / 180, 2);
+    expect(s24).toBeCloseTo(portrait, 2);
+
+    useScene.setState(initial, true);
+    resetRocketState();
+    readyRun();
+    useScene.getState().setRocket({ connected: true, code: "AB2C" });
+    for (let t = 0; t <= 2000; t += 50) handleRocketMessage(frameFor(0, [0, 0, 0], "s24fe"), base + 5000 + t);
+    expect(useScene.getState().flight.status).toBe("ready");
+    handleRocketMessage(frameFor(0, [0, 8, 0], "s24fe"), base + 8000);
+    for (let t = 0; t < 1000; t += 50) {
+      handleRocketMessage(frameFor(0, [0.2, 0.3, 0.1], "s24fe"), base + 8100 + t);
+    }
+    expect(useScene.getState().flight.status).toBe("ready");
+    for (let t = 0; t <= 400; t += 50) {
+      handleRocketMessage(frameFor(0, [0, 4, 0], "s24fe"), base + 10000 + t);
+    }
+    expect(useScene.getState().flight.status).toBe("flying");
+    for (let t = 0; t <= 2100; t += 50) {
+      handleRocketMessage(frameFor(180, [0, 0, 0], "s24fe"), base + 12000 + t);
+    }
+    expect(useScene.getState().flight.status).toBe("failed");
+    expect(useScene.getState().flight.outcome?.reason).toMatch(/upside down/);
   });
 
   it("H15 disconnect pauses flight when the phone owned pitch", () => {

@@ -1,7 +1,7 @@
 // lib/rocket/protocol.ts — pure validation of messages between the laptop and the phone rocket (11 Task 1).
 // Owner: Neel. The RocketMessage type lives in lib/types.ts (01). Nothing here touches the network.
-import { isSoundId, LISTEN_ERROR_REASONS } from "@/lib/types";
-import type { ListenErrorReason, Quat, RocketMessage, Vec3 } from "@/lib/types";
+import { isSoundId, LISTEN_ERROR_REASONS, SHELL_STATUS_LEVELS, SHELL_STATUS_WORDS } from "@/lib/types";
+import type { ListenErrorReason, Quat, RocketMessage, ShellStatusLevel, ShellStatusWord, Vec3 } from "@/lib/types";
 
 /** Pairing code alphabet: no 0/O, 1/I/L, so a kid can read it off the screen. Plan 11 Task 1. */
 export const PAIR_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
@@ -37,6 +37,18 @@ const isCacheKey = (x: unknown): x is string => typeof x === "string" && CACHE_K
 const isListenReason = (x: unknown): x is ListenErrorReason =>
   (LISTEN_ERROR_REASONS as readonly unknown[]).includes(x);
 
+const isShellWord = (x: unknown): x is ShellStatusWord =>
+  (SHELL_STATUS_WORDS as readonly unknown[]).includes(x);
+
+const isShellLevel = (x: unknown): x is ShellStatusLevel =>
+  (SHELL_STATUS_LEVELS as readonly unknown[]).includes(x);
+
+function optionalRate(raw: unknown): Vec3 | null | undefined {
+  if (raw === undefined) return undefined;
+  if (!isFiniteArray(raw, 3)) return null;
+  return [raw[0], raw[1], raw[2]];
+}
+
 /** Checks a raw relay payload. Returns a NEW clean message (only known fields) or null. Never throws. */
 export function decodeMessage(raw: unknown): RocketMessage | null {
   if (!isRecord(raw)) return null;
@@ -51,7 +63,9 @@ export function decodeMessage(raw: unknown): RocketMessage | null {
       const nq: Quat = [q[0] / qLen, q[1] / qLen, q[2] / qLen, q[3] / qLen];
       const nlin: Vec3 = [lin[0], lin[1], lin[2]];
       const ngrav: Vec3 = [grav[0], grav[1], grav[2]];
-      return { k: "frame", q: nq, lin: nlin, grav: ngrav };
+      const rate = optionalRate(raw.rate);
+      if (rate === null) return null;
+      return rate ? { k: "frame", q: nq, lin: nlin, grav: ngrav, rate } : { k: "frame", q: nq, lin: nlin, grav: ngrav };
     }
     case "sound": {
       if (!isSoundId(raw.id)) return null;
@@ -96,6 +110,16 @@ export function decodeMessage(raw: unknown): RocketMessage | null {
     }
     case "listenError":
       return isListenReason(raw.reason) ? { k: "listenError", reason: raw.reason } : null;
+    case "status": {
+      if (!isShellWord(raw.word) || !isShellLevel(raw.level)) return null;
+      if (raw.flash === undefined) return { k: "status", word: raw.word, level: raw.level };
+      if (typeof raw.flash !== "boolean") return null;
+      return raw.flash
+        ? { k: "status", word: raw.word, level: raw.level, flash: true }
+        : { k: "status", word: raw.word, level: raw.level };
+    }
+    case "calibrate":
+      return { k: "calibrate" };
     default:
       return null;
   }

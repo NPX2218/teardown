@@ -148,6 +148,8 @@ describe("protocol (11 Task 1)", () => {
       say: { k: "say", id: "a", cacheKey: "b", text: "c" }, stopSay: { k: "stopSay" }, said: { k: "said", id: "a" },
       listen: { k: "listen" }, stopListen: { k: "stopListen" }, heard: { k: "heard", text: "hi" },
       listenError: { k: "listenError", reason: "network" },
+      status: { k: "status", word: "ARMED", level: "ok" },
+      calibrate: { k: "calibrate" },
     };
     for (const k of ROCKET_MESSAGE_KINDS) expect(decodeMessage(samples[k])?.k).toBe(k);
   });
