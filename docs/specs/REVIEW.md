@@ -1,5 +1,9 @@
 # Final specification review — 2026-10-17
 
+## Presentation and motion handoff · 2026-10-17
+
+The required finish now includes an Anders-owned polished README, animated browser presentation, speaker notes and static PDF; Neel owns app animation, shared Motion setup/presets and design sign-off. The outputs share 00's SpaceX/xAI theme. README rendering is GitHub-native media/Markdown; Motion runs in the app/deck, never the physics authority. Installation, visuals, runtime motion, slide exports and rehearsal remain future acceptance checks, not work completed by this documentation update.
+
 ## Scope revision review · 2026-10-17
 
 The current handoff follows the reorganized product scope in [07](07-replay.spec.md) and its [build plan](../plans/07-replay.md). The 95/100 assessment and extracted-suite counts below describe the prior baseline. They are not a score or passing-test claim for the newly specified orbital game.

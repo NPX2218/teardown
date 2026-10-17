@@ -2,6 +2,45 @@
 
 **Scope revision — 2026-10-17:** the [current stage spec](../specs/12-demo-submission.spec.md) and [07 migration contract](../specs/07-replay.spec.md#6-cross-stage-migration-contract) supersede conflicting instructions below for three-mode navigation, orbital-run acceptance and revised demo timing. The former checkpoint/stars mission and standalone Engines/Emissions surfaces are retired. Follow the revised [07 execution plan](07-replay.md); do not build legacy snippets verbatim.
 
+## Required polish deliverables · 2026-10-17
+
+These are included in the build, with one accountable owner for each. They supersede older README/demo instructions below where those conflict with the current scope.
+
+| Deliverable | Owner | Required output |
+|---|---|---|
+| Polished repository README | Anders | `README.md`, `docs/media/*`; visual story, actual demo media, simple setup, phone pairing, architecture, honest feature status and credits |
+| General hackathon slideshow | Anders | `docs/presentation/story.md`, `app/presentation/page.tsx`, `components/presentation/*`, `public/presentation/*`, printable `docs/presentation/teardown.pdf` |
+| Shared design and app animation | Neel | Current 00 tokens plus reusable Motion presets/provider; polished app transitions, control feedback and reduced-motion behavior |
+| Visual acceptance | Neel reviews; Anders edits his deliverables | README GitHub render, deck projector/readability, source/claim consistency and cohesive SpaceX/xAI look |
+
+See [12's presentation/readme acceptance](../specs/12-demo-submission.spec.md#required-readme-presentation-and-motion-deliverables) and [00's motion policy](../specs/00-theme.spec.md#framer-motion--motion-for-react-requirement).
+
+### README execution checklist · Anders
+
+- [ ] Outline the product story early; finalize screenshots and claims only after the corresponding features work.
+- [ ] Create a strong cover/hero from the actual rocket/Earth experience, a short demo preview, and concise product copy. Use GitHub-supported Markdown/images; no page-wide custom CSS or JavaScript assumptions.
+- [ ] Explain Explore, historical replay and the playable orbit mission; embed emissions in the flight story and include QR phone control. Do not resurrect retired modes.
+- [ ] Include working demo/video/presentation links when available, setup commands actually verified, architecture diagram, data/estimate boundaries, provider/device requirements, and known limitations.
+- [ ] Show the exact author credit, model/media licences and separate student disclaimer. No invented adoption/impact/performance figures or placeholder live links.
+- [ ] Verify on GitHub-style desktop/mobile rendering; static images and alt text explain the same story if animation is unavailable.
+
+### Presentation execution checklist · Anders
+
+- [ ] Write an eight-slide core story plus optional technical appendix and speaker notes, designed for a short hackathon pitch and reusable general introduction. Rehearse against the actual event's confirmed time limit rather than assume a duration.
+- [ ] Build an animated browser deck at `/presentation`, separate from the three product-navigation modes, using the shared design tokens and Motion presets supplied by Neel.
+- [ ] Add previous/next, slide count, direct slide links, keyboard navigation and full-screen presentation; isolate deck keys from gameplay controls.
+- [ ] Add real screenshots/demo clips and an explicit transition into the live demo; keep a local recorded-demo fallback. Do not stage an unearned orbit success as live evidence.
+- [ ] Export a complete static PDF with one logical slide per page; verify it independently of animations, network and provider availability.
+- [ ] Check projector-scale readability, full-screen/browser behavior, reduced motion, media controls, pause/skip, and all frames of each staged reveal.
+- [ ] Obtain Neel's design review, reconcile README/deck/app claims and credits, and commit the final presentation assets before submission.
+
+### App motion execution checklist · Neel
+
+- [ ] Integrate and pin one tested Framer Motion / Motion for React dependency through the shared package/lockfile gate; do not install both legacy and current packages.
+- [ ] Supply shared presets/provider driven by 00's existing easing/duration tokens and one reactive reduced-motion preference.
+- [ ] Animate purposeful hero/copy entrances, mode/panel changes, guide disclosure, focus/selection feedback and result transitions; preserve instantaneous pilot input and telemetry.
+- [ ] Verify animation cancellation, focus, click/drag behavior, loading/exit/reset and runtime performance with the full 3D scene active.
+
 > **For agentic workers (Cursor Agent):** Tasks 1–2 are code/docs; Tasks 3–5 are people tasks. Steps use `- [ ]` checkboxes.
 
 **Goal:** A rehearsed 2-minute demo, a README that shows judges where Cursor, Grok and real data are used, and a Devpost submission in by 7:00 AM Sunday.

@@ -33,6 +33,8 @@ The engine-out build is deferred. Estimated emissions belong inside flight sessi
 
 [07](07-replay.spec.md) is the complete new flight contract and [its plan](../plans/07-replay.md) is the execution checklist. Six-gesture completion, coaching thresholds, reaction/soft-landing stars, standalone engine/emissions controls and their old demo timings are retired. Historical tests of those paths are not evidence that the new game works.
 
+**Required finish:** Anders owns a polished README and animated browser presentation with speaker notes/static PDF; Neel owns the shared visual system, Framer Motion / Motion for React setup and app animation, plus visual sign-off. [12](12-demo-submission.spec.md#required-readme-presentation-and-motion-deliverables) defines outputs/story/evidence; [00](00-theme.spec.md#framer-motion--motion-for-react-requirement) defines animation and SpaceX/xAI fidelity. These are planned deliverables, not artifacts created in this docs pass.
+
 ## Baseline contracts and current overrides
 
 | Area | Decision |

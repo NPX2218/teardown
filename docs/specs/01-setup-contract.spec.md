@@ -9,6 +9,8 @@ All code below has been type-checked under `strict` and the tests run green (29 
 
 **Theme:** colours, fonts, spacing and z-layers come from `docs/specs/00-theme.spec.md`. 01 writes `app/layout.tsx` and `app/globals.css` from that spec verbatim; no 01 code hard-codes a colour. Footer line: **"Student project. Not affiliated with SpaceX or xAI."**
 
+**Motion dependency extension — 2026-10-17:** Neel's scaffold/integration step also selects and pins one tested Motion for React package (`motion`, imports from `motion/react`) with the current React 18 stack. The package and lockfile have one writer; Anders consumes the shared Motion provider/presets for the browser presentation. Follow 00's motion policy and verify compatible peer dependencies/client boundaries. The old dependency list below is extended by this requirement; no package installation or version compatibility test is claimed by this docs update.
+
 ## Conventions every later spec follows
 
 | Rule | Detail |

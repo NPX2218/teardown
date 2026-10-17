@@ -15,6 +15,31 @@
 | New run / reset | Cancel the active physics loop and pending run callbacks; release keyboard/touch/phone inputs; clear or reset the run's speech, captions, looping audio, emissions accumulation, trail, result overlay, and pending async updates. A run identifier/generation prevents late old-run work mutating a new run. Reset does not preserve a prior success or resume a disconnected phone automatically. |
 | Footer / credits | Use the exact footer text **"Made by Neel Bansal and Anders Haroldson"** as specified in 00/01. Preserve the model's Stanley Creative attribution, CC BY 4.0 license, and required link. Keep “Student project. Not affiliated with SpaceX or xAI.” separately. Public source/asset credits remain distinct from the authorship footer. |
 
+### Required README, presentation and motion deliverables
+
+**Ownership:** Anders is the single writer for the polished `README.md`, its media, and the hackathon presentation. Neel owns the shared visual system and app animation, and reviews the README/deck's visual quality without concurrently editing Anders's files. These deliverables are required build work, not an optional post-submission task. Their execution checklist is in [plan 12](../plans/12-demo-submission.md#required-polish-deliverables--2026-10-17).
+
+**README:** a clean, visual product handoff that looks good in GitHub's own renderer: a strong actual-product hero, brief problem/value statement, short demo media, three current modes, phone-controller flow, estimated emissions within flight, clear setup, architecture, verified feature status, limitations and source/asset credits. Custom CSS/Framer Motion cannot power GitHub Markdown; use intentional stills and a lightweight demo preview with a static alternative/alt text. Screenshots must show the implemented experience, not an unlabeled target mockup. Working demo/deck/video links replace placeholders only when verified. The exact team credit is “Made by Neel Bansal and Anders Haroldson”. The old rigid README-section/string tests must adapt to this content contract, not force obsolete checkpoint/stars copy or engine-out sections.
+
+**Presentation:** an animated, editable browser deck at `/presentation`, not another product-navigation mode. Anders owns `app/presentation/page.tsx`, `components/presentation/*`, `docs/presentation/story.md` and `public/presentation/*`. Use the shared Motion presets and 00 theme. Provide speaker notes, explicit navigation, current slide/count, direct slide links and a printable static PDF at `docs/presentation/teardown.pdf`. Browser presentation is the animated version; PDF is its reliable static backup. No PowerPoint output is required by this scope.
+
+| Core slide | Purpose / evidence |
+|---|---|
+| 1 · Teardown | Title, motto, one striking rocket/Earth visual and exact team credit |
+| 2 · The problem | Why watching launches does not explain rocket engineering; no unsupported audience/impact statistics |
+| 3 · Explore | Real model, selected parts, exploded view; show actual app capture |
+| 4 · Fly it yourself | Globe, launchpad, pitch/throttle, meaningful crash/retry and computed orbit objective; transition to live demo |
+| 5 · Phone controller | QR → permission → calibration → continuous tilt; real phone photo/demo when available, local controls as fallback |
+| 6 · Learn from flight | Sourced historical milestones versus simulated state; compact estimated emissions and their limits |
+| 7 · How it works | Clear architecture, guide/voice roles and the data/physics boundary; distinguish live providers from local fallback |
+| 8 · Close / try it | One clear value statement, tested demo/repository links, authors and credits; measured results only |
+
+Appendix slides may explain sources, orbit math, assumptions, trade-offs and roadmap. Deferred engine-out, docking, landing gameplay and planet travel are never presented as shipped. Do not guess judge criteria, event duration or results. Notes include handoffs between speakers, live-demo cues and a local recorded-demo fallback; rehearsal measures the actual complete presentation.
+
+**Animation/visual acceptance:** apply [00's Framer Motion policy](00-theme.spec.md#framer-motion--motion-for-react-requirement). SpaceX-style full-bleed compositions, white condensed headings, black backgrounds, quiet xAI reading surfaces and restrained outline controls carry across app/deck/media. Use staged diagrams/short reveals to explain, not decorative bounce, noise, spinning content or slide templates full of cards. Keep live-flight controls responsive; no animation drives physics or final results. Slides remain understandable with reduced motion and in PDF. No presentation renderer, animation package or new media is implemented in this specification pass.
+
+**Required evidence before submission:** README renders correctly at desktop/mobile; screenshots match real features; setup/links work; deck navigation and all reveal states work; large-screen text is readable; print/PDF includes every final slide state with no clipping; local demo media works without providers; reduced motion and animation cancellation pass; Neel signs off the shared visual direction; measured rehearsal timing fits the confirmed event slot. No success claim until that evidence exists.
+
 ### Retired instructions and verification claims
 
 The historical implementation snippets and scratch compile/test counts below target the old checkpoint/stars mission. Their `checkpointsFor`, `completeCheckpoint`/`Space`, `decideMove`, old mission waiting state, engine-panel imports/reset, `2` shortcut, checkpoint demo row, engine-out README table, and README test R4 must not be used as current-game implementation or acceptance. The 70-second mission row and old guided-mission timing rationale are superseded. Reusable kiosk, activity, narration-cancellation, licensing, and reset concepts still need adaptation to 07's current runtime seam before implementation.

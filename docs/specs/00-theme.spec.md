@@ -25,6 +25,24 @@ This section supersedes older surface maps, coloured-accent examples and mode de
 
 Use the official [Grok Bot design article](https://x.ai/news/designing-grok-bot) as the visual reference and check the current [brand guidelines](https://x.ai/legal/brand-guidelines) when selecting an asset. A public image is not automatically a reusable asset; record the chosen file/source/permission, or create an original guide character with the same restrained corner-launcher role. The mascot is optional decoration around the working guide, never a separate pet system, chat service or game objective. No mascot asset has been copied or implemented in this documentation pass.
 
+### Framer Motion / Motion for React requirement
+
+Use Framer Motion's current Motion for React library for purposeful DOM transitions in the app and animated browser presentation. The integration owner (Neel) selects and pins one tested package/version in 01's package/lockfile step; the current official path is `motion` with imports from `motion/react`. Do not install it alongside a duplicate `framer-motion` runtime. Follow the official [React/Next.js installation guide](https://motion.dev/docs/react-installation); retain the existing compatible React stack and verify client boundaries rather than upgrading framework majors to add animation.
+
+Neel owns a shared `components/ui/MotionProvider.tsx` and `lib/ui/motion.ts` preset module, consumed by Anders's presentation. Map the current `--ease-ui`, `--ease-out`, `--ease-overlay`, `--dur-fast`, `--dur` and `--dur-slow` tokens to one documented preset source so the app/deck do not drift. Motion animates DOM opacity/transforms/layout; React Three Fiber remains the scene renderer and the pure flight helper remains the only physics authority. Never animate the same property with CSS, Motion and a frame loop at once.
+
+| Surface | Intended motion |
+|---|---|
+| Explore / navigation | Restrained heading entrances, active-state feedback and mode/context transitions; no camera fighting the visitor |
+| Details / guide / mascot | Short, cancellable reveal/exit; focus restored on close; mascot feedback reflects actual service state |
+| Mission HUD / results | Calm readout/result transitions; controls react immediately, telemetry is not delayed/spring-interpolated into false values |
+| Presentation | Manual next/previous slide transitions, staged architecture/path explanations and optional playable demo media; never auto-advance past the speaker |
+| README | Actual screenshots and a short preview GIF/video link; static/alt alternatives. GitHub Markdown does not execute Motion or use our app stylesheet. |
+
+Reuse the existing reactive motion preference in §6.1 and apply the corresponding Motion provider policy; do not create conflicting per-component preference listeners. Follow the [official reduced-motion guidance](https://motion.dev/docs/react-accessibility). In reduced-motion mode remove parallax, large transforms, camera fly-throughs and loops; retain comprehensible static states/fades and direct flight feedback. Animation may never block steering, steal focus, postpone a state change, conceal a crash or award success. Exit/reset cancels pending reveals/callbacks, and the inactive deck/scene stops decorative work.
+
+The result should feel polished through composition, typography, spacing and coherent transitions while keeping the measured SpaceX/xAI visual language. No new bright brand colours, generic SaaS card grids, unnecessary scroll-jacking or decorative motion. Verify desktop/mobile, projector-sized deck, print/static fallback and full-scene performance before sign-off. This is a future implementation requirement, not an animation implementation claim.
+
 ## 1. What was measured
 
 Public pages, read on 2026-10-16. spacex.com was read from its published HTML and stylesheet (`styles.*.css`) plus computed styles in a browser. x.ai blocks plain downloads (Cloudflare challenge), so it was read only through computed styles and `:root` variables in a browser. Nothing was downloaded into the repo. All code below is written fresh from the values, not pasted.

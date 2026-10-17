@@ -30,6 +30,7 @@ After the shared 01 contract gate, lanes develop in parallel against typed seams
 | 06 | [Mission data](06-mission-data.md) | Anders | 01 | A real mission JSON | Sat 1:00 PM |
 | 09 | [Grok Imagine](09-imagine.md) | Anders | 01 | "Show in action" returns an image | Sat 3:00 PM |
 | 13 | [Integrated flight emissions](../specs/13-emissions.spec.md) | Anders | 01, 07 readout seam | Estimated CO₂ inside historical/reference/custom flights; no standalone mode | Re-plan |
+| 12 | [README + animated presentation](12-demo-submission.md#required-polish-deliverables--2026-10-17) | Anders; Neel design review | Shared theme/Motion presets; real app evidence for final assets | Polished README, browser deck, notes and static PDF | Before submission |
 | **Both** | | | | | |
 | 12 | [Demo + submission](12-demo-submission.md) | Both | all | Devpost submitted | Sun 7:00 AM |
 
@@ -55,12 +56,12 @@ After the shared 01 contract gate, lanes develop in parallel against typed seams
 | Owner | Files |
 |---|---|
 | **Neel · 3D + rocket** | `app/rocket/*`, `components/viewer/*` (incl. `ViewerSlot`), `components/replay/*` (incl. `MissionSlot`), `components/ui/*` (incl. `PairSlot`), `lib/explode.ts`, `lib/viewer/*`, `lib/replay.ts`, `lib/flight.helpers.ts`, `components/flight/*`, `lib/gestures.ts`, `lib/rocket/*` |
-| **Anders · AI + data + server** | `app/api/*`, `lib/grok.ts`, `lib/timeout.ts`, `lib/agent/*`, `lib/voice/*`, `lib/imagine/*`, `lib/parts.ts`, `lib/missions.ts`, `lib/emissions*.ts`, `components/voice/*` (incl. `VoiceSlot`), `components/imagine/*`, `components/emissions/*`, `data/*`, `scripts/*`, `public/audio/*`, `public/sounds/*`, `public/imagine/*`, `README.md` |
+| **Anders · AI + data + server** | `app/api/*`, `lib/grok.ts`, `lib/timeout.ts`, `lib/agent/*`, `lib/voice/*`, `lib/imagine/*`, `lib/parts.ts`, `lib/missions.ts`, `lib/emissions*.ts`, `components/voice/*` (incl. `VoiceSlot`), `components/imagine/*`, `components/emissions/*`, `data/*`, `scripts/*`, `public/audio/*`, `public/sounds/*`, `public/imagine/*`, `README.md`, `app/presentation/*`, `components/presentation/*`, `docs/presentation/*`, `public/presentation/*`, `docs/media/*` |
 | **Shared · Neel integration owner** | `lib/types.ts`, `lib/store.ts`, `lib/engines.ts`, `app/page.tsx` (frozen after 01), `.cursor/rules/` |
 
 Shared files have one active writer: Neel as integration owner. Anders submits interface requirements and reviews deltas; do not edit these files concurrently.
 
-Also: Neel owns `app/layout.tsx` and `app/globals.css` (fonts and style tokens; Anders uses the tokens). Each person owns the tests for their own files in `lib/__tests__/` and their own notes (`docs/xai-notes.md` Anders, `docs/realtime-notes.md` Neel).
+Also: Neel owns shared Motion presets/provider (`lib/ui/motion.ts`, `components/ui/MotionProvider.tsx`), and `app/layout.tsx` and `app/globals.css` (fonts and style tokens; Anders uses the tokens). Each person owns the tests for their own files in `lib/__tests__/` and their own notes (`docs/xai-notes.md` Anders, `docs/realtime-notes.md` Neel).
 
 ## Global Constraints
 
