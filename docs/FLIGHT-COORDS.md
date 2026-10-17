@@ -62,7 +62,7 @@ Free flight is the default. Phone or laptop pitch steers `stepFlight`. Nothing h
 
 Mission mode follows `missionTrackId` on the store. The field is not named `mission`. `lib/replay.ts` and `lib/flight/reference.ts` read `mission.reference`.
 
-When any sample has a null altitude or a null velocity, mission mode tracks milestones and the clock only. `FlightGuide.corridor` stays false. The note is `Reference trajectory unavailable`. No ghost, no corridor edges, and no autopilot. A missing number is not replaced with the classroom profile.
+When any sample has a null altitude or a null velocity, mission mode tracks milestones and the clock only. `FlightGuide.corridor` stays false. The note is `Reference trajectory unavailable`. No ghost, no corridor edges, and no autopilot. A missing number is not replaced with the classroom profile. Sentinel-6 stays in that state. The practice mission is the exception that already has numbers: a PRACTICE corridor recorded by flying the classroom profile, labelled simulated practice reference, not historical.
 
 When every sample has altitude and velocity, the ghost and the altitude ribbon are drawn by `GuidanceMarks` (a sibling of `Earth()`, not inside it). The player still steers. With no phone connected, `autopilotInput` follows the reference pitch and speed. The HUD shows altitude, speed, and pitch error, a target-pitch line, and the correction cue.
 

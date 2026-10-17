@@ -1,25 +1,22 @@
 # Smoke
 
-Throwaway merge of the guide order, then a paired laptop and phone. The app was not edited. Harness fixes stay in `e2e/smoke/` and `scripts/smoke/`.
+Run on 17 October 2026 against current `main`. Checks ran in the app tree. Playwright used laptop 1440×900 and phone 780×360 (Galaxy S24 FE), the local relay, pair code `ABCD`, and `scripts/sim-phone.ts --mount s24fe`. Pictures and short videos are under `/opt/cursor/artifacts/smoke-main/`.
 
-Run on 17 October 2026 against the full stack, including the PRs that have since landed on `main` (`#8`, `#9`, `#10`, `#12`). Tips at the time: `#13` `7c0cfbc`, `#16` `39f1c99`, `#7` `20c5ae5`, plus the style follow-ups on `#1`, `#3`, and `#4`. `#18` opened after this run.
+`scripts/smoke/merge-all.sh` is for unmerged stacks. This run did not use it.
 
-## merge-all
-
-`scripts/smoke/merge-all.sh` in a throwaway worktree. No conflicts. `#11` was already inside `#13`. The voice glue was applied in `components/ui/GuideLauncher.tsx` (mount effect only).
+## Checks
 
 | Check | Result |
 | --- | --- |
-| tsc | pass |
+| tsc --noEmit | pass |
 | lint | pass |
-| vitest | 91 files, 695 passed, 1 skipped (696) |
+| vitest | 92 files, 703 passed, 1 skipped (704) |
 | next build | pass |
+| Playwright `e2e/smoke/` | 9 passed |
 
 The skip is in `lib/__tests__/missions.test.ts`. It waits on a Launch Library 2 RTLS file that is not in the repo.
 
 ## Scenarios
-
-Laptop 1440×900, phone 780×360 (Galaxy S24 FE). Local relay, pair code `ABCD`, `scripts/sim-phone.ts --mount s24fe`. Pictures and short videos are under `/opt/cursor/artifacts/smoke/`.
 
 | Scenario | Result | Evidence |
 | --- | --- | --- |
@@ -28,19 +25,17 @@ Laptop 1440×900, phone 780×360 (Galaxy S24 FE). Local relay, pair code `ABCD`,
 | Tilt steering | pass | `tilt-laptop.png`, `tilt-phone.png`, `tilt-*.webm` |
 | Flick to stage | pass | `flick-laptop.png`, `flick-phone.png`, `flick-*.webm` |
 | Nose-down abort | pass | `abort-laptop.png`, `abort-phone.png`, `abort-*.webm` |
-| Free-flight crash | pass | `crash-laptop.png`, `crash-phone.png`, `crash-*.webm`. Outcome: tower strike. |
-| Mission drift | fail | `drift-laptop.png`, `drift-phone.png`, `drift-*.webm` |
+| Free-flight crash | pass | `crash-laptop.png`, `crash-phone.png`, `crash-*.webm`. Crashed outcome on screen. |
+| Mission drift | pass | `drift-warning-laptop.png`, `drift-warning-hud.png` ("Drifting off track"), `drift-return-laptop.png`, `drift-return-hud.png` ("Return to trajectory"), `drift-failed-hud.png`, `drift-laptop.png` ("Mission failed: off nominal") |
 | Sentinel-6 milestones | pass | `sentinel-laptop.png`, `sentinel-phone.png`, `sentinel-*.webm`. Milestones include liftoff, max-Q, staging, MECO, stage sep. The note "Reference trajectory unavailable" is on screen. |
 | Mascot voice states | pass | `mascot-idle.png`, `mascot-listening.png`, `mascot-user-speaking.png`, `mascot-thinking.png`, `mascot-speaking.png`, `mascot-phone.png`, `mascot-*.webm` |
 
-Free-flight phone lift, tilt, flick, and abort all ran from the simulator. The short-hop crash used the on-screen Launch button and the laptop throttle, then the phone tipped to 85°. A lift impulse alone takes throttle at about 12% and the short hop never leaves the pad, so a tilt-only replay cannot crash. Mission mode was started with the on-screen Launch button so the clock could run. Warp 8 was on.
+Free-flight phone lift, tilt, flick, and abort ran from the simulator. The short-hop crash used the on-screen Launch button and the laptop throttle, then the phone tipped to 85°. Mission drift launched from the screen with the phone held upright and time at 4×. The PRACTICE corridor climbs while the rocket stays on the pad, so the HUD shows "Drifting off track", then "Return to trajectory", then "Mission failed: off nominal" about 5 simulated seconds after the red warning. Sentinel-6 was also launched from the screen, with warp 8×.
 
-## App bug
+## Fixes in this run
 
-**Mission mode cannot warn or fail for drift.**
+The practice mission now has a PRACTICE corridor: altitude, downrange, speed, and pitch recorded by flying `CLASSROOM_ORBIT_PROFILE` through `stepFlight`. The label is simulated practice reference, not historical. Sentinel-6 is still published milestone times only, and mission mode still shows "Reference trajectory unavailable" for that flight.
 
-- Files: `data/missions/practice.json`, `data/missions/sentinel-6-michael-freilich.json` (every `altKm` / `velMs` / `pitchDeg` is null), `lib/flight/reference.ts` (`referenceHasKinematics`), `lib/flight/guidance.ts` (the corridor step runs only when that is true).
-- Repro: pair, Your mission, Mission, Practice sample, Launch, warp 8×, hold a steep phone tilt. The HUD shows "Reference trajectory unavailable". It never shows "Drifting off track", "Return to trajectory", or "Mission failed: off nominal". Height stays 0.00 km in the screenshot because throttle was still 0; the missing banner does not depend on that. With no numeric reference, `guidance.ts` forces the warning level back to nominal.
-- Suggested fix: check in one labelled practice corridor with numeric altitude and speed samples, or the drift banners never run in the demo. Do not invent a Sentinel-6 path. That record is published times only.
+The flight HUD mounts `components/emissions/EmissionsSlot`. During the practice flight the page does not say "Estimate unavailable". The readout is Anders's carbon-dioxide line.
 
-No other app bug showed up in this run. The flight HUD still says "Estimate unavailable" / "Combustion factor is not loaded" until the emissions import in the guide is swapped. That gap is already listed there.
+`GuideLauncher` calls `bindVoiceActivity(onVoiceState)` from its mount effect. Grok speech stays on the laptop. `lib/rocket/commands.ts` still drops `say` and `stopSay`. The phone plays rocket sounds and vibration only.

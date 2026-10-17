@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
+import { PagesAssetPrefix, PagesPreviewNote } from "@/components/pages/PagesBuild";
 import { MotionProvider } from "@/components/ui/MotionProvider";
 import { Footer } from "@/components/ui/Footer";
 import "./globals.css";
@@ -34,7 +35,11 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable} ${dDin.variable}`}>
+      <head>
+        <PagesAssetPrefix />
+      </head>
       <body>
+        <PagesPreviewNote />
         <MotionProvider>
           {children}
           <Footer />

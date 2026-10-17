@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { MISSIONS } from "@/data/missions/index";
 import {
   BREAKUP_REASON,
@@ -26,9 +26,12 @@ import {
   referencePoint,
   sampleReference,
 } from "@/lib/flight/reference";
-import { EARTH_RADIUS_M } from "@/lib/flight.helpers";
+import { CLASSROOM_LAUNCH } from "@/lib/flight/classroom";
+import { EARTH_RADIUS_M, createFlight, stepFlight } from "@/lib/flight.helpers";
 import { getPublishedFuelReadout, registerFuelReadoutPublisher, resetFuelReadoutAdapter } from "@/lib/flight/fuel-readout";
+import { CLASSROOM_ORBIT_PROFILE, inputAt } from "@/lib/flight/profiles";
 import { replayDataCaption, referenceTrajectoryNote } from "@/lib/replay";
+import { recordPracticeCorridor } from "@/scripts/record-practice-corridor";
 import { useScene } from "@/lib/store";
 import type { Mission, MissionReference } from "@/lib/types";
 
@@ -38,10 +41,6 @@ beforeEach(() => {
   useScene.setState(initial, true);
   resetFuelReadoutAdapter();
   registerFuelReadoutPublisher(null);
-});
-
-afterEach(() => {
-  delete MISSIONS["sentinel-6-michael-freilich"];
 });
 
 function sample(patch: Partial<AnomalySample> = {}): AnomalySample {
@@ -227,20 +226,77 @@ describe("mission reference", () => {
     };
     expect(replayDataCaption(historical)).toBe("Data: ESA launch timeline");
     expect(replayDataCaption(MISSIONS.practice)).toBe("Data: Practice sample");
-    expect(referenceTrajectoryNote(MISSIONS.practice)).toBe("Reference trajectory unavailable");
+    expect(referenceTrajectoryNote(MISSIONS.practice)).toBeNull();
+    const sentinel = MISSIONS["sentinel-6-michael-freilich"];
+    expect(referenceHasKinematics(sentinel.reference)).toBe(false);
+    expect(referenceTrajectoryNote(sentinel)).toBe("Reference trajectory unavailable");
+    for (const row of sentinel.reference?.samples ?? []) {
+      expect(row.altKm).toBeNull();
+      expect(row.velMs).toBeNull();
+      expect(row.pitchDeg ?? null).toBeNull();
+    }
     const withPath: Mission = { ...historical, reference: KINEMATIC };
     expect(referenceTrajectoryNote(withPath)).toBeNull();
   });
 
-  it("enables Sentinel-6 only when a historical mission is registered", () => {
-    expect(historicalMissions(MISSIONS)).toHaveLength(0);
-    MISSIONS["sentinel-6-michael-freilich"] = {
-      ...MISSIONS.practice,
-      id: "sentinel-6-michael-freilich",
-      name: "Sentinel-6 Michael Freilich",
-      kind: "historical",
-    };
+  it("lists the registered Sentinel-6 record and does not treat practice as historical", () => {
     expect(historicalMissions(MISSIONS).map((mission) => mission.id)).toEqual(["sentinel-6-michael-freilich"]);
+    expect(historicalMissions({ practice: MISSIONS.practice })).toEqual([]);
+  });
+
+  it("checks in the PRACTICE corridor recorded from the classroom orbit profile", () => {
+    const fresh = recordPracticeCorridor();
+    expect(fresh.outcomeKind).toBe("orbit");
+    const reference = MISSIONS.practice.reference;
+    expect(reference?.id).toBe("practice-corridor");
+    expect(reference?.interpolated).toBe(true);
+    expect(reference?.label.toLowerCase()).toContain("simulated practice reference, not historical");
+    expect(referenceHasKinematics(reference)).toBe(true);
+    const kinematics = (reference?.samples ?? []).map((row) => ({
+      t: row.t,
+      altKm: row.altKm,
+      downrangeKm: row.downrangeKm,
+      velMs: row.velMs,
+      pitchDeg: row.pitchDeg,
+    }));
+    expect(kinematics).toEqual(fresh.samples.map((row) => ({
+      t: row.t,
+      altKm: row.altKm,
+      downrangeKm: row.downrangeKm,
+      velMs: row.velMs,
+      pitchDeg: row.pitchDeg,
+    })));
+
+    let body = createFlight(CLASSROOM_LAUNCH);
+    let guide = emptyGuide("mission");
+    const ctx = {
+      playMode: "mission" as const,
+      reference: reference ?? null,
+      events: [] as { t: number; id: string }[],
+      endTimeS: null,
+    };
+    let steps = 0;
+    while (!body.outcome && steps < 900 * 60) {
+      steps += 1;
+      body = stepFlight(body, inputAt(CLASSROOM_ORBIT_PROFILE, body.simulatedTimeS), 1 / 60);
+      const altM = Math.hypot(body.x, body.y) - EARTH_RADIUS_M;
+      const stepped = stepGuide(guide, guideSample({
+        t: body.simulatedTimeS,
+        altM,
+        speedMs: Math.hypot(body.vx, body.vy),
+        pitchRad: body.pitchRad,
+        throttle: body.throttle,
+        x: body.x,
+        y: body.y,
+        airborne: body.airborne,
+        existing: body.outcome,
+      }), ctx);
+      guide = stepped.guide;
+      expect(guide.warningLevel).toBe("nominal");
+      expect(stepped.outcome?.reason).not.toBe("Mission failed: off nominal");
+    }
+    expect(body.outcome?.kind).toBe("orbit");
+    expect(guide.corridor).toBe(true);
   });
 });
 
@@ -376,18 +432,42 @@ describe("flight loop fuel and mission degrade", () => {
     expect(getPublishedFuelReadout()?.consumedRp1Kg?.[1]).toBeGreaterThan(0);
   });
 
-  it("mission mode with the practice record does not invent a corridor", () => {
+  it("practice mission shows drift warnings, then fails off nominal after about five seconds", () => {
+    expect(referenceHasKinematics(MISSIONS.practice.reference)).toBe(true);
     useScene.getState().setPlayMode("mission");
     useScene.getState().setMissionTrack("practice");
     const started = useScene.getState().startFlight("classroom");
+    expect(started.ok).toBe(true);
     const runId = (started.data as { runId: string }).runId;
     useScene.getState().launchFlight();
-    useScene.getState().setFlightInput({ throttle: 1 }, "local", runId);
-    useScene.getState().advanceFlight(0.2);
-    const state = useScene.getState();
-    expect(state.guidanceNote).toBe("Reference trajectory unavailable");
-    expect(state.flight.guide?.corridor).toBe(false);
-    expect(state.flight.outcome).toBeNull();
-    expect(state.warningLevel).toBe("nominal");
+    useScene.getState().setRocket({ connected: true, code: "ABCD" });
+    expect(useScene.getState().setFlightAxisOwner("pitch", "phone").ok).toBe(true);
+    expect(useScene.getState().setFlightInput({ pitchRad: 0, throttle: 0, calibrated: true }, "phone", runId).ok).toBe(true);
+    useScene.getState().setFlightWarp(8);
+
+    const seen: string[] = [];
+    let cautionT: number | null = null;
+    let warningT: number | null = null;
+    let failT: number | null = null;
+    for (let i = 0; i < 800 && failT === null; i += 1) {
+      useScene.getState().advanceFlight(0.1);
+      const flight = useScene.getState().flight;
+      const banner = flight.guide?.banner ?? null;
+      if (banner && seen[seen.length - 1] !== banner) seen.push(banner);
+      if (banner === "Drifting off track" && cautionT === null) cautionT = flight.simulatedTimeS;
+      if (banner === "Return to trajectory" && warningT === null) warningT = flight.simulatedTimeS;
+      if (flight.guide?.warningLevel === "failed") failT = flight.simulatedTimeS;
+    }
+
+    expect(seen).toEqual(["Drifting off track", "Return to trajectory", "Mission failed: off nominal"]);
+    expect(cautionT).not.toBeNull();
+    expect(warningT).not.toBeNull();
+    expect(failT).not.toBeNull();
+    expect((failT ?? 0) - (warningT ?? 0)).toBeGreaterThan(4.5);
+    expect((failT ?? 0) - (warningT ?? 0)).toBeLessThan(5.5);
+    expect(useScene.getState().flight.outcome?.reason).toBe("Mission failed: off nominal");
+    expect(useScene.getState().flight.guide?.corridor).toBe(true);
+    expect(useScene.getState().guidanceNote).toBeNull();
+    expect(referenceTrajectoryNote(MISSIONS["sentinel-6-michael-freilich"])).toBe("Reference trajectory unavailable");
   });
 });

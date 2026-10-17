@@ -2,37 +2,1805 @@
   "id": "practice",
   "name": "Practice mission (sample data)",
   "date": "2020-03-18",
-  "booster": { "serial": "SAMPLE", "flight": 1 },
+  "booster": {
+    "serial": "SAMPLE",
+    "flight": 1
+  },
   "landing": "droneship",
   "kind": "practice",
   "label": "Practice sample. Not a real flight.",
   "continuousTelemetry": false,
   "source": "https://spaceflightnow.com/2020/03/15/timeline-for-falcon-9-launch-of-starlink-satellites-3/",
   "reference": {
-    "id": "practice-sample",
-    "label": "Practice sample. Not Sentinel-6. Not a measured path. Kinematics are null on purpose.",
-    "interpolated": false,
+    "id": "practice-corridor",
+    "label": "PRACTICE corridor. Simulated practice reference, not historical. Not Sentinel-6.",
+    "interpolated": true,
+    "method": "Flew CLASSROOM_ORBIT_PROFILE through stepFlight on the classroom scenario and recorded altitude, downrange, speed, and commanded pitch every 2 seconds until the orbit outcome. Simulated practice reference, not historical.",
     "samples": [
-      { "t": 0, "altKm": null, "downrangeKm": null, "velMs": null, "pitchDeg": null, "event": "liftoff", "source": "practice-starlink-sfn", "quality": "practice-placeholder" },
-      { "t": 72, "altKm": null, "downrangeKm": null, "velMs": null, "pitchDeg": null, "event": "max-Q", "source": "practice-starlink-sfn", "quality": "practice-placeholder" },
-      { "t": 152, "altKm": null, "downrangeKm": null, "velMs": null, "pitchDeg": null, "event": "MECO", "source": "practice-starlink-sfn", "quality": "practice-placeholder" },
-      { "t": 156, "altKm": null, "downrangeKm": null, "velMs": null, "pitchDeg": null, "event": "stage sep", "source": "practice-starlink-sfn", "quality": "practice-placeholder" },
-      { "t": 163, "altKm": null, "downrangeKm": null, "velMs": null, "pitchDeg": null, "event": "SECO-start", "source": "practice-starlink-sfn", "quality": "practice-placeholder" },
-      { "t": 190, "altKm": null, "downrangeKm": null, "velMs": null, "pitchDeg": null, "event": "fairing", "source": "practice-starlink-sfn", "quality": "practice-placeholder" },
-      { "t": 419, "altKm": null, "downrangeKm": null, "velMs": null, "pitchDeg": null, "event": "entry", "source": "practice-starlink-sfn", "quality": "practice-placeholder" },
-      { "t": 515, "altKm": null, "downrangeKm": null, "velMs": null, "pitchDeg": null, "event": "landing", "source": "practice-starlink-sfn", "quality": "practice-placeholder" },
-      { "t": 532, "altKm": null, "downrangeKm": null, "velMs": null, "pitchDeg": null, "event": "insertion", "source": "practice-starlink-sfn", "quality": "practice-placeholder" }
+      {
+        "t": 0,
+        "altKm": 0,
+        "downrangeKm": 0,
+        "velMs": 0,
+        "pitchDeg": 0,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 2,
+        "altKm": 0.0266,
+        "downrangeKm": 0,
+        "velMs": 26.46,
+        "pitchDeg": 0,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 4,
+        "altKm": 0.1068,
+        "downrangeKm": 0,
+        "velMs": 53.61,
+        "pitchDeg": 0,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 6,
+        "altKm": 0.2419,
+        "downrangeKm": 0,
+        "velMs": 81.42,
+        "pitchDeg": 0,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 8,
+        "altKm": 0.4334,
+        "downrangeKm": 0,
+        "velMs": 109.9,
+        "pitchDeg": 0,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 10,
+        "altKm": 0.6824,
+        "downrangeKm": 0,
+        "velMs": 139.04,
+        "pitchDeg": 0,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 12,
+        "altKm": 0.9904,
+        "downrangeKm": 0,
+        "velMs": 168.82,
+        "pitchDeg": 0,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 14,
+        "altKm": 1.3586,
+        "downrangeKm": 0,
+        "velMs": 199.26,
+        "pitchDeg": 0,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 16,
+        "altKm": 1.7884,
+        "downrangeKm": 0,
+        "velMs": 230.34,
+        "pitchDeg": 0,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 18,
+        "altKm": 2.281,
+        "downrangeKm": 0,
+        "velMs": 262.09,
+        "pitchDeg": 0,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 20,
+        "altKm": 2.8378,
+        "downrangeKm": 0,
+        "velMs": 294.53,
+        "pitchDeg": 0,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 22,
+        "altKm": 3.4601,
+        "downrangeKm": 0,
+        "velMs": 327.67,
+        "pitchDeg": 0,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 24,
+        "altKm": 4.1495,
+        "downrangeKm": 0,
+        "velMs": 361.56,
+        "pitchDeg": 0,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 26,
+        "altKm": 4.9074,
+        "downrangeKm": 0.0004,
+        "velMs": 396.22,
+        "pitchDeg": 1.805,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 28,
+        "altKm": 5.7355,
+        "downrangeKm": 0.004,
+        "velMs": 431.73,
+        "pitchDeg": 1.805,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 30,
+        "altKm": 6.6355,
+        "downrangeKm": 0.0112,
+        "velMs": 468.14,
+        "pitchDeg": 1.805,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 32,
+        "altKm": 7.6092,
+        "downrangeKm": 0.0235,
+        "velMs": 505.5,
+        "pitchDeg": 3.317,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 34,
+        "altKm": 8.6586,
+        "downrangeKm": 0.0428,
+        "velMs": 543.93,
+        "pitchDeg": 3.317,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 36,
+        "altKm": 9.7858,
+        "downrangeKm": 0.0695,
+        "velMs": 583.47,
+        "pitchDeg": 5.162,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 38,
+        "altKm": 10.9931,
+        "downrangeKm": 0.1068,
+        "velMs": 624.23,
+        "pitchDeg": 5.162,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 40,
+        "altKm": 12.2828,
+        "downrangeKm": 0.1554,
+        "velMs": 666.35,
+        "pitchDeg": 5.162,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 42,
+        "altKm": 13.6576,
+        "downrangeKm": 0.218,
+        "velMs": 709.77,
+        "pitchDeg": 7.363,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 44,
+        "altKm": 15.1201,
+        "downrangeKm": 0.2973,
+        "velMs": 754.78,
+        "pitchDeg": 7.363,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 46,
+        "altKm": 16.6734,
+        "downrangeKm": 0.3945,
+        "velMs": 801.34,
+        "pitchDeg": 9.941,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 48,
+        "altKm": 18.32,
+        "downrangeKm": 0.5145,
+        "velMs": 849.59,
+        "pitchDeg": 9.941,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 50,
+        "altKm": 20.0634,
+        "downrangeKm": 0.6587,
+        "velMs": 899.76,
+        "pitchDeg": 9.941,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 52,
+        "altKm": 21.9067,
+        "downrangeKm": 0.8314,
+        "velMs": 951.56,
+        "pitchDeg": 12.926,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 54,
+        "altKm": 23.8529,
+        "downrangeKm": 1.0369,
+        "velMs": 1005.53,
+        "pitchDeg": 12.926,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 56,
+        "altKm": 25.906,
+        "downrangeKm": 1.2773,
+        "velMs": 1061.48,
+        "pitchDeg": 16.358,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 58,
+        "altKm": 28.0685,
+        "downrangeKm": 1.5603,
+        "velMs": 1119.54,
+        "pitchDeg": 16.358,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 60,
+        "altKm": 30.3446,
+        "downrangeKm": 1.8881,
+        "velMs": 1180.15,
+        "pitchDeg": 16.358,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 62,
+        "altKm": 32.7371,
+        "downrangeKm": 2.2673,
+        "velMs": 1242.52,
+        "pitchDeg": 20.266,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 64,
+        "altKm": 35.2492,
+        "downrangeKm": 2.7048,
+        "velMs": 1307.76,
+        "pitchDeg": 20.266,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 66,
+        "altKm": 37.8853,
+        "downrangeKm": 3.2039,
+        "velMs": 1375.31,
+        "pitchDeg": 24.689,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 68,
+        "altKm": 40.6466,
+        "downrangeKm": 3.7759,
+        "velMs": 1445.38,
+        "pitchDeg": 24.689,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 70,
+        "altKm": 43.538,
+        "downrangeKm": 4.4248,
+        "velMs": 1518.83,
+        "pitchDeg": 24.689,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 72,
+        "altKm": 46.5612,
+        "downrangeKm": 5.1604,
+        "velMs": 1593.89,
+        "pitchDeg": 29.656,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 74,
+        "altKm": 49.7183,
+        "downrangeKm": 5.9929,
+        "velMs": 1672.83,
+        "pitchDeg": 29.656,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 76,
+        "altKm": 53.0142,
+        "downrangeKm": 6.9276,
+        "velMs": 1754.43,
+        "pitchDeg": 35.197,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 78,
+        "altKm": 56.4469,
+        "downrangeKm": 7.9811,
+        "velMs": 1839.06,
+        "pitchDeg": 35.197,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 80,
+        "altKm": 60.0216,
+        "downrangeKm": 9.1596,
+        "velMs": 1928.43,
+        "pitchDeg": 35.197,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 82,
+        "altKm": 63.6512,
+        "downrangeKm": 10.4018,
+        "velMs": 1911.05,
+        "pitchDeg": 41.293,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 84,
+        "altKm": 67.2424,
+        "downrangeKm": 11.6427,
+        "velMs": 1892.84,
+        "pitchDeg": 41.293,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 86,
+        "altKm": 70.7954,
+        "downrangeKm": 12.8821,
+        "velMs": 1874.7,
+        "pitchDeg": 47.401,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 88,
+        "altKm": 74.3102,
+        "downrangeKm": 14.1201,
+        "velMs": 1856.62,
+        "pitchDeg": 47.401,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 90,
+        "altKm": 77.7869,
+        "downrangeKm": 15.3567,
+        "velMs": 1838.59,
+        "pitchDeg": 47.401,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 92,
+        "altKm": 81.2255,
+        "downrangeKm": 16.592,
+        "velMs": 1820.61,
+        "pitchDeg": 53.337,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 94,
+        "altKm": 84.6262,
+        "downrangeKm": 17.826,
+        "velMs": 1802.68,
+        "pitchDeg": 53.337,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 96,
+        "altKm": 87.9889,
+        "downrangeKm": 19.0587,
+        "velMs": 1784.79,
+        "pitchDeg": 59.106,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 98,
+        "altKm": 91.3137,
+        "downrangeKm": 20.2902,
+        "velMs": 1766.94,
+        "pitchDeg": 59.106,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 100,
+        "altKm": 94.6006,
+        "downrangeKm": 21.5203,
+        "velMs": 1749.14,
+        "pitchDeg": 59.106,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 102,
+        "altKm": 97.8498,
+        "downrangeKm": 22.7493,
+        "velMs": 1731.39,
+        "pitchDeg": 64.698,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 104,
+        "altKm": 101.0611,
+        "downrangeKm": 23.977,
+        "velMs": 1713.67,
+        "pitchDeg": 64.698,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 106,
+        "altKm": 104.2347,
+        "downrangeKm": 25.2035,
+        "velMs": 1696,
+        "pitchDeg": 70.13,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 108,
+        "altKm": 107.3706,
+        "downrangeKm": 26.4288,
+        "velMs": 1678.38,
+        "pitchDeg": 70.13,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 110,
+        "altKm": 110.4688,
+        "downrangeKm": 27.6529,
+        "velMs": 1660.8,
+        "pitchDeg": 70.13,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 112,
+        "altKm": 113.5294,
+        "downrangeKm": 28.8758,
+        "velMs": 1643.27,
+        "pitchDeg": 75.384,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 114,
+        "altKm": 116.5524,
+        "downrangeKm": 30.0976,
+        "velMs": 1625.78,
+        "pitchDeg": 75.384,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 116,
+        "altKm": 119.5379,
+        "downrangeKm": 31.3183,
+        "velMs": 1608.34,
+        "pitchDeg": 80.478,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 118,
+        "altKm": 122.4858,
+        "downrangeKm": 32.5379,
+        "velMs": 1590.95,
+        "pitchDeg": 80.478,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 120,
+        "altKm": 125.3962,
+        "downrangeKm": 33.7564,
+        "velMs": 1573.61,
+        "pitchDeg": 80.478,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 122,
+        "altKm": 128.2691,
+        "downrangeKm": 34.9737,
+        "velMs": 1556.32,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 124,
+        "altKm": 131.1047,
+        "downrangeKm": 36.1901,
+        "velMs": 1539.07,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 126,
+        "altKm": 133.9028,
+        "downrangeKm": 37.4053,
+        "velMs": 1521.88,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 128,
+        "altKm": 136.6636,
+        "downrangeKm": 38.6195,
+        "velMs": 1504.74,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 130,
+        "altKm": 139.387,
+        "downrangeKm": 39.8328,
+        "velMs": 1487.65,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 132,
+        "altKm": 142.0732,
+        "downrangeKm": 41.045,
+        "velMs": 1470.61,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 134,
+        "altKm": 144.7221,
+        "downrangeKm": 42.2562,
+        "velMs": 1453.63,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 136,
+        "altKm": 147.3337,
+        "downrangeKm": 43.4664,
+        "velMs": 1436.71,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 138,
+        "altKm": 149.9082,
+        "downrangeKm": 44.6757,
+        "velMs": 1419.84,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 140,
+        "altKm": 152.4454,
+        "downrangeKm": 45.884,
+        "velMs": 1403.03,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 142,
+        "altKm": 154.9455,
+        "downrangeKm": 47.0914,
+        "velMs": 1386.28,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 144,
+        "altKm": 157.4085,
+        "downrangeKm": 48.2979,
+        "velMs": 1369.6,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 146,
+        "altKm": 159.8344,
+        "downrangeKm": 49.5034,
+        "velMs": 1352.97,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 148,
+        "altKm": 162.2232,
+        "downrangeKm": 50.7081,
+        "velMs": 1336.41,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 150,
+        "altKm": 164.575,
+        "downrangeKm": 51.9119,
+        "velMs": 1319.91,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 152,
+        "altKm": 166.8898,
+        "downrangeKm": 53.1149,
+        "velMs": 1303.49,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 154,
+        "altKm": 169.1675,
+        "downrangeKm": 54.317,
+        "velMs": 1287.13,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 156,
+        "altKm": 171.4084,
+        "downrangeKm": 55.5183,
+        "velMs": 1270.84,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 158,
+        "altKm": 173.6122,
+        "downrangeKm": 56.7187,
+        "velMs": 1254.63,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 160,
+        "altKm": 175.7792,
+        "downrangeKm": 57.9184,
+        "velMs": 1238.49,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 162,
+        "altKm": 177.9093,
+        "downrangeKm": 59.1173,
+        "velMs": 1222.43,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 164,
+        "altKm": 180.0025,
+        "downrangeKm": 60.3154,
+        "velMs": 1206.45,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 166,
+        "altKm": 182.0589,
+        "downrangeKm": 61.5127,
+        "velMs": 1190.55,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 168,
+        "altKm": 184.0785,
+        "downrangeKm": 62.7093,
+        "velMs": 1174.74,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 170,
+        "altKm": 186.0612,
+        "downrangeKm": 63.9052,
+        "velMs": 1159.01,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 172,
+        "altKm": 188.0072,
+        "downrangeKm": 65.1004,
+        "velMs": 1143.38,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 174,
+        "altKm": 189.9165,
+        "downrangeKm": 66.2948,
+        "velMs": 1127.84,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 176,
+        "altKm": 191.789,
+        "downrangeKm": 67.4886,
+        "velMs": 1112.4,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 178,
+        "altKm": 193.6248,
+        "downrangeKm": 68.6817,
+        "velMs": 1097.05,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 180,
+        "altKm": 195.4239,
+        "downrangeKm": 69.8742,
+        "velMs": 1081.81,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 182,
+        "altKm": 197.1864,
+        "downrangeKm": 71.0659,
+        "velMs": 1066.68,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 184,
+        "altKm": 198.9122,
+        "downrangeKm": 72.2571,
+        "velMs": 1051.66,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 186,
+        "altKm": 200.6013,
+        "downrangeKm": 73.4476,
+        "velMs": 1036.76,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 188,
+        "altKm": 202.2539,
+        "downrangeKm": 74.6376,
+        "velMs": 1021.98,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 190,
+        "altKm": 203.8699,
+        "downrangeKm": 75.8269,
+        "velMs": 1007.32,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 192,
+        "altKm": 205.4493,
+        "downrangeKm": 77.0157,
+        "velMs": 992.79,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 194,
+        "altKm": 206.9921,
+        "downrangeKm": 78.2039,
+        "velMs": 978.4,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 196,
+        "altKm": 208.4984,
+        "downrangeKm": 79.3916,
+        "velMs": 964.14,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 198,
+        "altKm": 209.9682,
+        "downrangeKm": 80.5787,
+        "velMs": 950.03,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 200,
+        "altKm": 211.4015,
+        "downrangeKm": 81.7653,
+        "velMs": 936.08,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 202,
+        "altKm": 212.7983,
+        "downrangeKm": 82.9514,
+        "velMs": 922.28,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 204,
+        "altKm": 214.1586,
+        "downrangeKm": 84.137,
+        "velMs": 908.65,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 206,
+        "altKm": 215.4824,
+        "downrangeKm": 85.3221,
+        "velMs": 895.19,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 208,
+        "altKm": 216.7698,
+        "downrangeKm": 86.5067,
+        "velMs": 881.9,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 210,
+        "altKm": 218.0208,
+        "downrangeKm": 87.6909,
+        "velMs": 868.81,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 212,
+        "altKm": 219.2354,
+        "downrangeKm": 88.8746,
+        "velMs": 855.9,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 214,
+        "altKm": 220.4135,
+        "downrangeKm": 90.0579,
+        "velMs": 843.21,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 216,
+        "altKm": 221.5553,
+        "downrangeKm": 91.2408,
+        "velMs": 830.72,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 218,
+        "altKm": 222.6606,
+        "downrangeKm": 92.4233,
+        "velMs": 818.45,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 220,
+        "altKm": 223.7297,
+        "downrangeKm": 93.6054,
+        "velMs": 806.41,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 222,
+        "altKm": 224.7623,
+        "downrangeKm": 94.7872,
+        "velMs": 794.62,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 224,
+        "altKm": 225.7586,
+        "downrangeKm": 95.9685,
+        "velMs": 783.07,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 226,
+        "altKm": 226.7186,
+        "downrangeKm": 97.1495,
+        "velMs": 771.78,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 228,
+        "altKm": 227.6423,
+        "downrangeKm": 98.3302,
+        "velMs": 760.77,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 230,
+        "altKm": 228.5296,
+        "downrangeKm": 99.5106,
+        "velMs": 750.04,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 232,
+        "altKm": 229.3807,
+        "downrangeKm": 100.6906,
+        "velMs": 739.6,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 234,
+        "altKm": 230.1954,
+        "downrangeKm": 101.8703,
+        "velMs": 729.47,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 236,
+        "altKm": 230.9739,
+        "downrangeKm": 103.0498,
+        "velMs": 719.67,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 238,
+        "altKm": 231.7161,
+        "downrangeKm": 104.229,
+        "velMs": 710.19,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 240,
+        "altKm": 232.422,
+        "downrangeKm": 105.4079,
+        "velMs": 701.07,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 242,
+        "altKm": 233.0916,
+        "downrangeKm": 106.5866,
+        "velMs": 692.3,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 244,
+        "altKm": 233.7251,
+        "downrangeKm": 107.7651,
+        "velMs": 683.9,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 246,
+        "altKm": 234.3222,
+        "downrangeKm": 108.9433,
+        "velMs": 675.89,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 248,
+        "altKm": 234.8831,
+        "downrangeKm": 110.1213,
+        "velMs": 668.28,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 250,
+        "altKm": 235.4078,
+        "downrangeKm": 111.2992,
+        "velMs": 661.08,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 252,
+        "altKm": 235.8963,
+        "downrangeKm": 112.4768,
+        "velMs": 654.31,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 254,
+        "altKm": 236.3486,
+        "downrangeKm": 113.6543,
+        "velMs": 647.98,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 256,
+        "altKm": 236.7646,
+        "downrangeKm": 114.8599,
+        "velMs": 697.42,
+        "pitchDeg": 90,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 258,
+        "altKm": 237.1444,
+        "downrangeKm": 116.2641,
+        "velMs": 808.19,
+        "pitchDeg": 90,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 260,
+        "altKm": 237.4883,
+        "downrangeKm": 117.9027,
+        "velMs": 926.23,
+        "pitchDeg": 90,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 262,
+        "altKm": 237.7961,
+        "downrangeKm": 119.7857,
+        "velMs": 1051.24,
+        "pitchDeg": 90,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 264,
+        "altKm": 238.0683,
+        "downrangeKm": 121.9236,
+        "velMs": 1183.21,
+        "pitchDeg": 90,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 266,
+        "altKm": 238.3048,
+        "downrangeKm": 124.328,
+        "velMs": 1322.35,
+        "pitchDeg": 90,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 268,
+        "altKm": 238.506,
+        "downrangeKm": 127.0117,
+        "velMs": 1469.05,
+        "pitchDeg": 90,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 270,
+        "altKm": 238.672,
+        "downrangeKm": 129.9887,
+        "velMs": 1623.87,
+        "pitchDeg": 90,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 272,
+        "altKm": 238.8032,
+        "downrangeKm": 133.2744,
+        "velMs": 1787.52,
+        "pitchDeg": 90,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 274,
+        "altKm": 238.9,
+        "downrangeKm": 136.886,
+        "velMs": 1960.88,
+        "pitchDeg": 90,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 276,
+        "altKm": 238.9627,
+        "downrangeKm": 140.8428,
+        "velMs": 2145.01,
+        "pitchDeg": 90,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 278,
+        "altKm": 238.9917,
+        "downrangeKm": 145.1664,
+        "velMs": 2341.24,
+        "pitchDeg": 90,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 280,
+        "altKm": 238.9877,
+        "downrangeKm": 149.8815,
+        "velMs": 2551.18,
+        "pitchDeg": 90,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 282,
+        "altKm": 238.9512,
+        "downrangeKm": 155.016,
+        "velMs": 2776.79,
+        "pitchDeg": 90,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 284,
+        "altKm": 238.8829,
+        "downrangeKm": 160.6024,
+        "velMs": 3020.56,
+        "pitchDeg": 90,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 286,
+        "altKm": 238.792,
+        "downrangeKm": 166.6782,
+        "velMs": 3284.38,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 288,
+        "altKm": 238.7228,
+        "downrangeKm": 173.2258,
+        "velMs": 3452.41,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 290,
+        "altKm": 238.6452,
+        "downrangeKm": 179.9391,
+        "velMs": 3512.15,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 292,
+        "altKm": 238.5533,
+        "downrangeKm": 186.7684,
+        "velMs": 3572.96,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 294,
+        "altKm": 238.4475,
+        "downrangeKm": 193.716,
+        "velMs": 3634.87,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 296,
+        "altKm": 238.3285,
+        "downrangeKm": 200.784,
+        "velMs": 3697.92,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 298,
+        "altKm": 238.1966,
+        "downrangeKm": 207.9746,
+        "velMs": 3762.16,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 300,
+        "altKm": 238.0527,
+        "downrangeKm": 215.2902,
+        "velMs": 3827.62,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 302,
+        "altKm": 237.8971,
+        "downrangeKm": 222.7333,
+        "velMs": 3894.35,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 304,
+        "altKm": 237.7306,
+        "downrangeKm": 230.3062,
+        "velMs": 3962.41,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 306,
+        "altKm": 237.5538,
+        "downrangeKm": 238.0118,
+        "velMs": 4031.83,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 308,
+        "altKm": 237.3674,
+        "downrangeKm": 245.8526,
+        "velMs": 4102.68,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 310,
+        "altKm": 237.1721,
+        "downrangeKm": 253.8315,
+        "velMs": 4175.02,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 312,
+        "altKm": 236.9686,
+        "downrangeKm": 261.9515,
+        "velMs": 4248.9,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 314,
+        "altKm": 236.7576,
+        "downrangeKm": 270.2156,
+        "velMs": 4324.39,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 316,
+        "altKm": 236.54,
+        "downrangeKm": 278.6272,
+        "velMs": 4401.57,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 318,
+        "altKm": 236.3165,
+        "downrangeKm": 287.1894,
+        "velMs": 4480.51,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 320,
+        "altKm": 236.0881,
+        "downrangeKm": 295.9059,
+        "velMs": 4561.28,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 322,
+        "altKm": 235.8556,
+        "downrangeKm": 304.7802,
+        "velMs": 4643.99,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 324,
+        "altKm": 235.62,
+        "downrangeKm": 313.8164,
+        "velMs": 4728.72,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 326,
+        "altKm": 235.3823,
+        "downrangeKm": 323.0183,
+        "velMs": 4815.57,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 328,
+        "altKm": 235.1434,
+        "downrangeKm": 332.3903,
+        "velMs": 4904.66,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 330,
+        "altKm": 234.9045,
+        "downrangeKm": 341.9367,
+        "velMs": 4996.11,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 332,
+        "altKm": 234.6667,
+        "downrangeKm": 351.6624,
+        "velMs": 5090.03,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 334,
+        "altKm": 234.4312,
+        "downrangeKm": 361.5722,
+        "velMs": 5186.57,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 336,
+        "altKm": 234.1993,
+        "downrangeKm": 371.6715,
+        "velMs": 5285.89,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 338,
+        "altKm": 233.9722,
+        "downrangeKm": 381.9656,
+        "velMs": 5388.14,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 340,
+        "altKm": 233.7514,
+        "downrangeKm": 392.4606,
+        "velMs": 5493.52,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 342,
+        "altKm": 233.5384,
+        "downrangeKm": 403.1626,
+        "velMs": 5602.2,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 344,
+        "altKm": 233.3346,
+        "downrangeKm": 414.0782,
+        "velMs": 5714.43,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 346,
+        "altKm": 233.1419,
+        "downrangeKm": 425.2145,
+        "velMs": 5830.42,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 348,
+        "altKm": 232.9618,
+        "downrangeKm": 436.579,
+        "velMs": 5950.45,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 350,
+        "altKm": 232.7964,
+        "downrangeKm": 448.1799,
+        "velMs": 6074.81,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 352,
+        "altKm": 232.6476,
+        "downrangeKm": 460.0257,
+        "velMs": 6203.84,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 354,
+        "altKm": 232.5174,
+        "downrangeKm": 472.1257,
+        "velMs": 6337.88,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 356,
+        "altKm": 232.4084,
+        "downrangeKm": 484.4901,
+        "velMs": 6477.36,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 358,
+        "altKm": 232.3228,
+        "downrangeKm": 497.1296,
+        "velMs": 6622.73,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 360,
+        "altKm": 232.2633,
+        "downrangeKm": 510.0561,
+        "velMs": 6774.53,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 362,
+        "altKm": 232.2329,
+        "downrangeKm": 523.2824,
+        "velMs": 6933.34,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 364,
+        "altKm": 232.2345,
+        "downrangeKm": 536.8227,
+        "velMs": 7099.85,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 366,
+        "altKm": 232.2716,
+        "downrangeKm": 550.6922,
+        "velMs": 7274.85,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 368,
+        "altKm": 232.3479,
+        "downrangeKm": 564.9082,
+        "velMs": 7459.25,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 370,
+        "altKm": 232.4674,
+        "downrangeKm": 579.4896,
+        "velMs": 7654.12,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 372,
+        "altKm": 232.6345,
+        "downrangeKm": 594.4575,
+        "velMs": 7860.74,
+        "pitchDeg": 83.079,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 374,
+        "altKm": 232.8278,
+        "downrangeKm": 609.6276,
+        "velMs": 7862.29,
+        "pitchDeg": 90,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 376,
+        "altKm": 233.0221,
+        "downrangeKm": 624.7968,
+        "velMs": 7862.07,
+        "pitchDeg": 90,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 378,
+        "altKm": 233.2172,
+        "downrangeKm": 639.9651,
+        "velMs": 7861.84,
+        "pitchDeg": 90,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 380,
+        "altKm": 233.4133,
+        "downrangeKm": 655.1325,
+        "velMs": 7861.62,
+        "pitchDeg": 90,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 382,
+        "altKm": 233.6102,
+        "downrangeKm": 670.299,
+        "velMs": 7861.39,
+        "pitchDeg": 90,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      },
+      {
+        "t": 382.017,
+        "altKm": 233.6119,
+        "downrangeKm": 670.4253,
+        "velMs": 7861.38,
+        "pitchDeg": 90,
+        "source": "simulated-practice-reference",
+        "quality": "simulated-practice"
+      }
     ]
   },
   "events": [
-    { "t": 0, "id": "liftoff", "say": "Liftoff! We're entering the first phase of flight." },
-    { "t": 72, "id": "maxq", "say": "Max-Q! This is when the air pushes hardest on the rocket." },
-    { "t": 152, "id": "meco", "say": "Main engine cutoff. The first stage's engines are off." },
-    { "t": 156, "id": "stage_sep", "say": "Stage separation! The booster lets go of the second stage." },
-    { "t": 163, "id": "ses1", "say": "The second stage engine is on. Next stop, space!" },
-    { "t": 190, "id": "fairing_sep", "say": "The nose cone opens and falls away. The satellites are free to go." },
-    { "t": 419, "id": "entry_burn", "say": "Entry burn complete! The booster has slowed down for landing." },
-    { "t": 515, "id": "landing", "say": "Touchdown! The booster landed and can fly again." },
-    { "t": 532, "id": "seco", "say": "Second stage engine cutoff. We made it to orbit!" }
+    {
+      "t": 0,
+      "id": "liftoff",
+      "say": "Liftoff! We're entering the first phase of flight."
+    },
+    {
+      "t": 72,
+      "id": "maxq",
+      "say": "Max-Q! This is when the air pushes hardest on the rocket."
+    },
+    {
+      "t": 152,
+      "id": "meco",
+      "say": "Main engine cutoff. The first stage's engines are off."
+    },
+    {
+      "t": 156,
+      "id": "stage_sep",
+      "say": "Stage separation! The booster lets go of the second stage."
+    },
+    {
+      "t": 163,
+      "id": "ses1",
+      "say": "The second stage engine is on. Next stop, space!"
+    },
+    {
+      "t": 190,
+      "id": "fairing_sep",
+      "say": "The nose cone opens and falls away. The satellites are free to go."
+    },
+    {
+      "t": 419,
+      "id": "entry_burn",
+      "say": "Entry burn complete! The booster has slowed down for landing."
+    },
+    {
+      "t": 515,
+      "id": "landing",
+      "say": "Touchdown! The booster landed and can fly again."
+    },
+    {
+      "t": 532,
+      "id": "seco",
+      "say": "Second stage engine cutoff. We made it to orbit!"
+    }
   ]
 }

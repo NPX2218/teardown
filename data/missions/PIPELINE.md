@@ -122,3 +122,17 @@ toScene = (0 × 1e-6, 6378137 × 1e-6, 0) = (0, 6.378137, 0)
 ```
 
 `createFlight` in `lib/flight.helpers.ts` is the function that builds that pad state, and only after someone starts the flyable preset. It does not read the liftoff sample.
+
+## 8. PRACTICE corridor
+
+Sentinel-6 stays the seven milestone times above. The practice mission is a different file, `data/missions/practice.json`, and its `reference` is a PRACTICE corridor.
+
+Method, in `scripts/record-practice-corridor.ts`:
+
+1. Start `CLASSROOM_LAUNCH` with `createFlight`.
+2. Fly `CLASSROOM_ORBIT_PROFILE` through `stepFlight` at 1/60 s. That is the same integrator the exhibit uses. It is not a second physics model and not a historical trace.
+3. Every 2 seconds, store altitude (`hypot(x, y) - EARTH_RADIUS_M`), downrange (`atan2(x, y) * EARTH_RADIUS_M`), speed (`hypot(vx, vy)`), and commanded pitch (`pitchRad`).
+4. Keep the row where the classroom profile reaches orbit.
+5. Set `reference.interpolated` to true so mission mode can read between those rows. The label is `PRACTICE corridor. Simulated practice reference, not historical.`
+
+That corridor is a simulated practice reference, not historical. It is not pasted onto Sentinel-6. Re-record with `npx tsx scripts/record-practice-corridor.ts --write`.

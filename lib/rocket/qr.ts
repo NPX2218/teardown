@@ -2,9 +2,17 @@
 // The `qrcode` package only supplies the module matrix; PairRocket draws it as inline SVG (no canvas, no data URL).
 import QRCode from "qrcode";
 
+/** Set only for the Pages static export. Empty in dev and the normal build. */
+function pagesBasePath(): string {
+  return (process.env.NEXT_PUBLIC_BASE_PATH ?? "").replace(/\/+$/, "");
+}
+
 /** The page the phone opens. Tolerates a trailing slash on the origin; the code is URL-encoded. */
 export function rocketUrl(origin: string, code: string): string {
-  return `${origin.replace(/\/+$/, "")}/rocket?code=${encodeURIComponent(code)}`;
+  const base = pagesBasePath();
+  // Static export uses trailingSlash, so the phone file is rocket/index.html.
+  const page = base ? `${base}/rocket/` : "/rocket";
+  return `${origin.replace(/\/+$/, "")}${page}?code=${encodeURIComponent(code)}`;
 }
 
 /**

@@ -1,9 +1,12 @@
 "use client";
 // Embeds the emissions readout inside flight and replay. There is no emissions tab.
+// Anders's module owns the CO₂ number. The seam fixture stays for pages that
+// have not switched yet.
 import { useEffect } from "react";
 import { EmissionsSlot } from "@/components/emissions/EmissionsSlot";
 import {
   historicalEmissionsUnavailable,
+  historicalFuelReadout,
   publishHistoricalFuel,
   publishInteractiveFuel,
   resetFuelReadoutAdapter,
@@ -11,6 +14,12 @@ import {
 import { useAppMode } from "@/lib/flight/app-mode";
 import { useScene } from "@/lib/store";
 import styles from "./flight.module.css";
+
+function kilograms(value: number): string {
+  if (value >= 10000) return `${Math.round(value).toLocaleString("en-US")} kg`;
+  if (value >= 100) return `${value.toFixed(0)} kg`;
+  return `${value.toFixed(1)} kg`;
+}
 
 export function EmissionsPlacement() {
   const mode = useAppMode((s) => s.mode);
@@ -35,9 +44,22 @@ export function EmissionsPlacement() {
 
   if (mode === "explore") return null;
 
+  const historical = mode === "replay" && replay.missionId
+    ? historicalFuelReadout(replay.missionId, replay.t)
+    : null;
+  const rp1 = flight.fuel?.rp1ConsumedKg ?? 0;
+
   return (
     <div className={styles.embedded}>
       <EmissionsSlot />
+      {mode === "mission" && flight.fuel && (
+        <p className={styles.note}>
+          RP-1 burned {kilograms(rp1)}. This is kerosene, not carbon dioxide.
+        </p>
+      )}
+      {historical && (
+        <p className={styles.note}>{historical.assumption}</p>
+      )}
     </div>
   );
 }
