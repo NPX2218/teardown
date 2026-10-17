@@ -1,6 +1,6 @@
 // lib/rocket/orient.ts — pure quaternion math for the phone rocket (11 Task 3). Owner: Neel.
 // Quat is [w, x, y, z] (lib/types.ts). Inputs are assumed unit length (decodeMessage normalizes frames).
-import type { Quat } from "@/lib/types";
+import type { Quat, Vec3 } from "@/lib/types";
 
 /** Hamilton product a * b (apply b first, then a). */
 export function quatMul(a: Quat, b: Quat): Quat {
@@ -40,4 +40,12 @@ export const ORIENT_SLERP = 0.2;
 export function relativeOrientation(q0: Quat, q: Quat, remap: Quat = AXIS_REMAP): Quat {
   const rel = quatMul(quatConj(q0), q);
   return quatNormalize(quatMul(quatMul(remap, rel), quatConj(remap)));
+}
+
+/** Shortest rotation taking unit vector `from` onto unit vector `to`. Opposite vectors turn 180° about x. */
+export function quatFromTo(from: Vec3, to: Vec3): Quat {
+  const d = from[0] * to[0] + from[1] * to[1] + from[2] * to[2];
+  if (d < -0.999999) return [0, 1, 0, 0];
+  const c: Vec3 = [from[1] * to[2] - from[2] * to[1], from[2] * to[0] - from[0] * to[2], from[0] * to[1] - from[1] * to[0]];
+  return quatNormalize([1 + d, c[0], c[1], c[2]]);
 }

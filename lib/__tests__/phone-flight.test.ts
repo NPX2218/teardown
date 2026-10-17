@@ -2,16 +2,14 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { handoffPitchToLocal, resumeFlightExplicit, submitPhonePitch } from "@/lib/flight/phone-pitch";
 import { handleRocketMessage, resetRocketState } from "@/lib/rocket/useRocket";
 import { useScene } from "@/lib/store";
-import type { Quat, RocketMessage } from "@/lib/types";
+import type { RocketMessage } from "@/lib/types";
+import { frameFor } from "../../scripts/sim-phone";
 
 const initial = useScene.getState();
 
-function frame(q: Quat): RocketMessage {
-  return { k: "frame", q, lin: [0, 0, 0], grav: [0, -9.8, 0] };
-}
-
-function tilt(rad: number): Quat {
-  return [Math.cos(rad / 2), Math.sin(rad / 2), 0, 0];
+// A portrait phone leaned `rad` forward: gravity and pose move together, like a real phone.
+function frame(rad = 0): RocketMessage {
+  return frameFor((rad * 180) / Math.PI, [0, 0, 0], "portrait");
 }
 
 function launchWithPhone(): string {
@@ -38,8 +36,8 @@ describe("phone pitch on the flight mixer", () => {
   it("phone-steers-flight: a paired phone tilts a live run and the screen keeps throttle", () => {
     const runId = launchWithPhone();
     expect(submitPhonePitch(0.4, true).ok).toBe(false);
-    handleRocketMessage(frame([1, 0, 0, 0]), 1_000);
-    handleRocketMessage(frame(tilt(0.35)), 1_050);
+    handleRocketMessage(frame(), 1_000);
+    handleRocketMessage(frame(0.35), 1_050);
     const pitched = useScene.getState().setFlightInput({ throttle: 1 }, "local", runId);
     expect(pitched.ok).toBe(true);
     expect(useScene.getState().flight.input.pitchRad).toBeGreaterThan(0.2);
@@ -66,8 +64,8 @@ describe("phone pitch on the flight mixer", () => {
 
   it("disconnect-pause: losing the phone pauses physics and a reconnect does not resume", () => {
     launchWithPhone();
-    handleRocketMessage(frame([1, 0, 0, 0]), 2_000);
-    handleRocketMessage(frame(tilt(0.3)), 2_050);
+    handleRocketMessage(frame(), 2_000);
+    handleRocketMessage(frame(0.3), 2_050);
     useScene.getState().setFlightInput({ throttle: 1 }, "local", useScene.getState().flight.runId!);
     advance(0.5);
     const time = useScene.getState().flight.simulatedTimeS;
@@ -85,7 +83,7 @@ describe("phone pitch on the flight mixer", () => {
 
     useScene.getState().setRocket({ connected: true, code: "ABCD" });
     expect(useScene.getState().flight.status).toBe("paused");
-    handleRocketMessage(frame(tilt(0.8)), 3_000);
+    handleRocketMessage(frame(0.8), 3_000);
     expect(useScene.getState().flight.status).toBe("paused");
     expect(useScene.getState().flight.input.pitchRad).toBe(0);
     expect(useScene.getState().flight.simulatedTimeS).toBe(time);
@@ -94,14 +92,14 @@ describe("phone pitch on the flight mixer", () => {
     expect(useScene.getState().flight.status).toBe("flying");
     expect(useScene.getState().flight.input).toEqual({ pitchRad: 0, throttle: 0 });
     expect(useScene.getState().flight.owners.pitch).toBe("local");
-    handleRocketMessage(frame(tilt(0.8)), 3_100);
+    handleRocketMessage(frame(0.8), 3_100);
     expect(useScene.getState().flight.input.pitchRad).toBe(0);
   });
 
   it("handoff: screen tilt takes pitch and later phone frames do not steer", () => {
     const runId = launchWithPhone();
-    handleRocketMessage(frame([1, 0, 0, 0]), 4_000);
-    handleRocketMessage(frame(tilt(0.4)), 4_050);
+    handleRocketMessage(frame(), 4_000);
+    handleRocketMessage(frame(0.4), 4_050);
     expect(useScene.getState().flight.input.pitchRad).toBeGreaterThan(0.2);
     useScene.getState().setFlightInput({ throttle: 0.6 }, "local", runId);
 
@@ -113,7 +111,7 @@ describe("phone pitch on the flight mixer", () => {
     expect(handed.input.throttle).toBe(0.6);
     expect(handed.armed.pitch).toBe(true);
     expect(submitPhonePitch(0.5, true).error).toBe("axis not owned: pitch");
-    handleRocketMessage(frame(tilt(0.9)), 4_200);
+    handleRocketMessage(frame(0.9), 4_200);
     expect(useScene.getState().flight.input.pitchRad).toBe(0);
     expect(useScene.getState().orientation).toBeNull();
 
