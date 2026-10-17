@@ -200,7 +200,7 @@ function Scene({ shot }: { shot: string }) {
   if (shot === "max-q") {
     return (
       <>
-        <Frame position={[26, 0, 34]} look={[0, -10, 0]} near={0.2} far={400} fov={32} />
+        <Frame position={[360, 70, 480]} look={[0, -120, 0]} near={1} far={8000} fov={34} />
         <PlumeShot altitudeKm={12} />
       </>
     );
