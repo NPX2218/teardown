@@ -16,7 +16,7 @@
 <p>
   <a href="https://npx2218.github.io/teardown/"><b>LIVE DEMO</b></a> &nbsp;&nbsp;|&nbsp;&nbsp;
   <a href="#quick-start"><b>RUN IT</b></a> &nbsp;&nbsp;|&nbsp;&nbsp;
-  <a href="public/presentation/index.html"><b>PRESENTATION</b></a> &nbsp;&nbsp;|&nbsp;&nbsp;
+  <a href="https://npx2218.github.io/teardown/presentation/"><b>PRESENTATION</b></a> &nbsp;&nbsp;|&nbsp;&nbsp;
   <a href="docs/presentation/teardown.pdf"><b>PDF</b></a> &nbsp;&nbsp;|&nbsp;&nbsp;
   <a href="docs/GUIDE.md"><b>HOW IT'S BUILT</b></a>
 </p>
@@ -224,7 +224,7 @@ Open `http://localhost:3000/?demo=1` and swap `ABCD` for the code it shows. In t
 | `/?kiosk=1` | Museum mode: an attract loop after 60 s idle, and no typing in the Grok guide |
 | `/?demo=1` | Keeps the same pairing code between reloads |
 | `/rocket` | The page that runs on the phone |
-| `/presentation` | The pitch deck (arrow keys, `N` for notes, `F` for full screen) |
+| `/presentation` | The pitch deck (arrow keys, `N` for notes, `F` for full screen). Live at [npx2218.github.io/teardown/presentation](https://npx2218.github.io/teardown/presentation/), offline in `public/presentation/index.html` |
 
 Run `npm test` for the unit tests (1,116 passing), `npm run test:e2e` for the Playwright flight with a simulated phone, and `npm run smoke` for the paired laptop + phone run.
 

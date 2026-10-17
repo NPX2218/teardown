@@ -6,7 +6,10 @@ export const metadata = {
   description: MOTTO,
 };
 
-/** Separate from Explore, Flight replay and Your mission. Not a fourth product mode. */
+/** GitHub Pages serves the app under /teardown, so the deck's media paths need the same prefix. */
+const MEDIA_BASE = `${(process.env.NEXT_PUBLIC_BASE_PATH ?? "").replace(/\/+$/, "")}/presentation/media/`;
+
+/** Separate from Explore and Your mission. Not a third product mode. */
 export default function PresentationPage() {
-  return <Deck />;
+  return <Deck mediaBase={MEDIA_BASE} />;
 }
