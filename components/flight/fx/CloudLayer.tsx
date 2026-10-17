@@ -6,26 +6,38 @@ import * as THREE from "three";
 import { EARTH_RADIUS_M } from "@/lib/flight.helpers";
 import { METRES_TO_SCENE } from "@/lib/flight/scene-scale";
 import { FLIGHT_SCENE } from "@/lib/viewer/colors";
-import { CLOUD_DECKS_KM, cloudDeckOpacity, cloudPunch, fxBudget } from "./falcon";
+import {
+  CLOUD_DECKS_KM,
+  cloudDeckOpacity,
+  cloudPunch,
+  fxBudget,
+  padBankOpacity,
+  padBasis,
+  padColumn,
+  resolvePad,
+} from "./falcon";
 import { useFxReduced } from "./motion";
-import { cloudFragment, cloudVertex, fogFragment, fogVertex, puffFragment, puffVertex } from "./shaders";
+import { cloudFragment, cloudVertex, fogFragment, fogVertex, padCloudFragment, padCloudVertex, puffFragment, puffVertex } from "./shaders";
 import { softParticleTexture } from "./softTexture";
+import { hash01 } from "./softTexture";
 import type { CloudLayerProps, MotionOverride } from "./types";
 
 const MAX_DECKS = CLOUD_DECKS_KM.length;
 const MAX_PUFFS = fxBudget(false).cloudPuffs;
 
 /**
- * Cloud decks between about 2 km and 12 km, in the Earth-radii group
- * (surface radius 1). A few shells plus puffs placed ahead of the camera so
- * the climb passes through them. They fade once the vehicle is above the band.
+ * Cloud decks between about 2 km and 12 km, plus the Starbase liftoff bank.
+ * The bank and the white column stay at `pad` (Earth radii). Omit `pad` to
+ * use Boca Chica, 25.997 N, 97.157 W.
  */
-export function CloudLayer({ altitudeKm, reducedMotion }: CloudLayerProps & MotionOverride) {
+export function CloudLayer({ altitudeKm, pad, reducedMotion }: CloudLayerProps & MotionOverride) {
   const reduced = useFxReduced(reducedMotion);
   const budget = fxBudget(reduced);
   const altRef = useRef(altitudeKm);
+  const padRef = useRef(pad);
   const reducedRef = useRef(reduced);
   altRef.current = altitudeKm;
+  padRef.current = pad;
   reducedRef.current = reduced;
 
   const map = useMemo(() => softParticleTexture(), []);
@@ -33,6 +45,8 @@ export function CloudLayer({ altitudeKm, reducedMotion }: CloudLayerProps & Moti
   const puffGeo = useMemo(() => new THREE.PlaneGeometry(1, 1), []);
   const fogGeo = useMemo(() => new THREE.PlaneGeometry(1, 1), []);
   const color = useMemo(() => new THREE.Color(FLIGHT_SCENE.ice), []);
+  const cream = useMemo(() => new THREE.Color(FLIGHT_SCENE.rocket), []);
+  const flame = useMemo(() => new THREE.Color(FLIGHT_SCENE.flame), []);
 
   const shellMats = useMemo(() => CLOUD_DECKS_KM.map((km, index) => new THREE.ShaderMaterial({
     uniforms: {
@@ -64,6 +78,45 @@ export function CloudLayer({ altitudeKm, reducedMotion }: CloudLayerProps & Moti
     toneMapped: false,
   }), [color, map]);
 
+  const bankGeo = useMemo(() => seededPadGeo(fxBudget(false).padBank, 31), []);
+  const columnGeo = useMemo(() => seededPadGeo(fxBudget(false).padColumn, 37), []);
+
+  const bankMat = useMemo(() => new THREE.ShaderMaterial({
+    uniforms: {
+      uScale: { value: 210 * METRES_TO_SCENE },
+      uOpacity: { value: 0 },
+      uOrange: { value: 0.8 },
+      uTime: { value: 0 },
+      uDrift: { value: 1 },
+      uCream: { value: cream },
+      uFlame: { value: flame },
+      uMap: { value: map },
+    },
+    vertexShader: padCloudVertex,
+    fragmentShader: padCloudFragment,
+    transparent: true,
+    depthWrite: false,
+    toneMapped: false,
+  }), [cream, flame, map]);
+
+  const columnMat = useMemo(() => new THREE.ShaderMaterial({
+    uniforms: {
+      uScale: { value: 110 * METRES_TO_SCENE },
+      uOpacity: { value: 0 },
+      uOrange: { value: 0 },
+      uTime: { value: 0 },
+      uDrift: { value: 0.4 },
+      uCream: { value: cream },
+      uFlame: { value: flame },
+      uMap: { value: map },
+    },
+    vertexShader: padCloudVertex,
+    fragmentShader: padCloudFragment,
+    transparent: true,
+    depthWrite: false,
+    toneMapped: false,
+  }), [cream, flame, map]);
+
   const fogMat = useMemo(() => new THREE.ShaderMaterial({
     uniforms: {
       uColor: { value: color },
@@ -78,6 +131,8 @@ export function CloudLayer({ altitudeKm, reducedMotion }: CloudLayerProps & Moti
 
   const root = useRef<THREE.Group>(null);
   const puffs = useRef<THREE.InstancedMesh>(null);
+  const bank = useRef<THREE.InstancedMesh>(null);
+  const column = useRef<THREE.InstancedMesh>(null);
   const fog = useRef<THREE.Mesh>(null);
   const shells = useRef<Array<THREE.Mesh | null>>([]);
   const scratch = useMemo(() => ({
@@ -98,8 +153,12 @@ export function CloudLayer({ altitudeKm, reducedMotion }: CloudLayerProps & Moti
     fogGeo.dispose();
     puffMat.dispose();
     fogMat.dispose();
+    bankMat.dispose();
+    columnMat.dispose();
+    bankGeo.dispose();
+    columnGeo.dispose();
     shellMats.forEach((mat) => mat.dispose());
-  }, [fogGeo, fogMat, puffGeo, puffMat, shellGeo, shellMats]);
+  }, [bankGeo, bankMat, columnGeo, columnMat, fogGeo, fogMat, puffGeo, puffMat, shellGeo, shellMats]);
 
   useFrame(({ camera, clock }) => {
     const alt = altRef.current;
@@ -151,6 +210,29 @@ export function CloudLayer({ altitudeKm, reducedMotion }: CloudLayerProps & Moti
     }
     puffMesh.instanceMatrix.needsUpdate = true;
 
+    const anchor = resolvePad(padRef.current);
+    const basis = padBasis(anchor);
+    const bankOpacity = padBankOpacity(alt);
+    const columnState = padColumn(alt);
+    bankMat.uniforms.uTime.value = clock.elapsedTime;
+    bankMat.uniforms.uOpacity.value = bankOpacity;
+    bankMat.uniforms.uOrange.value = bankOpacity * clampAltitudeOrange(alt);
+    bankMat.uniforms.uDrift.value = reducedRef.current ? 0 : 1;
+    columnMat.uniforms.uTime.value = clock.elapsedTime;
+    columnMat.uniforms.uOpacity.value = columnState.amount;
+    columnMat.uniforms.uDrift.value = reducedRef.current ? 0 : 0.35;
+    if (bank.current) {
+      bank.current.visible = bankOpacity > 0.03;
+      bank.current.count = budget.padBank;
+      placePadBank(bank.current, basis, budget.padBank, scratch.dummy);
+    }
+    if (column.current) {
+      const showColumn = columnState.amount > 0.03 && columnState.lengthM > 20;
+      column.current.visible = showColumn;
+      column.current.count = budget.padColumn;
+      if (showColumn) placePadColumn(column.current, basis, budget.padColumn, columnState.lengthM, scratch.dummy);
+    }
+
     if (fog.current) {
       scratch.local.copy(scratch.cam).addScaledVector(scratch.ahead, 36 * METRES_TO_SCENE);
       rootGroup.worldToLocal(scratch.local);
@@ -180,7 +262,75 @@ export function CloudLayer({ altitudeKm, reducedMotion }: CloudLayerProps & Moti
         );
       })}
       <instancedMesh ref={puffs} args={[puffGeo, puffMat, MAX_PUFFS]} frustumCulled={false} />
+      <instancedMesh ref={bank} args={[bankGeo, bankMat, fxBudget(false).padBank]} frustumCulled={false} />
+      <instancedMesh ref={column} args={[columnGeo, columnMat, fxBudget(false).padColumn]} frustumCulled={false} />
       <mesh ref={fog} geometry={fogGeo} material={fogMat} visible={false} frustumCulled={false} />
     </group>
   );
+}
+
+function clampAltitudeOrange(altitudeKm: number): number {
+  if (altitudeKm <= 0.4) return 1;
+  if (altitudeKm >= 2.2) return 0.15;
+  return 1 - ((altitudeKm - 0.4) / 1.8) * 0.85;
+}
+
+function seededPadGeo(count: number, salt: number): THREE.PlaneGeometry {
+  const geo = new THREE.PlaneGeometry(1, 1);
+  const seeds = new Float32Array(count);
+  for (let i = 0; i < count; i += 1) {
+    const inner = i < count * 0.22;
+    seeds[i] = inner ? hash01(i, salt) * 0.18 : 0.22 + hash01(i, salt) * 0.78;
+  }
+  geo.setAttribute("aSeed", new THREE.InstancedBufferAttribute(seeds, 1));
+  return geo;
+}
+
+function placePadBank(
+  mesh: THREE.InstancedMesh,
+  basis: ReturnType<typeof padBasis>,
+  count: number,
+  dummy: THREE.Object3D,
+) {
+  for (let i = 0; i < count; i += 1) {
+    const ang = hash01(i, 41) * Math.PI * 2;
+    const inner = i < count * 0.3;
+    const radius = (inner ? 4 + hash01(i, 42) * 48 : 55 + hash01(i, 42) * 300) / EARTH_RADIUS_M;
+    const lift = (4 + hash01(i, 43) * 80) / EARTH_RADIUS_M;
+    dummy.position.set(
+      basis.up[0] * (1 + lift) + basis.east[0] * Math.cos(ang) * radius + basis.north[0] * Math.sin(ang) * radius,
+      basis.up[1] * (1 + lift) + basis.east[1] * Math.cos(ang) * radius + basis.north[1] * Math.sin(ang) * radius,
+      basis.up[2] * (1 + lift) + basis.east[2] * Math.cos(ang) * radius + basis.north[2] * Math.sin(ang) * radius,
+    );
+    dummy.rotation.set(0, 0, 0);
+    dummy.scale.set(1, 1, 1);
+    dummy.updateMatrix();
+    mesh.setMatrixAt(i, dummy.matrix);
+  }
+  mesh.instanceMatrix.needsUpdate = true;
+}
+
+function placePadColumn(
+  mesh: THREE.InstancedMesh,
+  basis: ReturnType<typeof padBasis>,
+  count: number,
+  lengthM: number,
+  dummy: THREE.Object3D,
+) {
+  for (let i = 0; i < count; i += 1) {
+    const along = (i + 0.5) / count;
+    const lift = (along * lengthM) / EARTH_RADIUS_M;
+    const ang = hash01(i, 51) * Math.PI * 2;
+    const radius = (3 + along * 18) / EARTH_RADIUS_M;
+    dummy.position.set(
+      basis.up[0] * (1 + lift) + (basis.east[0] * Math.cos(ang) + basis.north[0] * Math.sin(ang)) * radius,
+      basis.up[1] * (1 + lift) + (basis.east[1] * Math.cos(ang) + basis.north[1] * Math.sin(ang)) * radius,
+      basis.up[2] * (1 + lift) + (basis.east[2] * Math.cos(ang) + basis.north[2] * Math.sin(ang)) * radius,
+    );
+    dummy.rotation.set(0, 0, 0);
+    dummy.scale.set(1, 1, 1);
+    dummy.updateMatrix();
+    mesh.setMatrixAt(i, dummy.matrix);
+  }
+  mesh.instanceMatrix.needsUpdate = true;
 }

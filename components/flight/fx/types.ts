@@ -53,6 +53,12 @@ export interface ExplosionProps {
 export interface CloudLayerProps {
   /** Vehicle altitude, kilometres. Fade the deck out as this climbs through the clouds. */
   altitudeKm: number;
+  /**
+   * Launch pad in Earth radii (surface is radius 1). Liftoff steam and the
+   * contrail column stay here while the rocket climbs. Omit to use Boca Chica
+   * (25.997, -97.157), the Starbase pad the env module is building.
+   */
+  pad?: EarthRadiiVec3;
 }
 
 /** Optional override. When omitted, the OS `prefers-reduced-motion` setting is used. */

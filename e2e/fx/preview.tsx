@@ -6,7 +6,7 @@ import type { PerspectiveCamera } from "three";
 import { EARTH_RADIUS_M } from "@/lib/flight.helpers";
 import { METRES_TO_SCENE } from "@/lib/flight/scene-scale";
 import { FLIGHT_SCENE, SCENE_COLORS } from "@/lib/viewer/colors";
-import { CloudLayer, EnginePlume, Explosion, FALCON_M, StageSeparation } from "@/components/flight/fx";
+import { CloudLayer, EnginePlume, Explosion, FALCON_M, StageSeparation, bocaChicaPad } from "@/components/flight/fx";
 
 declare global {
   interface Window {
@@ -39,7 +39,7 @@ function RocketBody() {
 function Pad() {
   return (
     <mesh position={[0, -1.2, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-      <circleGeometry args={[36, 40]} />
+      <circleGeometry args={[420, 48]} />
       <meshBasicMaterial color={FLIGHT_SCENE.land} />
     </mesh>
   );
@@ -148,6 +148,47 @@ function Scene({ shot }: { shot: string }) {
       </>
     );
   }
+  if (shot === "overhead") {
+    return (
+      <>
+        <Frame position={[2, 360, 3]} look={[0, 0, 0]} near={0.6} far={1800} fov={48} up={[0, 0, 1]} />
+        <PlumeShot altitudeKm={0} />
+      </>
+    );
+  }
+  if (shot === "climb") {
+    return (
+      <>
+        <Frame position={[220, -500, 80]} look={[0, -500, 0]} near={1} far={7000} fov={28} />
+        <PlumeShot altitudeKm={2.5} />
+      </>
+    );
+  }
+  if (shot === "pad") {
+    const pad = bocaChicaPad();
+    const x = pad[0] * EARTH_RADIUS;
+    const y = pad[1] * EARTH_RADIUS;
+    const z = pad[2] * EARTH_RADIUS;
+    return (
+      <>
+        <Frame
+          position={[x + 0.00062, y + 0.00028, z + 0.00048]}
+          look={[x, y, z]}
+          near={0.00002}
+          far={2}
+          fov={46}
+          up={[pad[0], pad[1], pad[2]]}
+        />
+        <group scale={EARTH_RADIUS}>
+          <mesh>
+            <sphereGeometry args={[1, 64, 40]} />
+            <meshBasicMaterial color={FLIGHT_SCENE.ocean} />
+          </mesh>
+          <CloudLayer altitudeKm={1.1} pad={pad} />
+        </group>
+      </>
+    );
+  }
   if (shot === "max-q") {
     return (
       <>
@@ -166,8 +207,8 @@ function Scene({ shot }: { shot: string }) {
   }
   return (
     <>
-      <Frame position={[18, 5, 24]} look={[0, 6, 0]} near={0.15} far={300} fov={34} />
-      <PlumeShot altitudeKm={0} />
+      <Frame position={[120, 46, 156]} look={[0, 14, 0]} near={0.5} far={2000} fov={36} />
+      <PlumeShot altitudeKm={0.08} />
     </>
   );
 }

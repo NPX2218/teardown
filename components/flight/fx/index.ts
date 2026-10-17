@@ -16,6 +16,8 @@ export { StageSeparation } from "./StageSeparation";
 export { Explosion } from "./Explosion";
 export { CloudLayer } from "./CloudLayer";
 export {
+  BOCA_CHICA_LAT,
+  BOCA_CHICA_LON,
   CLOUD_BAND,
   CLOUD_DECKS_KM,
   EXPLOSION_BURST_S,
@@ -23,15 +25,21 @@ export {
   FALCON_GLB_HEIGHT_CM,
   FALCON_M,
   atmospherePressure,
+  bocaChicaPad,
   boosterPose,
   cloudDeckOpacity,
   cloudPunch,
   explosionVisual,
   fairingPose,
   fxBudget,
+  latLonToUnit,
   merlinNozzles,
   mvacIgnition,
+  padBankOpacity,
+  padBasis,
+  padColumn,
   plumeProfile,
+  resolvePad,
   viewerMetresPerUnit,
 } from "./falcon";
 export type {

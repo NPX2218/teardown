@@ -6,7 +6,16 @@ import * as THREE from "three";
 import { FLIGHT_SCENE } from "@/lib/viewer/colors";
 import { fxBudget, merlinNozzles, plumeProfile } from "./falcon";
 import { useFxReduced } from "./motion";
-import { plumeFragment, plumeVertex, smokeFragment, smokeVertex, sparkFragment, sparkVertex } from "./shaders";
+import {
+  contrailFragment,
+  contrailVertex,
+  plumeFragment,
+  plumeVertex,
+  smokeFragment,
+  smokeVertex,
+  sparkFragment,
+  sparkVertex,
+} from "./shaders";
 import { downwardCone, hash01, softParticleTexture } from "./softTexture";
 import type { EnginePlumeProps, MotionOverride } from "./types";
 
@@ -16,8 +25,9 @@ const _color = new THREE.Color();
 
 /**
  * Merlin exhaust in the rocket frame (metres, origin at the bells, +Y nose).
- * Tight and bright at sea level, wide and faint in vacuum, with pad steam
- * during the first few hundred metres of powered flight.
+ * Bright white column at the bells, orange where it meets the pad, and a
+ * cream billow that spreads across the ground. A white contrail grows
+ * behind the vehicle as it climbs. Wide and faint only in vacuum.
  */
 export function EnginePlume({ throttle, altitudeKm, reducedMotion }: EnginePlumeProps & MotionOverride) {
   const reduced = useFxReduced(reducedMotion);
@@ -58,7 +68,7 @@ export function EnginePlume({ throttle, altitudeKm, reducedMotion }: EnginePlume
   const hot = useMemo(() => _color.clone().set(FLIGHT_SCENE.rocket), []);
   const flame = useMemo(() => new THREE.Color(FLIGHT_SCENE.flame), []);
   const vacTint = useMemo(() => new THREE.Color(FLIGHT_SCENE.atmosphere), []);
-  const steam = useMemo(() => new THREE.Color(FLIGHT_SCENE.ice), []);
+  const cream = useMemo(() => new THREE.Color(FLIGHT_SCENE.rocket), []);
 
   const plumeUniforms = useMemo(() => ({
     uTime: { value: 0 },
@@ -102,8 +112,11 @@ export function EnginePlume({ throttle, altitudeKm, reducedMotion }: EnginePlume
     uniforms: {
       uTime: { value: 0 },
       uSmoke: { value: 0 },
+      uSpread: { value: 240 },
+      uOrange: { value: 1 },
       uReduced: { value: 0 },
-      uColor: { value: steam },
+      uCream: { value: cream },
+      uFlame: { value: flame },
       uMap: { value: map },
     },
     vertexShader: smokeVertex,
@@ -111,22 +124,58 @@ export function EnginePlume({ throttle, altitudeKm, reducedMotion }: EnginePlume
     transparent: true,
     depthWrite: false,
     toneMapped: false,
-  }), [map, steam]);
+  }), [cream, flame, map]);
+
+  const contrailMat = useMemo(() => new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+      uLength: { value: 1 },
+      uAmount: { value: 0 },
+      uReduced: { value: 0 },
+      uCream: { value: cream },
+      uMap: { value: map },
+    },
+    vertexShader: contrailVertex,
+    fragmentShader: contrailFragment,
+    transparent: true,
+    depthWrite: false,
+    toneMapped: false,
+  }), [cream, map]);
+
+  const contrailGeo = useMemo(() => {
+    const count = fxBudget(false).contrail;
+    const geo = new THREE.PlaneGeometry(1, 1);
+    const seeds = new Float32Array(count);
+    const dirs = new Float32Array(count * 3);
+    for (let i = 0; i < count; i += 1) {
+      seeds[i] = (i + 0.5) / count;
+      const ang = hash01(i, 19) * Math.PI * 2;
+      dirs[i * 3] = Math.cos(ang);
+      dirs[i * 3 + 1] = 0;
+      dirs[i * 3 + 2] = Math.sin(ang);
+    }
+    geo.setAttribute("aSeed", new THREE.InstancedBufferAttribute(seeds, 1));
+    geo.setAttribute("aDir", new THREE.InstancedBufferAttribute(dirs, 3));
+    return geo;
+  }, []);
 
   const cores = useRef<THREE.InstancedMesh>(null);
   const envelope = useRef<THREE.Mesh>(null);
   const sparks = useRef<THREE.Points>(null);
   const smoke = useRef<THREE.InstancedMesh>(null);
+  const contrail = useRef<THREE.InstancedMesh>(null);
 
   useEffect(() => () => {
     cone.dispose();
     sparkGeo.dispose();
     smokeGeo.dispose();
+    contrailGeo.dispose();
     coreMat.dispose();
     envelopeMat.dispose();
     sparkMat.dispose();
     smokeMat.dispose();
-  }, [cone, coreMat, envelopeMat, smokeGeo, smokeMat, sparkGeo, sparkMat]);
+    contrailMat.dispose();
+  }, [cone, contrailGeo, contrailMat, coreMat, envelopeMat, smokeGeo, smokeMat, sparkGeo, sparkMat]);
 
   useFrame(({ clock }) => {
     const profile = plumeProfile(throttleRef.current, altitudeRef.current);
@@ -174,7 +223,18 @@ export function EnginePlume({ throttle, altitudeKm, reducedMotion }: EnginePlume
       smoke.current.count = budget.smoke;
       smokeMat.uniforms.uTime.value = time;
       smokeMat.uniforms.uSmoke.value = profile.smoke;
+      smokeMat.uniforms.uOrange.value = profile.orange;
+      smokeMat.uniforms.uSpread.value = 36 + profile.smoke * 130;
       smokeMat.uniforms.uReduced.value = reduced ? 1 : 0;
+    }
+    if (contrail.current) {
+      const trailing = profile.contrail > 0.02 && profile.contrailM > 8;
+      contrail.current.visible = trailing;
+      contrail.current.count = budget.contrail;
+      contrailMat.uniforms.uTime.value = time;
+      contrailMat.uniforms.uLength.value = profile.contrailM;
+      contrailMat.uniforms.uAmount.value = profile.contrail;
+      contrailMat.uniforms.uReduced.value = reduced ? 1 : 0;
     }
   });
 
@@ -184,6 +244,7 @@ export function EnginePlume({ throttle, altitudeKm, reducedMotion }: EnginePlume
       <mesh ref={envelope} geometry={cone} material={envelopeMat} frustumCulled={false} />
       <points ref={sparks} geometry={sparkGeo} material={sparkMat} frustumCulled={false} />
       <instancedMesh ref={smoke} args={[smokeGeo, smokeMat, fxBudget(false).smoke]} frustumCulled={false} />
+      <instancedMesh ref={contrail} args={[contrailGeo, contrailMat, fxBudget(false).contrail]} frustumCulled={false} />
     </group>
   );
 }

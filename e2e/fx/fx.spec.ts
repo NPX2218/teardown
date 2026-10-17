@@ -6,7 +6,10 @@ const ART = process.env.FX_ARTIFACTS || "/opt/cursor/artifacts/fx";
 mkdirSync(ART, { recursive: true });
 
 const SHOTS: ReadonlyArray<{ name: string; shot: string; frame: number; ageMin?: number }> = [
-  { name: "liftoff", shot: "liftoff", frame: 24 },
+  { name: "liftoff", shot: "liftoff", frame: 18 },
+  { name: "overhead", shot: "overhead", frame: 14 },
+  { name: "climb", shot: "climb", frame: 10 },
+  { name: "pad", shot: "pad", frame: 6 },
   { name: "max-q", shot: "max-q", frame: 8 },
   { name: "vacuum", shot: "vacuum", frame: 8 },
   { name: "staging", shot: "staging", frame: 4 },

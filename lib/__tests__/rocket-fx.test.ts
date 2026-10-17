@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { DISPLAY_HEIGHT } from "@/lib/viewer/prepareModel";
 import {
+  BOCA_CHICA_LAT,
+  BOCA_CHICA_LON,
   CLOUD_DECKS_KM,
   EXPLOSION_BURST_S,
   EXPLOSION_FADE_S,
   FALCON_M,
+  bocaChicaPad,
   boosterPose,
   cloudDeckOpacity,
   cloudPunch,
@@ -13,17 +16,22 @@ import {
   fxBudget,
   merlinNozzles,
   mvacIgnition,
+  padBankOpacity,
+  padColumn,
   plumeProfile,
+  resolvePad,
   viewerMetresPerUnit,
 } from "@/components/flight/fx";
 
 describe("rocket fx", () => {
   it("FX1 sea-level plume is short, tight, bright, and smoky", () => {
     const sea = plumeProfile(1, 0);
-    expect(sea.lengthM).toBeCloseTo(16, 5);
-    expect(sea.radiusM).toBeCloseTo(0.85, 5);
+    expect(sea.lengthM).toBeCloseTo(32, 5);
+    expect(sea.radiusM).toBeCloseTo(1.15, 5);
     expect(sea.brightness).toBeCloseTo(1, 5);
     expect(sea.smoke).toBeCloseTo(1, 5);
+    expect(sea.orange).toBeCloseTo(1, 5);
+    expect(sea.contrail).toBe(0);
     expect(sea.vacuum).toBeCloseTo(0, 5);
   });
 
@@ -39,6 +47,9 @@ describe("rocket fx", () => {
     expect(maxQ.brightness).toBeGreaterThan(vac.brightness);
     expect(maxQ.brightness).toBeLessThan(sea.brightness);
     expect(vac.radiusM).toBeGreaterThan(sea.radiusM * 10);
+    expect(maxQ.contrailM).toBe(4500);
+    expect(maxQ.contrail).toBeGreaterThan(0.5);
+    expect(vac.contrail).toBe(0);
   });
 
   it("FX3 throttle 0 hides the plume and the steam", () => {
@@ -134,6 +145,27 @@ describe("rocket fx", () => {
     expect(quiet.cloudPuffs).toBeLessThan(full.cloudPuffs);
     expect(quiet.cloudDecks).toBeLessThan(full.cloudDecks);
     expect(full.debris).toBeLessThanOrEqual(32);
-    expect(full.smoke).toBeLessThanOrEqual(36);
+    expect(full.smoke).toBeLessThanOrEqual(80);
+    expect(quiet.contrail).toBeLessThan(full.contrail);
+    expect(quiet.padBank).toBeLessThan(full.padBank);
+  });
+
+  it("FX12 liftoff clouds default to the Boca Chica pad", () => {
+    expect(BOCA_CHICA_LAT).toBeCloseTo(25.997, 3);
+    expect(BOCA_CHICA_LON).toBeCloseTo(-97.157, 3);
+    const pad = bocaChicaPad();
+    expect(Math.hypot(pad[0], pad[1], pad[2])).toBeCloseTo(1, 5);
+    expect(pad[1]).toBeCloseTo(Math.sin((BOCA_CHICA_LAT * Math.PI) / 180), 5);
+    expect(resolvePad(undefined)).toEqual(pad);
+    expect(resolvePad([2, 0, 0])).toEqual([1, 0, 0]);
+    expect(resolvePad([Number.NaN, 0, 0])).toEqual(pad);
+    expect(padBankOpacity(0)).toBeGreaterThan(0.9);
+    expect(padBankOpacity(30)).toBe(0);
+    expect(padColumn(0).amount).toBe(0);
+    expect(padColumn(2).lengthM).toBe(2000);
+    expect(padColumn(2).amount).toBeGreaterThan(0.8);
+    const climb = plumeProfile(1, 2.5);
+    expect(climb.contrailM).toBeCloseTo(2500, 5);
+    expect(climb.smoke).toBe(0);
   });
 });

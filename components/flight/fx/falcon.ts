@@ -67,15 +67,21 @@ export interface PlumeProfile {
   radiusM: number;
   /** 0..1. Sea level is brightest. */
   brightness: number;
-  /** 0..1 pad steam. Only the first few hundred metres. */
+  /** 0..1 pad steam. Strong on the pad, gone after about 1.6 km. */
   smoke: number;
+  /** 0..1 warm light in the steam closest to the bells. */
+  orange: number;
+  /** White column length behind the bells, metres. */
+  contrailM: number;
+  /** 0..1 opacity of that column. */
+  contrail: number;
 }
 
 /**
  * Merlin exhaust shape.
- * Sea level is a short, tight, bright column. Max-Q is longer and a little
- * wider. Vacuum opens into a long faint bell. Width uses vacuum² so the
- * plume stays narrow through the dense air.
+ * Sea level is a bright white column with a wide cream billow. Max-Q keeps
+ * a white trail. Vacuum opens the bell. Width uses vacuum² so the dense-air
+ * plume stays narrow. The contrail grows with altitude and then holds.
  */
 export function plumeProfile(throttle: number, altitudeKm: number): PlumeProfile {
   const t = clamp01(throttle);
@@ -83,12 +89,92 @@ export function plumeProfile(throttle: number, altitudeKm: number): PlumeProfile
   const vacuum = 1 - pressure;
   const width = vacuum * vacuum;
   const drive = 0.35 + 0.65 * t;
-  const lengthM = (16 + vacuum * 58) * drive;
-  const radiusM = (0.85 + width * 14) * (0.55 + 0.45 * t);
-  const brightness = t * (0.42 + 0.58 * pressure);
+  const lengthM = (32 + vacuum * 70) * drive;
+  const radiusM = (1.15 + width * 16) * (0.55 + 0.45 * t);
+  const brightness = t * (0.55 + 0.45 * pressure);
   const h = Math.max(0, finiteOr(altitudeKm, 0));
-  const smoke = t * clamp01(1 - h / 0.4);
-  return { throttle: t, vacuum, lengthM, radiusM, brightness, smoke };
+  const smoke = t * clamp01(1 - h / 1.6);
+  const orange = smoke * (0.45 + 0.55 * pressure);
+  const contrailM = t > 0.02 ? Math.min(h * 1000, 4500) : 0;
+  const contrail = t * clamp01(h / 0.15) * clamp01(1 - h / 40);
+  return { throttle: t, vacuum, lengthM, radiusM, brightness, smoke, orange, contrailM, contrail };
+}
+
+/** Starbase / Boca Chica. The env pad is built here. */
+export const BOCA_CHICA_LAT = 25.997;
+export const BOCA_CHICA_LON = -97.157;
+
+/**
+ * Unit position on the flight globe. Same mapping as `latLonToUnit` in
+ * `lib/flight/scene-types.ts`: +Y north, +X lon 0 on the equator.
+ */
+export function latLonToUnit(latDeg: number, lonDeg: number): [number, number, number] {
+  const lat = Math.min(90, Math.max(-90, finiteOr(latDeg, 0)));
+  const lon = finiteOr(lonDeg, 0);
+  const wrapped = lon % 360;
+  const lon360 = wrapped < 0 ? wrapped + 360 : wrapped;
+  const phi = (((lon360 + 180) % 360) / 360) * Math.PI * 2;
+  const theta = ((90 - lat) * Math.PI) / 180;
+  const sinTheta = Math.sin(theta);
+  return [-Math.cos(phi) * sinTheta, Math.cos(theta), Math.sin(phi) * sinTheta];
+}
+
+export function bocaChicaPad(): [number, number, number] {
+  return latLonToUnit(BOCA_CHICA_LAT, BOCA_CHICA_LON);
+}
+
+/** Pad origin in Earth radii. Missing or broken input falls back to Boca Chica. */
+export function resolvePad(pad: readonly [number, number, number] | undefined): [number, number, number] {
+  if (!pad || pad.length < 3) return bocaChicaPad();
+  const x = pad[0];
+  const y = pad[1];
+  const z = pad[2];
+  if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) return bocaChicaPad();
+  const len = Math.hypot(x, y, z);
+  if (!(len > 0)) return bocaChicaPad();
+  return [x / len, y / len, z / len];
+}
+
+export interface PadBasis {
+  up: [number, number, number];
+  east: [number, number, number];
+  north: [number, number, number];
+}
+
+function cross3(a: readonly [number, number, number], b: readonly [number, number, number]): [number, number, number] {
+  return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+}
+
+function unit3(v: readonly [number, number, number]): [number, number, number] {
+  const len = Math.hypot(v[0], v[1], v[2]);
+  if (!(len > 0)) return [0, 1, 0];
+  return [v[0] / len, v[1] / len, v[2] / len];
+}
+
+/** Tangent frame on the globe. `up` is the outward normal at the pad. */
+export function padBasis(pad: readonly [number, number, number]): PadBasis {
+  const up = unit3(pad);
+  const pole: [number, number, number] = Math.abs(up[1]) > 0.92 ? [1, 0, 0] : [0, 1, 0];
+  const east = unit3(cross3(pole, up));
+  const north = unit3(cross3(up, east));
+  return { up, east, north };
+}
+
+/** Ground steam stays bright through the climb, then thins out above the cloud band. */
+export function padBankOpacity(altitudeKm: number): number {
+  const h = Math.max(0, finiteOr(altitudeKm, 0));
+  if (h <= 8) return 0.95;
+  if (h >= 25) return 0;
+  return clamp01(1 - (h - 8) / 17) * 0.95;
+}
+
+/** White column from the pad up toward the vehicle. Holds at 6 km so the draw stays bounded. */
+export function padColumn(altitudeKm: number): { lengthM: number; amount: number } {
+  const h = Math.max(0, finiteOr(altitudeKm, 0));
+  return {
+    lengthM: Math.min(h * 1000, 6000),
+    amount: clamp01(h / 0.2) * clamp01(1 - h / 45),
+  };
 }
 
 /** Nine Merlin bells: one on the axis, eight on the octaweb ring. */
@@ -217,18 +303,31 @@ export function cloudPunch(altitudeKm: number): number {
 
 export interface FxBudget {
   sparks: number;
+  /** Horizontal pad billow sprites on the rocket. */
   smoke: number;
+  /** White column sprites behind the bells. */
+  contrail: number;
   debris: number;
   embers: number;
   cloudDecks: number;
   cloudPuffs: number;
+  /** Cream bank sprites anchored at the pad. */
+  padBank: number;
+  /** Column sprites from the pad up along the radial. */
+  padColumn: number;
   flicker: boolean;
 }
 
 /** Particle counts. Reduced motion keeps the shapes and drops the specks. */
 export function fxBudget(reduced: boolean): FxBudget {
   if (reduced) {
-    return { sparks: 0, smoke: 8, debris: 8, embers: 0, cloudDecks: 2, cloudPuffs: 4, flicker: false };
+    return {
+      sparks: 0, smoke: 16, contrail: 10, debris: 8, embers: 0,
+      cloudDecks: 2, cloudPuffs: 4, padBank: 12, padColumn: 8, flicker: false,
+    };
   }
-  return { sparks: 64, smoke: 36, debris: 32, embers: 40, cloudDecks: 4, cloudPuffs: 12, flicker: true };
+  return {
+    sparks: 28, smoke: 72, contrail: 40, debris: 32, embers: 40,
+    cloudDecks: 4, cloudPuffs: 12, padBank: 56, padColumn: 36, flicker: true,
+  };
 }

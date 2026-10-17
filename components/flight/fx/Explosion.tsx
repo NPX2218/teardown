@@ -14,8 +14,8 @@ import {
   emberVertex,
   fireballFragment,
   fireballVertex,
-  smokeFragment,
-  smokeVertex,
+  burstSmokeFragment,
+  burstSmokeVertex,
 } from "./shaders";
 import { hash01, softParticleTexture } from "./softTexture";
 import type { ExplosionProps, MotionOverride } from "./types";
@@ -96,8 +96,8 @@ export function Explosion({ position, active, reducedMotion }: ExplosionProps & 
       uColor: { value: steam },
       uMap: { value: map },
     },
-    vertexShader: smokeVertex,
-    fragmentShader: smokeFragment,
+    vertexShader: burstSmokeVertex,
+    fragmentShader: burstSmokeFragment,
     transparent: true,
     depthWrite: false,
     toneMapped: false,

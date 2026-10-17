@@ -26,9 +26,9 @@ uniform vec3 uVacTint;
 varying float vAlong;
 varying float vSeed;
 void main() {
-  float hot = smoothstep(0.72, 0.0, vAlong);
-  vec3 col = mix(uFlame, uHot, hot);
-  col = mix(col, uVacTint, uVacuum * (1.0 - hot) * 0.85);
+  float hot = smoothstep(0.9, 0.05, vAlong);
+  vec3 col = mix(uFlame, uHot, clamp(hot + 0.45, 0.0, 1.0));
+  col = mix(col, uVacTint, uVacuum * (1.0 - hot) * 0.55);
   float flick = 1.0;
   if (uFlicker > 0.5) {
     flick = 0.84 + 0.16 * sin(uTime * 46.0 + vSeed * 13.0 + vAlong * 9.0);
@@ -73,6 +73,48 @@ attribute float aSeed;
 attribute vec3 aDir;
 uniform float uTime;
 uniform float uSmoke;
+uniform float uSpread;
+uniform float uOrange;
+uniform float uReduced;
+varying float vAlpha;
+varying float vOrange;
+varying vec2 vUv;
+void main() {
+  vUv = uv;
+  float life = uReduced > 0.5 ? aSeed * 0.8 : fract(uTime * (0.11 + aSeed * 0.1) + aSeed);
+  float spread = 4.0 + life * uSpread;
+  float rise = mix(0.5, 28.0, life);
+  vec3 p = aDir * spread + vec3(0.0, rise, 0.0);
+  float dist = length(p.xz);
+  vOrange = uOrange * (1.0 - smoothstep(6.0, max(18.0, uSpread * 0.38), dist)) * (1.0 - life * 0.25);
+  vec4 mv = modelViewMatrix * vec4(p, 1.0);
+  float size = (34.0 + life * 120.0) * (0.75 + aSeed * 0.45);
+  mv.xy += position.xy * size;
+  gl_Position = projectionMatrix * mv;
+  vAlpha = uSmoke * (0.55 + 0.45 * sin(clamp(life, 0.0, 1.0) * 3.14159265));
+}
+`;
+
+export const smokeFragment = /* glsl */ `
+uniform vec3 uCream;
+uniform vec3 uFlame;
+uniform sampler2D uMap;
+varying float vAlpha;
+varying float vOrange;
+varying vec2 vUv;
+void main() {
+  float sprite = texture2D(uMap, vUv).a;
+  vec3 col = mix(uCream, uFlame, clamp(vOrange * 0.42, 0.0, 1.0));
+  gl_FragColor = vec4(col, sprite * vAlpha * 0.62);
+}
+`;
+
+/** Crash smoke. Smaller and darker than the pad billow, and it loops once. */
+export const burstSmokeVertex = /* glsl */ `
+attribute float aSeed;
+attribute vec3 aDir;
+uniform float uTime;
+uniform float uSmoke;
 uniform float uReduced;
 varying float vAlpha;
 varying vec2 vUv;
@@ -89,7 +131,7 @@ void main() {
 }
 `;
 
-export const smokeFragment = /* glsl */ `
+export const burstSmokeFragment = /* glsl */ `
 uniform vec3 uColor;
 uniform sampler2D uMap;
 varying float vAlpha;
@@ -97,6 +139,82 @@ varying vec2 vUv;
 void main() {
   float sprite = texture2D(uMap, vUv).a;
   gl_FragColor = vec4(uColor, sprite * vAlpha);
+}
+`;
+
+export const contrailVertex = /* glsl */ `
+attribute float aSeed;
+attribute vec3 aDir;
+uniform float uTime;
+uniform float uLength;
+uniform float uAmount;
+uniform float uReduced;
+varying float vAlpha;
+varying vec2 vUv;
+void main() {
+  vUv = uv;
+  float along = aSeed;
+  float wobble = uReduced > 0.5 ? 0.0 : sin(uTime * 0.45 + aSeed * 16.0) * (1.0 + along * 5.0);
+  vec3 p = vec3(
+    aDir.x * (1.5 + along * 14.0) + wobble,
+    -along * uLength,
+    aDir.z * (1.5 + along * 14.0)
+  );
+  vec4 mv = modelViewMatrix * vec4(p, 1.0);
+  float size = 55.0 + along * 70.0;
+  mv.xy += position.xy * size;
+  gl_Position = projectionMatrix * mv;
+  float body = smoothstep(0.0, 0.06, along) * (1.0 - smoothstep(0.88, 1.0, along));
+  vAlpha = uAmount * (0.4 + 0.6 * body);
+}
+`;
+
+export const contrailFragment = /* glsl */ `
+uniform vec3 uCream;
+uniform sampler2D uMap;
+varying float vAlpha;
+varying vec2 vUv;
+void main() {
+  float sprite = texture2D(uMap, vUv).a;
+  gl_FragColor = vec4(uCream, sprite * vAlpha * 0.8);
+}
+`;
+
+export const padCloudVertex = /* glsl */ `
+attribute float aSeed;
+uniform float uScale;
+uniform float uOpacity;
+uniform float uOrange;
+uniform float uTime;
+uniform float uDrift;
+varying vec2 vUv;
+varying float vAlpha;
+varying float vOrange;
+void main() {
+  vUv = uv;
+  vec3 center = (instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+  vec4 mv = modelViewMatrix * vec4(center, 1.0);
+  mv.y += uDrift * sin(uTime * 0.6 + aSeed * 11.0) * uScale * 0.12;
+  float size = uScale * (0.5 + aSeed * 0.85);
+  mv.xy += position.xy * size;
+  gl_Position = projectionMatrix * mv;
+  vAlpha = uOpacity * (0.4 + 0.6 * fract(aSeed * 3.1));
+  vOrange = uOrange * (1.0 - smoothstep(0.12, 0.5, aSeed));
+}
+`;
+
+export const padCloudFragment = /* glsl */ `
+uniform vec3 uCream;
+uniform vec3 uFlame;
+uniform sampler2D uMap;
+varying vec2 vUv;
+varying float vAlpha;
+varying float vOrange;
+void main() {
+  float sprite = texture2D(uMap, vUv).a;
+  vec3 col = mix(uCream, uFlame, clamp(vOrange * 0.5, 0.0, 1.0));
+  if (sprite * vAlpha < 0.02) discard;
+  gl_FragColor = vec4(col, sprite * vAlpha);
 }
 `;
 
