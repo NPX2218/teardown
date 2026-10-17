@@ -1,29 +1,12 @@
 // lib/emissions-data.ts — sourced Falcon 9 emissions factors. Owner: Anders.
 // Pure. Every displayed number comes from data/emissions/falcon9.json.
 //
-// Contract delta (Neel, lib/types.ts): EmissionValue and EmissionsFile match the
-// 01 signatures. When that module lands, import those types from "@/lib/types"
-// instead of declaring them here. Do not add an emissions lens.
+// EmissionType, EmissionValue and EmissionsFile come from the shared contract.
+// Do not add an emissions lens.
 import raw from "@/data/emissions/falcon9.json";
+import type { EmissionType, EmissionValue, EmissionsFile } from "@/lib/types";
 
-export type EmissionType = "official" | "peer-reviewed" | "estimate";
-
-export interface EmissionValue {
-  value: number | string;
-  unit: string;
-  type: EmissionType;
-  source: string;
-  url: string;
-  low?: number;
-  high?: number;
-  note?: string;
-}
-
-export interface EmissionsFile {
-  vehicle: string;
-  caveats: string[];
-  values: Record<string, EmissionValue>;
-}
+export type { EmissionType, EmissionValue, EmissionsFile } from "@/lib/types";
 
 /** Ids the sources panel must be able to name. The flight counter reads only the factor and mixture rows. */
 export const REQUIRED_EMISSION_IDS = [
