@@ -2,6 +2,7 @@
 import { motion } from "motion/react";
 import { clearHeldAxes } from "@/lib/flight/local-controls";
 import { formatKm, formatSpeed } from "@/lib/flight/format";
+import { PATCH_OPEN_EVENT } from "@/lib/imagine/patch-client";
 import { motionPresets } from "@/lib/ui/motion";
 import { useScene } from "@/lib/store";
 import styles from "./flight.module.css";
@@ -48,6 +49,7 @@ export function FlightResult() {
       </p>
       <div className={styles.actions}>
         <button id="retry-flight" type="button" className="btn btn-accent" onClick={retry}>Try again</button>
+        <button type="button" className="btn" onClick={() => window.dispatchEvent(new Event(PATCH_OPEN_EVENT))}>See mission patch</button>
       </div>
     </motion.section>
   );

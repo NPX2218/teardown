@@ -6,6 +6,9 @@ import { IMAGE_TIMEOUT_MS } from "@/lib/imagine/prompt";
 
 const PATCH_PATH = /^\/api\/imagine\/patch\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/** Fired by the flight result's "See mission patch" button to reopen a closed patch. */
+export const PATCH_OPEN_EVENT = "teardown:patch-open";
+
 export interface MissionPatchRequest {
   outcome: FlightOutcome;
   scenarioName: string;
