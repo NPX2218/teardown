@@ -147,6 +147,7 @@ export function PairRocket() {
     };
   }, [showCard]);
 
+  const flightEnded = useScene((s) => s.flight.outcome !== null);
   const qr = useMemo(() => (code && origin ? qrSvgPath(rocketUrl(origin, code)) : null), [code, origin]);
   const tryNow = useCallback(() => retryNow.current(), []);
 
@@ -163,11 +164,11 @@ export function PairRocket() {
     </p>
   );
 
-  // Flight owns its connection/calibration readout. Keep Explore's richer status
-  // here, and show only the pairing entry/card during a disconnected flight.
+  // Flight owns its connection readout while the flight is in progress.
+  // Once a result is up, keep a small "Rocket on" chip so that card stays visible.
   const flightMode = mode !== "explore";
-  const showSurface = !flightMode || !rocket.connected;
-  const view = rocket.connected ? (justConnected ? "toast" : "status") : showCard ? "card" : "button";
+  const view = rocket.connected ? (justConnected ? "toast" : flightEnded ? "chip" : "status") : showCard ? "card" : "button";
+  const showSurface = !flightMode || !rocket.connected || view === "chip";
   let surface: ReactNode;
   if (view === "toast") {
     surface = (
@@ -175,6 +176,9 @@ export function PairRocket() {
         <p className="lead">Rocket connected</p>
       </div>
     );
+  } else if (view === "chip") {
+    // The flight result card sits in this corner; the full status card would cover Try again.
+    surface = <span className="chip chip--ok">Rocket on</span>;
   } else if (view === "status") {
     surface = (
       <div className="card">

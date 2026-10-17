@@ -6,52 +6,68 @@
 
 .panel:global(.overlay__panel) {
   position: relative;
-  width: min(100%, 52rem);
-  max-height: min(86dvh, 48rem);
+  width: min(100%, 54rem);
+  max-height: min(90dvh, 52rem);
   display: grid;
-  gap: var(--sp-4);
+  gap: var(--sp-5);
+  padding: var(--sp-5);
   color: var(--text);
+}
+
+@media (min-width: 720px) {
+  .panel:global(.overlay__panel) {
+    padding: var(--sp-6);
+    gap: var(--sp-6);
+  }
 }
 
 .heading {
   display: grid;
-  gap: 4px;
-  padding-right: var(--target);
+  gap: var(--sp-1);
+  padding-right: calc(var(--target) + var(--sp-2));
 }
 
-.kicker {
+.kicker:global(.eyebrow) {
   margin: 0;
 }
 
 .title {
   margin: 0;
-  font-size: var(--fs-h3, 1.5rem);
+  font-size: var(--fs-h2);
   font-weight: 500;
   letter-spacing: -0.02em;
-  line-height: 1.15;
+  line-height: 1.1;
 }
 
 .body {
   display: grid;
-  gap: var(--sp-4);
-  align-items: center;
+  gap: var(--sp-5);
 }
 
 @media (min-width: 720px) {
   .body {
-    grid-template-columns: minmax(0, 1.1fr) minmax(16rem, 0.9fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--sp-6);
+    align-items: start;
   }
 }
 
 .frame {
   position: relative;
+  display: grid;
+  place-items: center;
   aspect-ratio: 1;
-  width: min(100%, 22rem);
+  width: min(100%, 24rem);
   margin-inline: auto;
   overflow: hidden;
-  border: 1px solid var(--hairline);
-  border-radius: 12px;
+  border: 1px solid var(--hairline-2);
+  border-radius: 16px;
   background: var(--bg);
+}
+
+.frame[data-phase="loading"] {
+  border-style: dashed;
+  border-color: var(--hairline-3);
 }
 
 .picture {
@@ -61,59 +77,152 @@
   background: var(--bg);
 }
 
-.shimmer {
-  position: absolute;
-  inset: 0;
-  background-image: linear-gradient(100deg, var(--surface-2) 20%, var(--surface-3) 50%, var(--surface-2) 80%);
-  background-size: 200% 100%;
-  animation: patch-shimmer var(--dur) var(--ease-ui) infinite;
-}
-
-@keyframes patch-shimmer {
-  from { background-position: 100% 0; }
-  to { background-position: -100% 0; }
-}
-
-.fallback {
-  width: 70%;
-  height: 70%;
-  margin: 15%;
+.badge {
+  width: 64%;
+  height: 64%;
   color: var(--text);
 }
 
+.drawing {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: var(--sp-2);
+  width: 100%;
+  height: 100%;
+  padding: var(--sp-5);
+  text-align: center;
+  color: var(--text-2);
+}
+
+.drawing .badge {
+  width: 58%;
+  height: auto;
+  margin-bottom: var(--sp-3);
+  color: var(--text-2);
+}
+
+.orbit {
+  transform-origin: 60px 60px;
+  animation: patch-orbit 12s linear infinite;
+}
+
+.sketch {
+  stroke-dasharray: 1;
+  animation: patch-sketch 2.4s var(--ease-ui) infinite alternate;
+}
+
+@keyframes patch-orbit {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes patch-sketch {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+
 .status {
-  position: absolute;
-  left: var(--sp-4);
-  right: var(--sp-4);
-  bottom: var(--sp-4);
   margin: 0;
+  font-size: var(--fs-body);
+  font-weight: 500;
+  color: var(--text);
+}
+
+.statusSub {
+  margin: 0;
+  color: var(--text-3);
+}
+
+.details {
+  display: grid;
+  gap: var(--sp-5);
+  align-content: start;
 }
 
 .facts {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--sp-4);
   margin: 0;
+  border-top: 1px solid var(--hairline-2);
+}
+
+.fact:global(.stat) {
+  gap: var(--sp-2);
+  padding: var(--sp-4) 0;
+  border-bottom: 1px solid var(--hairline-2);
+}
+
+.fact:nth-child(odd) {
+  padding-right: var(--sp-4);
+}
+
+.fact:nth-child(even) {
+  padding-left: var(--sp-4);
+  border-left: 1px solid var(--hairline-2);
+}
+
+/* CO₂ is the fifth fact: it takes the full last row instead of leaving a gap. */
+.fact:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+  padding-right: 0;
+}
+
+.fact dd {
+  margin: 0;
+}
+
+.story {
+  display: grid;
+  justify-items: start;
+  gap: var(--sp-2);
 }
 
 .reason {
   margin: 0;
+  font-size: var(--fs-small);
+  line-height: 1.5;
+  color: var(--text-2);
 }
 
-.breakup {
+.alert {
+  display: grid;
+  justify-items: start;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  border: 1px solid var(--hairline-2);
+  border-radius: 12px;
+}
+
+.alert p {
+  margin: 0;
+}
+
+.download {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.download p {
   margin: 0;
 }
 
 .qrBlock {
-  display: grid;
-  justify-items: center;
-  gap: 8px;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--hairline-2);
 }
 
 .qr {
-  width: 12rem;
-  height: 12rem;
-  padding: var(--sp-4);
+  flex: none;
+  /* 9rem keeps modules ~3px so a phone scans it off the screen; the padding is the QR quiet zone. */
+  width: 9rem;
+  height: 9rem;
+  padding: var(--sp-3);
+  border-radius: 8px;
   background: var(--qr-paper);
   color: var(--bg);
   box-sizing: border-box;
@@ -125,8 +234,15 @@
   height: 100%;
 }
 
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--sp-4);
+.qrText {
+  display: grid;
+  gap: var(--sp-1);
+}
+
+.qrText p {
+  margin: 0;
+}
+
+.qrTitle {
+  font-weight: 500;
 }

@@ -47,6 +47,7 @@ export function Marker({
           <meshBasicMaterial color="white" transparent opacity={tone === "quiet" ? 0.3 : 0.6} toneMapped={false} depthWrite={false} />
         </mesh>
       )}
+      {/* No distanceFactor: it scales by 1/distance, so a camera on the pad blew labels up to millions of px and starved page painting. */}
       <Html center zIndexRange={[40, 0]} style={{ pointerEvents: "none" }}>
         <Label text={label} tone={tone} />
       </Html>
