@@ -1,8 +1,9 @@
 // app/api/imagine/route.ts — POST /api/imagine (09 Task 2). Owner: Anders.
-// Server only: the one place the xAI credentials and XAI_IMAGE_MODEL are read for images.
-// A missing key is a 503. This route never invents a picture.
+// Server only. The key is read in lib/imagine/server.ts. A missing key is a 503.
+// This route never invents a picture.
 import { findImaginePart } from "@/lib/imagine/catalog";
 import { IMAGE_TIMEOUT_MS, buildImaginePrompt } from "@/lib/imagine/prompt";
+import { readImagineConfig } from "@/lib/imagine/server";
 import { buildXaiRequest, extractImageUrl, parseImagineBody } from "@/lib/imagine/shape";
 
 export const runtime = "nodejs";
@@ -10,13 +11,6 @@ export const runtime = "nodejs";
 const fail = (status: number, error: string): Response => Response.json({ error }, { status });
 const isTimeout = (err: unknown): boolean =>
   err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError");
-
-/** Reads server env without requiring @types/node in this lane. Next's types also provide `process`. */
-function env(name: string): string | undefined {
-  const proc = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process;
-  const value = proc?.env?.[name];
-  return typeof value === "string" && value !== "" ? value : undefined;
-}
 
 export async function POST(req: Request): Promise<Response> {
   let raw: unknown;
@@ -32,8 +26,7 @@ export async function POST(req: Request): Promise<Response> {
   const part = findImaginePart(partId);
   if (!part) return fail(400, `unknown part: ${partId}`);
 
-  const apiKey = env("XAI_API_KEY");
-  const model = env("XAI_IMAGE_MODEL");
+  const { apiKey, model } = readImagineConfig();
   if (!apiKey || !model) return fail(503, "imagine is not set up on the server");
 
   const { url, body } = buildXaiRequest(model, buildImaginePrompt(part, prompt), image);

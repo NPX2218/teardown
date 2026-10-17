@@ -1,8 +1,8 @@
-/// <reference path="./css.d.ts" />
 "use client";
 // "Show in action" button and picture overlay (09 Task 4). Owner: Anders.
 // Hidden during Flight replay and Your mission so it does not cover flight controls.
 // No emissions lens. No mission.stars gate.
+import Image from "next/image";
 import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
 import {
   IDLE_STATUS,
@@ -193,10 +193,13 @@ export function ImagineSlot() {
 
           {status.phase === "idle" && imageUrl !== null && (
             <figure>
-              <img
+              <Image
                 className={`fit ${styles.picture}`}
                 src={imageUrl}
                 alt={`Grok Imagine picture of the ${partName}`}
+                width={960}
+                height={540}
+                unoptimized
                 onError={() => failImagine(partId, "the picture could not be loaded")}
               />
               <figcaption className="caption">

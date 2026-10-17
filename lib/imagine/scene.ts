@@ -1,9 +1,8 @@
-// Stand-in for useScene until 01's lib/store.ts lands.
-// Contract delta: bind imageUrl, setImageUrl, selectedId, parts, and snapshot to the store.
-// flightActive is true during Flight replay or Your mission so Show in action cannot cover those controls.
-// There is no emissions lens and no mission.stars flag.
-
-import { CATALOG, type ImaginePart } from "@/lib/imagine/catalog";
+// lib/imagine/scene.ts — picture state on Neel's store. Owner: Anders.
+// Show in action is hidden while a flight or a historical replay is active.
+import type { ImaginePart } from "@/lib/imagine/catalog";
+import { idleFlight } from "@/lib/flight/session";
+import { isFlightActive, useScene } from "@/lib/store";
 
 export interface ImagineScene {
   parts: { groups: ImaginePart[] } | null;
@@ -14,47 +13,88 @@ export interface ImagineScene {
   setImageUrl: (url: string | null) => void;
 }
 
-const listeners = new Set<() => void>();
-
-function emit(): void {
-  listeners.forEach((fn) => fn());
-}
-
 function setImageUrl(url: string | null): void {
-  scene = { ...scene, imageUrl: url };
-  emit();
+  useScene.getState().setImageUrl(url);
 }
 
-function fresh(): ImagineScene {
+function partList(): ImaginePart[] | null {
+  const parts = useScene.getState().parts;
+  if (!parts) return null;
+  return parts.groups.map((group) => ({ id: group.id, name: group.name, role: group.role }));
+}
+
+function sameParts(left: ImaginePart[] | undefined, right: ImaginePart[] | null): boolean {
+  if (!left || !right || left.length !== right.length) return left === right;
+  return left.every((part, index) => part.id === right[index]?.id && part.name === right[index]?.name && part.role === right[index]?.role);
+}
+
+function readScene(previous: ImagineScene | null): ImagineScene {
+  const store = useScene.getState();
+  const groups = partList();
+  const parts = previous && sameParts(previous.parts?.groups, groups) ? previous.parts : groups ? { groups } : null;
   return {
-    parts: { groups: CATALOG.map((part) => ({ ...part })) },
-    selectedId: null,
-    imageUrl: null,
-    snapshot: null,
-    flightActive: false,
+    parts,
+    selectedId: store.selectedId,
+    imageUrl: store.imageUrl,
+    snapshot: store.snapshot,
+    flightActive: isFlightActive(store),
     setImageUrl,
   };
 }
 
-let scene: ImagineScene = fresh();
+let view = readScene(null);
+
+function refresh(): ImagineScene {
+  const next = readScene(view);
+  if (
+    view.selectedId === next.selectedId &&
+    view.imageUrl === next.imageUrl &&
+    view.flightActive === next.flightActive &&
+    view.snapshot === next.snapshot &&
+    view.parts === next.parts
+  ) {
+    return view;
+  }
+  view = next;
+  return view;
+}
 
 export function getImagineScene(): ImagineScene {
-  return scene;
+  return refresh();
 }
 
 export function subscribeImagineScene(fn: () => void): () => void {
-  listeners.add(fn);
-  return () => {
-    listeners.delete(fn);
-  };
+  return useScene.subscribe(() => {
+    refresh();
+    fn();
+  });
 }
 
 export function resetImagineScene(): void {
-  scene = fresh();
-  emit();
+  useScene.setState({
+    selectedId: null,
+    imageUrl: null,
+    snapshot: null,
+    replay: { missionId: null, t: 0, playing: false },
+    flight: idleFlight(),
+  });
+  refresh();
 }
 
+/** Test helper. flightActive is derived with isFlightActive, not stored on its own. */
 export function patchImagineScene(partial: Partial<Omit<ImagineScene, "setImageUrl">>): void {
-  scene = { ...scene, ...partial, setImageUrl };
-  emit();
+  const store = useScene.getState();
+  const next: Parameters<typeof useScene.setState>[0] = {};
+  if (partial.selectedId !== undefined) next.selectedId = partial.selectedId;
+  if (partial.imageUrl !== undefined) next.imageUrl = partial.imageUrl;
+  if (partial.snapshot !== undefined) next.snapshot = partial.snapshot;
+  if (partial.flightActive === true && !isFlightActive(store)) {
+    next.replay = { missionId: "practice", t: 0, playing: false };
+  }
+  if (partial.flightActive === false) {
+    next.replay = { missionId: null, t: 0, playing: false };
+    next.flight = idleFlight();
+  }
+  useScene.setState(next);
+  refresh();
 }

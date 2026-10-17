@@ -4,7 +4,7 @@
 import { IMAGE_TIMEOUT_MS } from "@/lib/imagine/prompt";
 import { getImagineScene } from "@/lib/imagine/scene";
 import { IMAGE_INPUT_SUPPORTED, JPEG_PREFIX, isShowableImageUrl } from "@/lib/imagine/shape";
-import type { ToolResult } from "@/lib/imagine/types";
+import type { ToolResult } from "@/lib/types";
 
 export const CLIENT_GRACE_MS = 2000;
 export const CACHE_CHECK_TIMEOUT_MS = 2000;
@@ -146,7 +146,8 @@ export async function requestImagine(
 
 /**
  * The agent's `imagine` tool. Validates arguments without coercing them, then STARTS the picture and returns at once.
- * 04 should call this from its imagine handler: return runImagineTool({ prompt, part_id }).
+ * The agent branch cannot import this file until both fixes are merged. After that, its handler should be:
+ *   imagine: (args) => runImagineTool(args)
  */
 export async function runImagineTool(args: unknown): Promise<ToolResult> {
   const a = typeof args === "object" && args !== null ? (args as Record<string, unknown>) : {};
