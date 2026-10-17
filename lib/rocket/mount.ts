@@ -20,6 +20,12 @@ export const SCREEN_NORMAL: Vec3 = [0, 0, 1];
 export const CALIBRATE_MS = 2000;
 export const CALIBRATE_MAX_MOTION = 0.6;
 export const CALIBRATE_MAX_DRIFT_DEG = 8;
+/**
+ * A stalled frame must not throw away an upright hold. The Kerbal scene can
+ * hitch for more than half a second; the lift in the tilt replay is only
+ * armed for 400 ms after that hold.
+ */
+export const CALIBRATE_MAX_GAP_MS = 2500;
 export const CALIBRATE_MIN_G = 8;
 export const CALIBRATE_MAX_G = 12;
 
@@ -251,7 +257,7 @@ export class UprightCalibrator {
     if (!Number.isFinite(tMs) || !finite(grav) || !Number.isFinite(motion)) return null;
     const magnitude = hypot(grav);
     const still = motion < CALIBRATE_MAX_MOTION && magnitude >= CALIBRATE_MIN_G && magnitude <= CALIBRATE_MAX_G;
-    const gap = this.last !== null && tMs - this.last > 500;
+    const gap = this.last !== null && tMs - this.last > CALIBRATE_MAX_GAP_MS;
     if (!still || gap || (this.last !== null && tMs < this.last)) {
       this.reset();
       this.last = tMs;

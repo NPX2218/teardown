@@ -3,6 +3,7 @@ import { quatMul, quatNormalize } from "@/lib/rocket/orient";
 import {
   G,
   MOUNT_IDS,
+  CALIBRATE_MAX_GAP_MS,
   UprightCalibrator,
   attitudeFromGravity,
   basisFromDownAndScreen,
@@ -69,6 +70,14 @@ describe("rocket mount", () => {
 
     const brief = new UprightCalibrator();
     for (let t = 0; t < 2000; t += 50) expect(brief.push(upright, 0, t)).toBeNull();
+
+    const gapped = new UprightCalibrator();
+    expect(gapped.push(upright, 0, 0)).toBeNull();
+    expect(gapped.push(upright, 0, 1200)).toBeNull();
+    expect(gapped.push(upright, 0, 1200 + CALIBRATE_MAX_GAP_MS + 50)).toBeNull();
+    let lockedLate: ReturnType<UprightCalibrator["push"]> = null;
+    for (let t = 0; t <= 2000; t += 50) lockedLate = gapped.push(upright, 0, 4000 + t);
+    expect(lockedLate).not.toBeNull();
 
     const drifted = new UprightCalibrator();
     for (let t = 0; t <= 2500; t += 50) {
