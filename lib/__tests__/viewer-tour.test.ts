@@ -1,6 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { damp, homeView, partDistance } from "@/lib/viewer/camera";
-import { runTourStep, TOUR_GAP_MS, tourGroups, type TourDeps } from "@/lib/viewer/tour";
+import { runTourStep, stopTourSpeech, TOUR_GAP_MS, tourGroups, type TourDeps } from "@/lib/viewer/tour";
+import { speakLine } from "@/lib/voice/speak";
 import type { PartGroup, PartsFile } from "@/lib/types";
 
 describe("camera math (03 Task 5)", () => {
@@ -96,4 +97,56 @@ describe("tour (03 Task 5)", () => {
     await runTourStep(0, deps);
     expect(calls).toEqual(["stop", "select:null", "fly:home"]);
   });
+
+  it("TD6 stop uses stopSpeaking, then stopSay, then a cutting speakLine", () => {
+    const line = vi.fn(() => Promise.resolve());
+    const stopSpeaking = vi.fn();
+    const stopSay = vi.fn();
+    stopTourSpeech({ speakLine: line, stopSpeaking, stopSay });
+    expect(stopSpeaking).toHaveBeenCalledOnce();
+    expect(stopSay).not.toHaveBeenCalled();
+    expect(line).not.toHaveBeenCalled();
+
+    stopTourSpeech({ speakLine: line, stopSay });
+    expect(stopSay).toHaveBeenCalledOnce();
+    expect(line).not.toHaveBeenCalled();
+
+    stopTourSpeech({ speakLine: line });
+    expect(line).toHaveBeenCalledWith("");
+  });
+
+  it("TD7 stopping the tour cancels an in-flight placeholder line", async () => {
+    const log: string[] = [];
+    let current: { onerror: (() => void) | null } | null = null;
+    vi.stubGlobal("window", {
+      speechSynthesis: {
+        speak(u: { onerror: (() => void) | null; text: string }) {
+          log.push(`speak:${u.text}`);
+          current = u;
+        },
+        cancel() {
+          log.push("cancel");
+          const live = current;
+          current = null;
+          live?.onerror?.();
+        },
+      },
+    });
+    vi.stubGlobal("SpeechSynthesisUtterance", class {
+      text: string;
+      onend: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      constructor(text: string) { this.text = text; }
+    });
+    const line = speakLine("this is the fairing");
+    stopTourSpeech();
+    await line;
+    expect(log).toContain("speak:this is the fairing");
+    expect(log).toContain("cancel");
+    expect(log.some((entry) => entry.startsWith("speak:") && entry !== "speak:this is the fairing")).toBe(false);
+  });
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
 });
