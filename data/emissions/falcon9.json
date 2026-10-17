@@ -1,0 +1,192 @@
+{
+  "vehicle": "falcon9",
+  "caveats": [
+    "Flight carbon dioxide is estimated from RP-1 the simulation burned times a combustion factor. It is not a measured plume.",
+    "Liquid oxygen is not counted as fuel. Building the rocket is excluded. This is direct carbon dioxide, not CO2e or soot warming.",
+    "A replay model is separate from a flown simulation. Missing burn details stay unknown instead of using a sample timeline.",
+    "Rocket carbon dioxide is a tiny global share. No numerical fraction is calculated here."
+  ],
+  "values": {
+    "co2PerMerlinSecondKg": {
+      "value": 277,
+      "unit": "kg CO2 per engine per second",
+      "type": "estimate",
+      "source": "Demo combustion model; FAA background",
+      "url": "https://www.faa.gov/media/91716",
+      "low": 277,
+      "high": 290,
+      "note": "277 is rounded from assumed 295 kg/s propellant / (1 + 2.356 oxidizer:fuel) x assumed 3.15 kg CO2/kg fuel. 290 is an illustrative upper model input, not a verified FAA emission rate. The flight counter does not use this per-second rate."
+    },
+    "co2PerMvacSecondKg": {
+      "value": 219,
+      "unit": "kg CO2 per engine per second",
+      "type": "estimate",
+      "source": "Demo assumption for vacuum-engine CO2 rate; FAA background",
+      "url": "https://www.faa.gov/media/91716",
+      "note": "219 kg CO2 per engine-second is a demo model input; it is not a verified FAA value. The flight counter does not use this per-second rate."
+    },
+    "entryBurnEngines": {
+      "value": 3,
+      "unit": "engines",
+      "type": "estimate",
+      "source": "Demo burn-profile assumption; vehicle background from SpaceX",
+      "url": "https://www.spacex.com/vehicles/falcon-9/",
+      "note": "Assumed engine count for a retired timeline sketch. It is not a measured event and the flight counter does not use it."
+    },
+    "entryBurnSeconds": {
+      "value": 20,
+      "unit": "seconds",
+      "type": "estimate",
+      "source": "Demo burn-profile assumption; vehicle background from SpaceX",
+      "url": "https://www.spacex.com/vehicles/falcon-9/",
+      "note": "Assumed duration for a retired timeline sketch. Missing historical burns stay unknown. The flight counter does not use it."
+    },
+    "landingBurnEngines": {
+      "value": 1,
+      "unit": "engines",
+      "type": "estimate",
+      "source": "Demo burn-profile assumption; vehicle background from SpaceX",
+      "url": "https://www.spacex.com/vehicles/falcon-9/",
+      "note": "Assumed engine count for a retired timeline sketch. The flight counter does not use it."
+    },
+    "landingBurnSeconds": {
+      "value": 25,
+      "unit": "seconds",
+      "type": "estimate",
+      "source": "Demo burn-profile assumption; vehicle background from SpaceX",
+      "url": "https://www.spacex.com/vehicles/falcon-9/",
+      "note": "Assumed duration for a retired timeline sketch. The flight counter does not use it."
+    },
+    "blackCarbonT": {
+      "value": 3,
+      "unit": "tonnes per launch",
+      "type": "estimate",
+      "source": "Demo assumption; background: Barker, Marais & McDowell 2024, Scientific Data; also Ryan 2022, Maloney 2022",
+      "url": "https://doi.org/10.1038/s41597-024-03910-z",
+      "low": 0.4,
+      "high": 17,
+      "note": "3 t with illustrative 0.4–17 t sensitivity bounds is a demo assumption informed by launch-emissions literature; these exact values have not been verified from this paper. Soot is not added to the carbon-dioxide counter."
+    },
+    "waterVaporT": {
+      "value": 180,
+      "unit": "tonnes per launch",
+      "type": "estimate",
+      "source": "Demo assumption; background: Derived from Barker, Marais & McDowell 2024, Scientific Data and Ryan et al. 2022, Earth's Future",
+      "url": "https://doi.org/10.1038/s41597-024-03910-z",
+      "low": 150,
+      "high": 210,
+      "note": "180 t with illustrative 150–210 t sensitivity bounds is a demo assumption; these exact values have not been verified from the linked paper. Water is not added to the carbon-dioxide counter."
+    },
+    "sootWarmingFactor": {
+      "value": 500,
+      "unit": "times",
+      "type": "peer-reviewed",
+      "source": "Ryan et al. 2022, Earth's Future",
+      "url": "https://doi.org/10.1029/2021EF002612",
+      "note": "Ryan et al. abstract reports rocket black-carbon warming per emitted mass about 500 times that of surface and aviation sources. This is not a CO2e conversion factor or a whole-launch multiplier."
+    },
+    "upperAtmosphereYears": {
+      "value": 4,
+      "unit": "years",
+      "type": "estimate",
+      "source": "Demo assumption; background: NASA Technical Memorandum NASA/TM-20240013276",
+      "url": "https://ntrs.nasa.gov/citations/20240013276",
+      "note": "Four years is a demo residence-time assumption; the exact figure has not been verified in the linked NASA memorandum and must not be attributed as a NASA measurement."
+    },
+    "newBoosterCo2T": {
+      "value": 420,
+      "unit": "tonnes CO2e",
+      "type": "estimate",
+      "source": "Unverified demo manufacturing assumption; vehicle background only",
+      "url": "https://www.spacex.com/vehicles/falcon-9/",
+      "note": "420 tonnes CO2e is an unverified, low-confidence demo manufacturing assumption. It is not direct CO2 and is excluded from every flight counter and car comparison."
+    },
+    "carCo2PerYearT": {
+      "value": 4.6,
+      "unit": "tonnes CO2 per car per year",
+      "type": "official",
+      "source": "US EPA, Greenhouse Gas Emissions from a Typical Passenger Vehicle",
+      "url": "https://www.epa.gov/greenvehicles/greenhouse-gas-emissions-typical-passenger-vehicle"
+    },
+    "flightCo2PerPassengerKm": {
+      "value": 0.15,
+      "unit": "kg CO2 per passenger-km",
+      "type": "estimate",
+      "source": "Demo assumption; background: UK DESNZ conversion factors via Our World in Data",
+      "url": "https://ourworldindata.org/travel-carbon-footprint",
+      "note": "Assumed direct-CO2 comparison rate, not a verified OWID or UK conversion factor. It is not used in the flight counter."
+    },
+    "rocketShareOfHumanCo2": {
+      "value": "a tiny share",
+      "unit": "",
+      "type": "estimate",
+      "source": "Qualitative context; no numerical global-share estimate",
+      "url": "https://doi.org/10.1029/2021EF002612",
+      "note": "No numerical fraction is supported here. Do not compare propellant tonnes with global CO2 tonnes or infer a global share from this demo flight model."
+    },
+    "faaCo2Below100kFtT": {
+      "value": 274,
+      "unit": "tonnes CO2 per launch",
+      "type": "estimate",
+      "source": "Unverified legacy demo input; FAA background document",
+      "url": "https://www.faa.gov/media/91716",
+      "note": "274 t is retained only as an unverified demo assumption; no exact FAA table or conversion has been verified. It is not used in the flight counter."
+    },
+    "faaLandingCo2T": {
+      "value": 90.4,
+      "unit": "tonnes CO2 per landing",
+      "type": "estimate",
+      "source": "Unverified legacy demo input; FAA background document",
+      "url": "https://www.faa.gov/media/91716",
+      "note": "90.4 t is retained only as an unverified demo assumption; no exact FAA table or conversion has been verified. It is not a measured upper bound and is not used in the flight counter."
+    },
+    "stage2BurnSeconds": {
+      "value": 397,
+      "unit": "seconds",
+      "type": "estimate",
+      "source": "Demo assumption; background: SpaceX Falcon 9 vehicle page, second stage burn time",
+      "url": "https://www.spacex.com/vehicles/falcon-9/",
+      "note": "397 s is an unverified published-burn background figure. Player emissions do not use a fixed burn length."
+    },
+    "flightRouteKm": {
+      "value": 5600,
+      "unit": "km",
+      "type": "estimate",
+      "source": "Demo assumption; background: Rounded great-circle distance, New York to London",
+      "url": "https://en.wikipedia.org/wiki/Great-circle_distance",
+      "note": "Background distance only. It is not used in the flight counter."
+    },
+    "merlinPropellantKgPerS": {
+      "value": 295,
+      "unit": "kg per engine per second",
+      "type": "estimate",
+      "source": "Demo assumption; background: Derived from FAA SLC-40 Environmental Assessment, App. A (Sierra Engineering plume model, 2019)",
+      "url": "https://www.faa.gov/media/91716",
+      "note": "295 kg/s is an unverified flow assumption; the linked FAA document is background, not evidence for this exact value. The flight counter uses consumed RP-1 mass, not this rate."
+    },
+    "merlinMixtureRatio": {
+      "value": 2.356,
+      "unit": "oxidizer : fuel",
+      "type": "official",
+      "source": "FAA SLC-40 Environmental Assessment, App. A (Sierra Engineering plume model, 2019)",
+      "url": "https://www.faa.gov/media/91716",
+      "note": "Oxidizer:fuel ratio 2.356 appears at PDF page 77 (zero-based index 76) of the FAA SLC-40 EA. It is a model parameter, not a measured in-flight rate. It is used only to turn mixed LOX+RP-1 mass into RP-1 mass."
+    },
+    "co2PerKgKeroseneKg": {
+      "value": 3.15,
+      "unit": "kg CO2 per kg kerosene",
+      "type": "estimate",
+      "source": "Demo kerosene combustion-factor assumption; ICAO background",
+      "url": "https://www.icao.int/environmental-protection/CarbonOffset/Pages/default.aspx",
+      "note": "3.15 is an assumed model factor, not presented as an official or verified ICAO value. The flight counter multiplies consumed RP-1 kilograms by this factor."
+    },
+    "co2PerMerlinSecondFaaKg": {
+      "value": 290,
+      "unit": "kg CO2 per engine per second",
+      "type": "estimate",
+      "source": "Unverified legacy demo input; FAA background document",
+      "url": "https://www.faa.gov/media/91716",
+      "note": "290 kg/s is an illustrative sensitivity input, not a verified FAA plume-model result. The flight counter does not use it."
+    }
+  }
+}
