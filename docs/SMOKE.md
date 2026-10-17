@@ -2,7 +2,7 @@
 
 Throwaway merge of the guide order, then a paired laptop and phone. The app was not edited. Harness fixes stay in `e2e/smoke/` and `scripts/smoke/`.
 
-Run on 17 October 2026 against the tips in `docs/REVIEW-GUIDE.md` (`#13` `7c0cfbc`, `#16` `39f1c99`, `#7` `20c5ae5`, plus the style follow-ups on `#1`, `#3`, and `#4`).
+Run on 17 October 2026 against the full stack, including the PRs that have since landed on `main` (`#8`, `#9`, `#10`, `#12`). Tips at the time: `#13` `7c0cfbc`, `#16` `39f1c99`, `#7` `20c5ae5`, plus the style follow-ups on `#1`, `#3`, and `#4`. `#18` opened after this run.
 
 ## merge-all
 

@@ -32,6 +32,7 @@ for ref in \
   cursor/parts-data-18be \
   cursor/presentation-readme-ecd4 \
   cursor/voice-realtime-dfdf \
+  cursor/about-section-cd80 \
   neel/17-review-guide
 do
   git fetch origin "$ref" || log "fetch miss $ref"
@@ -58,7 +59,7 @@ merge_one() {
   local sha
   sha="$(git rev-parse "$ref")"
   if git merge-base --is-ancestor "$sha" HEAD; then
-    log "OK   #$num already in HEAD ($(git rev-parse --short "$sha"))"
+    log "SKIP #$num already on this base ($(git rev-parse --short "$sha"))"
     return 0
   fi
   if git merge --no-edit --no-ff "$sha" -m "smoke: merge #$num" >"$REPORT/merge-$num.txt" 2>&1; then
@@ -71,8 +72,9 @@ merge_one() {
   git merge --abort || true
 }
 
-# Guide order. #11 is merged after #13 so the recorded resolution wins.
-# #16 is the restyle on top of #14 and #15. #17 is this guide and is optional.
+# Starts at origin/main. PRs already merged there are skipped.
+# #11 is merged after #13 so the recorded resolution wins.
+# #18 is the About sheet on #16. #17 is this guide and is optional.
 merge_one 8  origin/neel/01-setup-contract
 merge_one 10 origin/neel/03-viewer-core
 merge_one 9  origin/neel/10-phone-rocket
@@ -82,6 +84,7 @@ merge_one 11 origin/neel/11-rocket-link
 merge_one 14 origin/neel/15-earth-skins
 merge_one 15 origin/neel/14-grok-mascot
 merge_one 16 origin/neel/16-spacexai-design
+merge_one 18 origin/cursor/about-section-cd80
 merge_one 2  origin/cursor/parts-data-18be
 merge_one 1  origin/cursor/emissions-readout-1384
 merge_one 3  origin/cursor/agent-grok-tools-dfdf
