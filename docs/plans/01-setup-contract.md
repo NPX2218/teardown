@@ -5,7 +5,7 @@
 **Goal:** A Next.js repo both teammates can build in parallel **without waiting on each other**: the shared types, the store, and a placeholder for every function or data file one lane needs from the other. After this hour, Neel's and Anders's lanes never block each other; merging just swaps placeholders for the real thing.
 **Architecture:** One zustand store holds all scene state. Its actions are the only way to change the scene, and they double as the tools Grok can call (04). Types live in one file.
 **Tech Stack:** Next.js App Router, TypeScript strict, zustand, vitest.
-**Spec:** planning doc §0–§3. This plan is the source of truth for the shared contract.
+**Spec:** planning doc §0–§3. The reviewed `docs/specs/01-setup-contract.spec.md` is the source of truth for the shared contract and exact setup commands.
 **Owner:** Both, together, Fri 4:00–5:00 PM. **Needs:** nothing.
 
 ## Global Constraints
@@ -16,11 +16,11 @@ See `00-index.md`. Every task includes them.
 ### Task 1: Repo, dependencies, test runner
 
 **Files:**
-- Create: the app **inside this existing repo** (it already holds `docs/`): from the repo root run `npx create-next-app@latest . --ts --app --eslint --no-tailwind --src-dir=false --import-alias "@/*"`. If it refuses because the folder isn't empty, move `docs/` out, run it, and move `docs/` back.
+- Create: the app **inside this existing repo** following the temporary scaffold and pinned dependency commands in `docs/specs/01-setup-contract.spec.md` Task 1. Keep `docs/` and the existing Git history in place.
 - Create: `vitest.config.ts`, `.env.local.example`, `.gitignore` entry for `.env.local`
 - Create: `lib/__tests__/smoke.test.ts`
 
-- [ ] **Step 1:** Create the app with the command above; `npm i three @react-three/fiber @react-three/drei zustand` and `npm i -D vitest @types/three`.
+- [ ] **Step 1:** Create the app with the exact commands in spec 01 Task 1; commit `package-lock.json`. React 18, fiber 8 and drei 9 must stay compatible.
 - [ ] **Step 2:** `vitest.config.ts` with `test.environment = "node"` and the `@` alias pointing at the repo root. Add `"test": "vitest run"` to `package.json`.
 - [ ] **Step 3:** `smoke.test.ts`: `expect(1 + 1).toBe(2)`.
 - [ ] **Step 4:** Run `npm test`. Expected: 1 passed.
@@ -235,7 +235,7 @@ Every function or data file one lane needs from the other gets created **now**, 
 | `lib/rocket/commands.ts` | `sendToRocket(m: RocketMessage): void`, `onRocketMessage(k: RocketMessage["k"], fn: (m: RocketMessage) => void): () => void`, `isRocketConnected(): boolean` | No-ops; `isRocketConnected()` returns `false` | Neel (11) |
 | `lib/engines.ts` | `G0`, `liftoffTW`, `liftoffVerdict`, `runningCount` (08 Task 1) | **The real thing**: it's ~15 lines, so write it and its tests T1–T4 here | done |
 | `data/parts/falcon9.json` | `PartsFile` | Rough version converted from the prototype's `PARTS` (10 groups, existing text) | Anders polishes in 02 |
-| `data/missions/practice.json` + `data/missions/index.ts` | `Mission` with id `practice`, name "Practice mission (sample data)" | Event times from a published Falcon 9 Starlink timeline (Spaceflight Now, 2020: max-Q 72, MECO 152, separation 156, stage 2 ignition 163, entry burn 399, landing 515, SECO 532); `say` lines short and kid-level | Anders adds the real mission in 06; `practice` stays for tests and the idle loop |
+| `data/missions/practice.json` + `data/missions/index.ts` | `Mission` with id `practice`, name "Practice mission (sample data)" | Event times from a published Falcon 9 Starlink timeline (Spaceflight Now, 2020: max-Q 72, MECO 152, separation 156, stage 2 ignition 163, fairing separation 190, entry-burn completion 419, landing 515, SECO 532); `say` lines short and kid-level | Anders adds the real mission in 06; `practice` stays for tests and the idle loop |
 | `data/emissions/falcon9.json` | `EmissionsFile` | `{ vehicle: "falcon9", caveats: [], values: {} }` | Anders (13) |
 | `public/sounds/` | `<SoundId>.mp3` (e.g. `liftoff_rumble.mp3`) | Empty folder; a missing file just plays nothing | Anders finds the files (05 Task 4) |
 | `app/page.tsx` + slot components | The page renders `<ViewerSlot/>`, `<MissionSlot/>`, `<PairSlot/>` (Neel's folders) and `<VoiceSlot/>`, `<ImagineSlot/>`, `<EmissionsSlot/>` (Anders's folders) | Each slot is an empty component in its owner's folder | Each owner fills their own slots; nobody edits `page.tsx` again |

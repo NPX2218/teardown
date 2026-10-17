@@ -69,5 +69,5 @@ Sections, in this order:
 
 - [ ] Both teammates' Cursor usage pages for Oct 16–18.
 - [ ] The Grok Bot planning thread.
-- [ ] `git log --oneline | head -30` showing small commits with the Cursor trailer.
+- [ ] `git log --oneline -30` showing small, task-focused commits under the developers' own identities, without tool attribution.
 - [ ] Add them to the README and Devpost gallery.

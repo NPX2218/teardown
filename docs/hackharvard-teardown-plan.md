@@ -201,7 +201,7 @@ Matches spacex.com's look without copying it: black background, off-white text (
 
 ## 6. Proving Cursor use
 - Both teammates code in Cursor on their own accounts; use Agent mode heavily.
-- Keep Cursor's `Co-authored-by: Cursor` commit trailer on in this repo.
+- Keep commits under each developer's own identity, without tool attribution or co-author trailers. Evidence of the build workflow comes from the screenshots below.
 - Commit `.cursor/rules/`.
 - Screenshot the agent building key features; put 3–4 in the README and Devpost.
 - Sun morning: screenshot each usage page (Oct 16–18). A Cursor Team admin can export a CSV for both.

@@ -1,6 +1,6 @@
 # Start Here: How Teardown Is Built
 
-A reading guide to every doc in this folder. Read this first, then open each doc in the order below. Diagrams render on GitHub.
+A reading guide to every doc in this folder. For implementation, start with the [reviewed spec index](specs/README.md), then use the stage spec alongside its plan. The spec index defines precedence and lists the remaining device and live-service checks. Diagrams render on GitHub.
 
 **Motto:** Bringing rocket science down to Earth.
 **Problem:** Rockets are one of the most-watched technologies in the world and one of the least understood.
@@ -116,7 +116,7 @@ flowchart LR
   S --> B6
 ```
 
-**No arrows cross between the two lanes.** Everything one lane needs from the other exists as a placeholder from 01, so neither of you ever waits; the store is the only place your work meets. See "How you stay independent" in `plans/00-index.md`.
+**The shared seams connect the lanes.** Everything one lane needs from the other exists as a placeholder from 01, so neither of you ever waits; the store, messaging seams and the named reset event are the agreed meeting points. See "How you stay independent" in `plans/00-index.md`.
 
 | When | Neel | Anders |
 |---|---|---|
@@ -188,7 +188,7 @@ Task N
   Commit        one small commit per task
 ```
 
-**Building with Cursor:** open the plan and tell Agent *"Read docs/plans/00-index.md and docs/plans/NN-name.md. Implement Task N only. Run the tests. Stop."* Review, commit, next task.
+**Building with Cursor:** open the plan and tell Agent *"Read docs/specs/README.md, docs/plans/00-index.md and docs/specs/NN-name.spec.md. Implement Task N only. Run the tests. Stop."* Review, commit, next task.
 
 ---
 
