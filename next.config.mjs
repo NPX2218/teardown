@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const pagesExport = process.env.PAGES_EXPORT === "1";
-const basePath = "/hackharvard-teardown";
+const basePath = "/teardown";
 
 // Route handlers (app/api/*) cannot be statically exported. Park them for this
 // process only; the client already falls back when /api/* 404s. Restored on exit.
