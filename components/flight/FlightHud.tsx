@@ -1,7 +1,8 @@
 "use client";
 import { motion } from "motion/react";
 import { motionPresets } from "@/lib/ui/motion";
-import { useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { presentDriftBanner, type BannerHold } from "@/lib/flight/banner-hold";
 import { MISSIONS } from "@/data/missions/index";
 import { SENTINEL_REFERENCE_UNAVAILABLE } from "@/lib/flight/classroom";
 import { historicalMissions, missionById } from "@/lib/flight/mission-select";
@@ -93,6 +94,22 @@ export function FlightHud() {
   const readyNote = playMode === "mission" ? (tracked ? referenceTrajectoryNote(tracked) : "Reference trajectory unavailable") : null;
   const guide = flight.guide;
   const deviation = playMode === "mission" ? guide?.deviation ?? null : null;
+  const holdRef = useRef<BannerHold | null>(null);
+  const [bannerClock, setBannerClock] = useState(0);
+  const presented = presentDriftBanner(
+    { banner: guide?.banner ?? null, warningLevel },
+    holdRef.current,
+    Date.now(),
+  );
+  holdRef.current = presented.hold;
+  useEffect(() => {
+    const until = presented.hold?.untilMs;
+    if (until === undefined) return;
+    const delay = until - Date.now();
+    if (delay <= 0) return;
+    const id = window.setTimeout(() => setBannerClock((tick) => tick + 1), delay);
+    return () => window.clearTimeout(id);
+  }, [presented.hold, bannerClock]);
 
   return (
     <>
@@ -149,7 +166,7 @@ export function FlightHud() {
             </div>
             <p>{goalLine(readout)}</p>
             {notice && <p className="hud__v hud__v--bad">{notice}</p>}
-            {guide?.banner && <p className={warningLevel === "warning" || warningLevel === "failed" ? "hud__v hud__v--bad" : styles.note} data-banner={warningLevel}>{guide.banner}</p>}
+            {presented.banner && <p className={presented.warningLevel === "warning" || presented.warningLevel === "failed" ? "hud__v hud__v--bad" : styles.note} data-banner={presented.warningLevel}>{presented.banner}</p>}
             {playMode === "mission" && guidanceNote && <p className={styles.note}>{guidanceNote}</p>}
             {deviation && deviation.band !== "none" && (
               <div className={styles.stack} data-deviation={deviation.band}>

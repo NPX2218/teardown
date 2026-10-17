@@ -24,7 +24,7 @@ describe("frame budget", () => {
     const stalled = frameWallSlices(0.45);
     expect(stalled).toHaveLength(5);
     expect(stalled.reduce((sum, step) => sum + step, 0)).toBeCloseTo(0.45, 5);
-    expect(frameWallSlices(3)).toEqual([0.1]);
+    expect(frameWallSlices(3).reduce((sum, step) => sum + step, 0)).toBeCloseTo(0.5, 5);
     expect(frameWallSlices(0)).toEqual([]);
     expect(FRAME_WALL_BUDGET_S).toBe(0.5);
   });

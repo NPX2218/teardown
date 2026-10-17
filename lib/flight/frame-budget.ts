@@ -8,14 +8,13 @@ export const FRAME_WALL_SLICE_S = 0.1;
 /**
  * Wall-time slices for one visible frame.
  * A slow animation frame keeps up to half a second so warp still reaches
- * mission events. A longer gap is a blocked main thread (a screenshot, a
- * hitch) and must not skip the drift warning on the way to failure.
+ * mission events. A longer gap keeps that same half second, not the whole
+ * stall, so one blocked frame cannot cross the drift warning by itself.
  */
 export function frameWallSlices(deltaS: number): number[] {
   if (typeof deltaS !== "number" || !Number.isFinite(deltaS) || deltaS <= 0) return [];
-  if (deltaS > FRAME_WALL_BUDGET_S) return [FRAME_WALL_SLICE_S];
   const slices: number[] = [];
-  let left = deltaS;
+  let left = Math.min(deltaS, FRAME_WALL_BUDGET_S);
   while (left > 1e-4) {
     const step = Math.min(left, FRAME_WALL_SLICE_S);
     slices.push(step);
