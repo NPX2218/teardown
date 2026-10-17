@@ -13,7 +13,7 @@ declare module "@playwright/test" {
     goto(url: string): Promise<unknown>;
     locator(selector: string, options?: unknown): Locator;
     getByRole(role: string, options?: unknown): Locator;
-    getByText(text: unknown): Locator;
+    getByText(text: unknown, options?: unknown): Locator;
     screenshot(options?: unknown): Promise<unknown>;
     evaluate(fn: unknown, arg?: unknown): Promise<unknown>;
     video(): { saveAs(path: string): Promise<void> } | null;
@@ -23,9 +23,12 @@ declare module "@playwright/test" {
     first(): Locator;
     innerText(): Promise<string>;
     evaluate(fn: unknown, arg?: unknown): Promise<unknown>;
+    scrollIntoViewIfNeeded(): Promise<void>;
+    screenshot(options?: unknown): Promise<unknown>;
   }
   interface Assertion {
     toBeVisible(options?: unknown): Promise<void>;
+    toHaveCount(count: number): Promise<void>;
     toHaveText(value: unknown, options?: unknown): Promise<void>;
     toHaveAttribute(name: string, value: unknown, options?: unknown): Promise<void>;
     toContainText(value: unknown, options?: unknown): Promise<void>;
@@ -35,7 +38,10 @@ declare module "@playwright/test" {
     (value?: unknown): Assertion;
     poll(fn: () => Promise<number>): { toBeGreaterThan(value: number): Promise<void> };
   }
-  export const test: (name: string, fn: (args: { browser: Browser }) => Promise<void> | void) => void;
+  export const test: {
+    (name: string, fn: (args: { browser: Browser }) => Promise<void> | void): void;
+    setTimeout(ms: number): void;
+  };
   export const expect: Expect;
   export function defineConfig(config: unknown): unknown;
 }
