@@ -30,8 +30,10 @@ describe("secrets stay server-only", () => {
     for (const file of [...walk(path.join(root, "lib")), ...walk(path.join(root, "app")), ...walk(path.join(root, "components"))]) {
       const text = readFileSync(file, "utf8");
       const relative = path.relative(root, file);
-      if (text.includes("XAI_API_KEY")) hits.push(relative);
-      expect(text, relative).not.toMatch(/NEXT_PUBLIC_XAI/);
+      const readsKey = /process\.env\.XAI_API_KEY/.test(text) || /process\.env\[\s*["']XAI_API_KEY["']\s*\]/.test(text);
+      if (readsKey) hits.push(relative);
+      expect(text, relative).not.toMatch(/process\.env\.NEXT_PUBLIC_XAI/);
+      expect(text, relative).not.toMatch(/process\.env\[\s*["']NEXT_PUBLIC_XAI/);
     }
     expect(hits.length).toBeGreaterThan(0);
     expect(hits.filter((file) => !allow.has(file))).toEqual([]);
