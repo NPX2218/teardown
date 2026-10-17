@@ -186,7 +186,8 @@ describe("flight simulator F1–F24 (2026-10-17)", () => {
     const flight = useScene.getState().flight;
     expect(flight.status).toBe("flying");
     expect(flight.outcome).toBeNull();
-    expect(flight.simulatedTimeS).toBeLessThanOrEqual(0.1 + 1e-9);
+    // Presentation scales the capped 0.1 wall second, preserving the same substeps.
+    expect(flight.simulatedTimeS).toBeLessThanOrEqual(0.8 + 1e-9);
     expect(flight.simulatedTimeS).toBeGreaterThan(0);
   });
 

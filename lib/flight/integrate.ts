@@ -18,7 +18,12 @@ import {
 } from "@/lib/flight.helpers";
 import { emissionsForInteractive, publishInteractiveFuel } from "@/lib/flight/fuel-readout";
 import { emptyGuide, stepGuide, type GuideContext, type GuideSample } from "@/lib/flight/guidance";
-import { physicalNose } from "@/lib/flight/attitude.helpers";
+import { attitudeReadout, physicalAttitude, physicalNose, radialBasis, transportControlFrame } from "@/lib/flight/attitude.helpers";
+import { sweepCapsules, vehicleCollisionCapsules } from "@/lib/flight/collision.helpers";
+import { nearbyLaunchObstacles, launchPadLiftM } from "@/lib/flight/launch-geometry.helpers";
+import { GROUND_DISC_M, SURFACE_LIFT_M } from "@/components/flight/env/frame";
+import { STARBASE, type LaunchSiteSpec } from "@/lib/flight/scene-types";
+import { quatSlerp } from "@/lib/flight/quaternion.helpers";
 
 /** Hidden tabs and any status other than flying do not take a physical step. */
 export function shouldAdvanceFlight(status: FlightStatus, documentHidden: boolean): boolean {
@@ -31,6 +36,8 @@ export interface IntegrateOptions {
   events?: { t: number; id: string }[];
   /** Connection metadata; guidance never overrides accepted pilot input. */
   phoneConnected?: boolean;
+  /** Same illustrated launch site as the flight renderer. */
+  site?: LaunchSiteSpec;
 }
 
 export function integrateSession(
@@ -46,13 +53,55 @@ export function integrateSession(
     reference: options.reference ?? null,
     events: options.events ?? [],
   };
+  const site = options.site ?? STARBASE;
+  const padLiftM = launchPadLiftM(site);
   let accumulator = flight.frameAccumulatorS + cappedWallDeltaS * flight.warp;
   let body = bodyFromFlightState(scenario, flight.state);
   let guide = flight.guide ?? emptyGuide(playMode);
   let steps = 0;
   while (accumulator >= SUBSTEP_S - 1e-12 && steps < MAX_FRAME_STEPS && !body.outcome) {
     accumulator -= SUBSTEP_S;
-    body = stepFlight(body, flight.input, SUBSTEP_S);
+    const before = body;
+    body = stepFlight(body, flight.input, SUBSTEP_S, { groundCollision: "external" });
+    // Before liftoff the integrator clamps the body upright and stationary on its
+    // supported deck. Once airborne, every substep checks the complete solid body.
+    if (before.airborne || body.airborne) {
+      const capsules = (sample: FlightBody, stage = sample.activeStageIndex) => {
+        const nose = physicalNose(sample);
+        return vehicleCollisionCapsules([sample.x, sample.y, sample.z ?? 0], [nose.x, nose.y, nose.z], stage, padLiftM);
+      };
+      const nearPad = Math.hypot(body.x, body.y - EARTH_RADIUS_M, body.z ?? 0) <= GROUND_DISC_M;
+      const startCapsules = capsules(before);
+      const endCapsules = capsules(body, before.activeStageIndex);
+      const earth = { centerM: [0, 0, 0] as [number, number, number], radiusM: EARTH_RADIUS_M + (nearPad ? SURFACE_LIFT_M : 0) };
+      let contact = sweepCapsules(startCapsules, endCapsules, nearbyLaunchObstacles(site, startCapsules, endCapsules), earth);
+      if (!contact && before.activeStageIndex !== body.activeStageIndex) {
+        // Stage separation replaces geometry; it cannot sweep the dropped body
+        // into the upper stage's different pivot/length as though it stretched.
+        const nextCapsules = capsules(body);
+        const appearing = sweepCapsules(nextCapsules, nextCapsules, nearbyLaunchObstacles(site, nextCapsules, nextCapsules), earth);
+        if (appearing) contact = { ...appearing, fraction: 1 };
+      }
+      if (contact) {
+        const fraction = contact.fraction;
+        body = {
+          ...body,
+          x: before.x + (body.x - before.x) * fraction,
+          y: before.y + (body.y - before.y) * fraction,
+          z: (before.z ?? 0) + ((body.z ?? 0) - (before.z ?? 0)) * fraction,
+          ...(body.attitudeQuat ? { attitudeQuat: quatSlerp(physicalAttitude(before), physicalAttitude(body), fraction) } : {}),
+          outcome: { kind: "crashed", reason: contact.kind === "ground" ? "The rocket hit the ground." : "The rocket hit a launch-site structure." },
+        };
+        if (body.attitudeQuat) body = {
+          ...body, ...attitudeReadout(body, body.attitudeQuat),
+          controlFrameQuat: transportControlFrame(before, body, before.controlFrameQuat ?? radialBasis(before).orientation),
+        };
+        guide = { ...guide, impact: {
+          x: contact.pointM[0], y: contact.pointM[1], z: contact.pointM[2],
+          t: before.simulatedTimeS + (body.simulatedTimeS - before.simulatedTimeS) * fraction,
+        } };
+      }
+    }
     const judged = stepGuide(guide, sampleOf(body, SUBSTEP_S), ctx);
     guide = judged.guide;
     if (judged.outcome) body = { ...body, outcome: judged.outcome };
@@ -87,6 +136,7 @@ function sampleOf(body: FlightBody, dt: number): GuideSample {
   return {
     t: body.simulatedTimeS,
     dt,
+    groundCollisionHandled: true,
     x: body.x,
     y: body.y,
     z,

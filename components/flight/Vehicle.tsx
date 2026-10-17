@@ -39,11 +39,12 @@ function FallbackRocket() {
   );
 }
 
-export function Vehicle({ stage, throttle, altitudeKm, elapsedS }: {
+export function Vehicle({ stage, throttle, altitudeKm, elapsedS, visible = true }: {
   stage: number;
   throttle: number;
   altitudeKm: number;
   elapsedS: number;
+  visible?: boolean;
 }) {
   const rig = useRef<THREE.Group>(null);
   const marker = useRef<THREE.Mesh>(null);
@@ -51,6 +52,11 @@ export function Vehicle({ stage, throttle, altitudeKm, elapsedS }: {
     const draw = flightDrawNow.current;
     const node = rig.current;
     if (!draw || !node) return;
+    node.visible = visible;
+    if (!visible) {
+      if (marker.current) marker.current.visible = false;
+      return;
+    }
     scratch.nose.set(draw.nose[0], draw.nose[1], draw.nose[2]);
     if (scratch.nose.lengthSq() < 1e-8) scratch.nose.set(0, 1, 0);
     scratch.nose.normalize();
@@ -58,7 +64,7 @@ export function Vehicle({ stage, throttle, altitudeKm, elapsedS }: {
       const [w, x, y, z] = draw.orientation;
       scratch.quat.set(x, y, z, w);
     } else scratch.quat.setFromUnitVectors(scratch.up, scratch.nose);
-    const { originM } = vehiclePoseOffsets(draw.position, draw.nose, draw.altitudeM, stage);
+    const { originM } = vehiclePoseOffsets(draw.position, draw.nose, draw.altitudeM, stage, draw.padLiftM);
     node.position.set(draw.position[0] + originM[0] / EARTH_RADIUS_M,
       draw.position[1] + originM[1] / EARTH_RADIUS_M,
       draw.position[2] + originM[2] / EARTH_RADIUS_M);
@@ -76,7 +82,7 @@ export function Vehicle({ stage, throttle, altitudeKm, elapsedS }: {
 
   return (
     <>
-      <group ref={rig} scale={1 / EARTH_RADIUS_M}>
+      <group ref={rig} visible={visible} scale={1 / EARTH_RADIUS_M}>
         {stage < 1 ? (
           <Suspense fallback={<FallbackRocket />}>
             <FalconModel />

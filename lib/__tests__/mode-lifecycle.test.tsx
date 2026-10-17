@@ -50,6 +50,7 @@ describe("mode lifecycle (PR #34)", () => {
   it("L12: the tilt readout includes actual sideways and inverted pointing (PR #34 full orientation)", () => {
     useAppMode.getState().openMission();
     useScene.getState().launchFlight();
+    useScene.getState().pauseFlight();
     useScene.setState((s) => ({ flight: { ...s.flight, state: { ...s.flight.state!, pitchRad: 0, yawRad: Math.PI } } }));
     expect(renderToStaticMarkup(<FlightHud />)).toContain('Tilt</span><span class="hud__v">180°');
   });
@@ -100,14 +101,20 @@ describe("mode lifecycle (PR #34)", () => {
     expect(useScene.getState().flight.status).toBe("flying");
   });
 
-  it("L5 flying controls keep pause, retry, and calibration with phone-only steering (report 2026-10-17)", () => {
+  it("L5 flying controls keep only pause, retry, and engine power with phone steering (report 2026-10-17)", () => {
     useAppMode.getState().openMission();
     useScene.getState().setRocket({ connected: true, code: "ABCD" });
     launchControlledFlight();
     const html = renderToStaticMarkup(<FlightHud />);
     expect(html).toContain('id="pause-flight"');
     expect(html).toContain('id="retry-flight"');
-    expect(html).toContain("Calibrate phone");
+    expect(html).not.toContain("Calibrate phone");
+    expect(html).toContain('id="throttle-control"');
+    expect(html).not.toContain("Flight options");
+    expect(html).not.toContain("Set engine power below");
+    expect(html).not.toContain("Sideways speed");
+    expect(html).not.toContain("Lowest point");
+    expect(html).toContain("Carbon dioxide so far");
     expect(html).not.toContain("Use screen tilt");
     expect(html).not.toContain("Use phone tilt");
     expect(html).not.toContain('id="pitch-control"');

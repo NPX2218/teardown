@@ -29,6 +29,7 @@ import { loadParts } from "@/lib/parts-source";
 import { assignAxisOwner, mixFlightInput, NEUTRAL_FLIGHT_INPUT } from "@/lib/flight/input-mixer";
 import { clampFlightWallDelta } from "@/lib/flight/hold-step";
 import { integrateSession } from "@/lib/flight/integrate";
+import { launchSiteFor } from "@/lib/flight/launch-site";
 import { playFlightCue } from "@/lib/flight/cues";
 import { milestoneEvents, missionById, referenceFor } from "@/lib/flight/mission-select";
 import { validateFlightScenario } from "@/lib/flight/scenario";
@@ -373,6 +374,7 @@ export const useScene = create<SceneState>()((set, get) => {
         reference: referenceFor(tracked),
         events: milestoneEvents(tracked),
         phoneConnected: get().rocket.connected,
+        site: launchSiteFor({ missionId: tracked?.id ?? null }),
       });
       if (stepped.runId !== flight.runId) return;
       const cue = stepped.guide?.cue ?? null;

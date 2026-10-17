@@ -2,8 +2,10 @@ import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 import { EARTH_RADIUS_M } from "@/lib/flight.helpers";
 import { chaseRangeM, chaseShot, padShot, type CameraShot } from "@/lib/flight/launch-camera";
+import { FALCON_M } from "@/components/flight/fx/falcon";
 import { vehiclePoseOffsets } from "@/lib/flight/vehicle-pose.helpers";
 import {
+  EARTH_RADIUS,
   STARBASE,
   add,
   dot,
@@ -101,5 +103,62 @@ describe("chase camera framing", () => {
       expect(Math.abs(ndc.x)).toBeLessThan(0.01);
       expect(Math.abs(ndc.y)).toBeLessThan(0.01);
     }
+  });
+});
+
+// REGRESSION GUARD for the 2026-10-17 forty-second Earth-reveal request.
+describe("presentation horizon reveal", () => {
+  function shotAt(altitudeM: number, extra = {}) {
+    return chaseShot({ frame, position: physicsMetersToEarthRadii(0, EARTH_RADIUS_M + altitudeM, frame), nose: frame.up, altitudeM, presentation: true, ...extra });
+  }
+  it("P1: keeps the rocket legible through the 8x forty-second climb (2026-10-17 report)", () => {
+    for (const alt of [150_000, 500_000, 1_153_596, 1_779_109]) {
+      const shot = shotAt(alt);
+      expect(new THREE.Vector3(...shot.position).distanceTo(new THREE.Vector3(...shot.target)) / 1e-6).toBeLessThanOrEqual(520.001);
+      expect(shot.fov).toBe(65);
+      const camera = cameraFor(shot);
+      const rocket = physicsMetersToEarthRadii(0, EARTH_RADIUS_M + alt, frame);
+      const base = new THREE.Vector3(...earthRadiiToScene(rocket)).project(camera);
+      const tip = new THREE.Vector3(...earthRadiiToScene(add(rocket, scale(frame.up, 70 / EARTH_RADIUS_M)))).project(camera);
+      expect(Math.abs(tip.y - base.y) * 400).toBeGreaterThan(60);
+    }
+  });
+  it("P2: centres the real spherical horizon with visible curvature by 150km (2026-10-17 report)", () => {
+    const camera = cameraFor(shotAt(150_000));
+    const hit = (x: number, y: number) => {
+      const ray = new THREE.Vector3(x, y, 1).unproject(camera).sub(camera.position).normalize();
+      const b = camera.position.dot(ray), c = camera.position.lengthSq() - EARTH_RADIUS ** 2;
+      return b * b - c >= 0 && b < 0;
+    };
+    function horizon(x: number) { let lo = -1, hi = 1; for (let i = 0; i < 50; i++) { const y = (lo + hi) / 2; if (hit(x, y)) lo = y; else hi = y; } return (1 - (lo + hi) / 2) * 400; }
+    expect(horizon(0)).toBeCloseTo(400, 0);
+    expect(horizon(1) - horizon(0)).toBeGreaterThan(45);
+  });
+  it("P4: keeps the separated upper stage readable at forty wall seconds (2026-10-17 report)", () => {
+    for (const alt of [1_153_596, 1_779_109]) {
+      const position = physicsMetersToEarthRadii(0, EARTH_RADIUS_M + alt, frame);
+      const camera = cameraFor(shotAt(alt, { stage: 1 }));
+      const { originM } = vehiclePoseOffsets(position, frame.up, alt, 1);
+      const base = add(position, scale(originM, 1 / EARTH_RADIUS_M));
+      const ndc = (height: number) => new THREE.Vector3(...earthRadiiToScene(add(base, scale(frame.up, height / EARTH_RADIUS_M)))).project(camera);
+      expect(Math.abs(ndc(FALCON_M.fairingTopYM).y - ndc(FALCON_M.mvacExitYM).y) * 400).toBeGreaterThan(25);
+    }
+  });
+  it("P5: opens gradually while realistic mode stays unchanged (2026-10-17 report)", () => {
+    expect(shotAt(30_000).fov).toBe(50);
+    expect(shotAt(90_000).fov).toBeCloseTo(57.5);
+    expect(shotAt(150_000).fov).toBe(65);
+    const plain = { frame, position: physicsMetersToEarthRadii(0, EARTH_RADIUS_M + 150_000, frame), nose: frame.up, altitudeM: 150_000 };
+    expect(chaseShot({ ...plain, presentation: false })).toEqual(chaseShot(plain));
+  });
+  it("P3: preserves realistic framing and manual orbit pitch (2026-10-17 report)", () => {
+    const launch = shotAt(0), pad = padShot(frame);
+    expect(launch.position).toEqual(pad.position);
+    expect(launch.target).toEqual(pad.target);
+    expect(launch.fov).toBe(pad.fov);
+    expect(shotAt(1_000_000, { presentation: false }).fov).toBe(50);
+    const manual = shotAt(150_000, { manualOrbit: true, pitch: 0.2 });
+    expect(manual.fov).toBe(50);
+    expect(dot(offset(manual, physicsMetersToEarthRadii(0, EARTH_RADIUS_M + 150_000, frame)), frame.up)).toBeLessThan(0);
   });
 });

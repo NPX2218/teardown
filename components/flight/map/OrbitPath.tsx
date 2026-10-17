@@ -12,8 +12,9 @@ import { useOrbitMap } from "./useOrbitMap";
  * An empty `state.points` draws no coast. Apoapsis, periapsis, and the
  * impact point are marked only when the state actually carries them.
  */
-export function OrbitPath({ state, trail, showMarkers = true }: OrbitPathProps) {
+export function OrbitPath({ state, trail, showMarkers = true, visible = true }: OrbitPathProps) {
   const snap = useOrbitMap(state, trail);
+  if (!visible) return <MarkReady />;
   return (
     <group name="orbit-path">
       <MarkReady />

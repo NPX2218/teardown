@@ -6,6 +6,8 @@ import { vehiclePoseOffsets } from "@/lib/flight/vehicle-pose.helpers";
 export { ROCKET_MID_M } from "@/lib/flight/vehicle-pose.helpers";
 import {
   add,
+  cross,
+  dot,
   earthRadiiToScene,
   length,
   normalize,
@@ -33,6 +35,15 @@ export const CHASE_RANGE_KNOTS: readonly (readonly [number, number])[] = [
   [500_000, 520],
   [2_000_000, 22_000_000],
 ];
+
+/**
+ * The 2026-10-17 presentation request needs Earth curvature within forty seconds.
+ * An 8x upright climb passes 150 km in about twenty wall seconds at 70% power.
+ * Ease from the familiar launch shot to the real spherical horizon over that climb.
+ * A 65-degree field shows the arc while a 520 m range cap keeps the ship readable.
+ * Realistic pace and a visitor's dragged orbit retain their existing pitch and field.
+ */
+const PRESENTATION_REVEAL = { startM: 30_000, endM: 150_000, maxRangeM: 520, fov: 65 } as const;
 
 export interface CameraShot {
   position: [number, number, number];
@@ -124,16 +135,29 @@ export function chaseShot(args: {
   stage?: number;
   yaw?: number;
   pitch?: number;
+  presentation?: boolean;
+  manualOrbit?: boolean;
+  padLiftM?: number;
 }): CameraShot {
   const yaw = args.yaw ?? PAD_YAW;
-  const pitch = args.pitch ?? PAD_PITCH;
-  const { up, right, downrange } = args.frame;
-  const distanceM = chaseRangeM(args.altitudeM);
+  const reveal = args.presentation && !args.manualOrbit
+    ? smoothstep01((args.altitudeM - PRESENTATION_REVEAL.startM) / (PRESENTATION_REVEAL.endM - PRESENTATION_REVEAL.startM))
+    : 0;
+  const basePitch = args.pitch ?? PAD_PITCH;
+  const horizonPitch = -Math.acos(EARTH_RADIUS_M / (EARTH_RADIUS_M + Math.max(0, args.altitudeM)));
+  const pitch = basePitch + (horizonPitch - basePitch) * reveal;
+  const up = args.presentation ? normalize(args.position) : args.frame.up;
+  const downrange = args.presentation
+    ? normalize(add(args.frame.downrange, scale(up, -dot(args.frame.downrange, up))))
+    : args.frame.downrange;
+  const right = args.presentation ? normalize(cross(downrange, up)) : args.frame.right;
+  const range = chaseRangeM(args.altitudeM);
+  const distanceM = args.presentation ? Math.min(PRESENTATION_REVEAL.maxRangeM, range) : range;
   const minHeight = Math.max(8, distanceM * 0.012);
-  const { centerM } = vehiclePoseOffsets(args.position, args.nose, args.altitudeM, args.stage);
+  const { centerM } = vehiclePoseOffsets(args.position, args.nose, args.altitudeM, args.stage, args.padLiftM);
   const target = add(args.position, scale(centerM, 1 / EARTH_RADIUS_M));
   const eye = aboveGround(target, orbitDirection(scale(downrange, -1), right, scale(up, -1), yaw, pitch), distanceM, minHeight);
-  return { position: eye, target: earthRadiiToScene(target), up: [up[0], up[1], up[2]], fov: distanceM > 500_000 ? 42 : 50 };
+  return { position: eye, target: earthRadiiToScene(target), up: [up[0], up[1], up[2]], fov: (distanceM > 500_000 ? 42 : 50) + (PRESENTATION_REVEAL.fov - 50) * reveal };
 }
 
 export function blendShots(from: CameraShot, to: CameraShot, t: number): CameraShot {

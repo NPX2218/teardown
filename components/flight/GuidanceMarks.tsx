@@ -39,6 +39,7 @@ export function GuidanceMarks() {
   const trackId = useScene((s) => s.missionTrackId);
   const replayId = useScene((s) => s.replay.missionId);
   const mode = useAppMode((s) => s.mode);
+  const view = useAppMode((s) => s.view);
   const trail = useScene((s) => (s.warningLevel === "failed" ? s.flight.guide?.trail ?? EMPTY : EMPTY));
   const mission = mode === "replay"
     ? missionById(MISSIONS, replayId)
@@ -52,11 +53,12 @@ export function GuidanceMarks() {
   );
   const marks = useMemo(() => {
     const objects: THREE.Line[] = [];
+    if (view !== "overview") return objects;
     const ghost = referencePath(reference);
     if (ghost && ghost.length > 1) objects.push(makeLine(ghost, FLIGHT_SCENE.path, frame));
     if (trail.length > 1) objects.push(makeLine(trail, FLIGHT_SCENE.boom, frame));
     return objects;
-  }, [reference, trail, frame]);
+  }, [reference, trail, frame, view]);
 
   useEffect(() => () => {
     marks.forEach((item) => {

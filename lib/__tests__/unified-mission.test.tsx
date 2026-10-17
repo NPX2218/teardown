@@ -10,6 +10,8 @@ import { useExhibit } from "@/lib/viewer/exhibit";
 const initialScene = useScene.getState();
 const initialMode = useAppMode.getState();
 const initialExhibit = useExhibit.getState();
+const motionPreference = vi.hoisted(() => ({ reduced: false }));
+vi.mock("@/components/ui/useReducedMotion", () => ({ useReducedMotion: () => motionPreference.reduced }));
 vi.mock("@/lib/store", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/store")>();
   return { ...actual, useScene: Object.assign((select: (state: typeof initialScene) => unknown) => select(actual.useScene.getState()), actual.useScene) };
@@ -26,10 +28,58 @@ beforeEach(() => {
   useScene.setState(initialScene, true);
   useAppMode.setState(initialMode, true);
   useExhibit.setState(initialExhibit, true);
+  motionPreference.reduced = false;
 });
 
 // REGRESSION GUARD: unify custom flights and published mission guides, 2026-10-17.
 describe("one mission entry (user request 2026-10-17)", () => {
+  it("U11: compact flight leaves only the emissions total and two actions above engine power (report 2026-10-17)", () => {
+    useAppMode.getState().openMission();
+    useScene.getState().setRocket({ connected: true, code: "TEST" });
+    useScene.getState().setFlightAxisOwner("pitch", "phone");
+    useScene.getState().launchFlight();
+    const html = renderToStaticMarkup(<FlightHud />);
+    expect(html).toContain("Carbon dioxide so far");
+    expect(html).not.toContain("RP-1 burned");
+    expect(html).not.toContain("Calibrate phone");
+    expect(html).not.toContain("Flight pacing");
+    expect(html).not.toContain("More numbers");
+    const controls = html.slice(html.indexOf('aria-label="Flight controls"'));
+    expect(controls.match(/<button/g)).toHaveLength(2);
+    expect(controls.indexOf('id="pause-flight"')).toBeLessThan(controls.indexOf('id="throttle-control"'));
+    expect(controls.indexOf('id="retry-flight"')).toBeLessThan(controls.indexOf('id="throttle-control"'));
+  });
+
+  it("U12: pause restores calibration and pacing choices after their launch transition (report 2026-10-17)", () => {
+    useAppMode.getState().openMission();
+    useScene.getState().setRocket({ connected: true, code: "TEST" });
+    useScene.getState().launchFlight();
+    useScene.getState().pauseFlight();
+    const html = renderToStaticMarkup(<FlightHud />);
+    expect(html).toContain("Resume");
+    expect(html).toContain("Calibrate phone");
+    expect(html).toContain("Presentation");
+    expect(html).toContain("Realistic");
+  });
+
+  it("U13: reduced motion keeps setup visible without the entrance movement (report 2026-10-17)", () => {
+    motionPreference.reduced = true;
+    useAppMode.getState().openMission();
+    useScene.getState().setRocket({ connected: true, code: "TEST" });
+    const html = renderToStaticMarkup(<FlightHud />);
+    expect(html).toContain("Calibrate phone");
+    expect(html).toContain("Presentation");
+    expect(html).not.toContain("transform:translateY(8px)");
+  });
+  it("U10: pacing exposes named Presentation and Realistic choices with the current rate (report 2026-10-17)", () => {
+    useAppMode.getState().openMission();
+    const presentation = renderToStaticMarkup(<FlightHud />);
+    expect(presentation).toMatch(/aria-pressed="true"[^>]*>Presentation/);
+    expect(presentation).toContain("Realistic");
+    useScene.getState().setFlightWarp(1);
+    const realistic = renderToStaticMarkup(<FlightHud />);
+    expect(realistic).toMatch(/aria-pressed="true"[^>]*>Realistic/);
+  });
   it("U1: navigation has one flight entry instead of a separate replay mode (report 2026-10-17)", () => {
     const html = renderToStaticMarkup(<Header />);
     expect(html).toContain("Explore");

@@ -20,7 +20,7 @@ describe("embedded emissions readout", () => {
     });
     const html = renderToStaticMarkup(<EmissionsSlot />);
     expect(html).toContain("3.78 t CO₂");
-    expect(html).toContain("estimated");
+    expect(html.toLowerCase()).toContain("estimated");
     expect(html).toContain('data-emissions-surface="embedded"');
     expect(html).not.toContain("Rocket · Emissions");
     expect(html).not.toContain("setLens");
@@ -56,6 +56,26 @@ describe("embedded emissions readout", () => {
     expect(html).toContain("not a measured plume");
     expect(html).toContain("https://");
     expect(html).not.toContain("Rocket · Emissions");
+  });
+
+  // REGRESSION GUARD for the 2026-10-17 crowded prelaunch emissions card.
+  it("E1: the summary shows one total and keeps supporting comparisons behind a closed disclosure (2026-10-17 report)", () => {
+    const view = estimateFromReadout(
+      { runId: "ready", scope: "interactive", tSeconds: 0, frozen: false, consumedRp1Kg: { 1: 0, 2: 0 } }, EMISSIONS,
+    );
+    const html = renderToStaticMarkup(<EmissionsReadout view={view} file={EMISSIONS} onDetails={() => undefined} />);
+    const summary = html.split("<details")[0];
+    expect(summary).toContain("Carbon dioxide so far");
+    expect(summary).toContain("0 kg CO₂");
+    expect(summary.toLowerCase()).toContain("estimated");
+    expect(summary.toLowerCase()).toContain("not a measured plume");
+    expect(summary).not.toContain("No carbon dioxide");
+    expect(summary).not.toContain("Booster:");
+    expect(summary).not.toContain("typical car");
+    expect(html).toContain("<summary>Estimate details</summary>");
+    expect(html).toContain("Booster:");
+    expect(html).toContain("typical car");
+    expect(html).not.toMatch(/<details[^>]*open/);
   });
 
   it("the readout button is present for a direct view", () => {

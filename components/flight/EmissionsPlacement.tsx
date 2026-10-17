@@ -13,7 +13,7 @@ import {
 } from "@/lib/flight/fuel-readout";
 import { useAppMode } from "@/lib/flight/app-mode";
 import { useScene } from "@/lib/store";
-import styles from "./flight.module.css";
+import styles from "@/components/emissions/emissions.module.css";
 
 function kilograms(value: number): string {
   if (value >= 10000) return `${Math.round(value).toLocaleString("en-US")} kg`;
@@ -51,15 +51,15 @@ export function EmissionsPlacement() {
   const rp1 = flight.fuel?.rp1ConsumedKg ?? 0;
 
   return (
-    <div className={styles.embedded}>
+    <div className={styles.placement}>
       <EmissionsSlot />
       {interactive && flight.fuel && (
-        <p className={styles.note}>
+        <p className={styles.fuelNote}>
           RP-1 burned {kilograms(rp1)}. This is kerosene, not carbon dioxide.
         </p>
       )}
       {historical && (
-        <p className={styles.note}>{historical.assumption}</p>
+        <p className={styles.fuelNote}>{historical.assumption}</p>
       )}
     </div>
   );

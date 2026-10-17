@@ -1,6 +1,10 @@
 "use client";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
+import { useSyncExternalStore } from "react";
 import { motionPresets } from "@/lib/ui/motion";
+import { useReducedMotion } from "@/components/ui/useReducedMotion";
+import { getEmissionsView, subscribeEmissionsView } from "@/lib/emissions-seam";
+import { formatEmissionsReadout } from "@/lib/emissions-format";
 import { MISSIONS } from "@/data/missions/index";
 import { historicalMissions, missionById } from "@/lib/flight/mission-select";
 import { referenceTrajectoryNote } from "@/lib/replay";
@@ -15,6 +19,7 @@ import {
 } from "@/lib/flight/format";
 import { clearHeldAxes } from "@/lib/flight/local-controls";
 import { launchControlledFlight } from "@/lib/flight/controls";
+import { FLIGHT_PACING } from "@/lib/flight/pacing.helpers";
 import { resumeFlightExplicit } from "@/lib/flight/phone-pitch";
 import { zeroRocket } from "@/lib/rocket/useRocket";
 import { clearCameraNudge } from "./cameraNudge";
@@ -26,6 +31,10 @@ import styles from "./flight.module.css";
 
 export function FlightHud({ controlsOnly = false }: { controlsOnly?: boolean }) {
   const flight = useScene((s) => s.flight);
+  const reduce = useReducedMotion();
+  const emissions = useSyncExternalStore(subscribeEmissionsView, getEmissionsView, getEmissionsView);
+  const emissionsCopy = formatEmissionsReadout(emissions);
+  const collapseTransition = reduce ? { duration: 0 } : motionPresets.out;
   const phoneConnected = useScene((s) => s.rocket.connected);
   const playMode = useScene((s) => s.playMode);
   const missionTrackId = useScene((s) => s.missionTrackId);
@@ -62,6 +71,11 @@ export function FlightHud({ controlsOnly = false }: { controlsOnly?: boolean }) 
     if (resumed.ok && useAppMode.getState().mode === "replay") useScene.getState().resumeReplay();
     mark();
   };
+  const retry = () => {
+    clearHeldAxes();
+    useScene.getState().retryFlight();
+    mark();
+  };
   const pick = (id: string) => {
     clearHeldAxes();
     useScene.getState().startFlight(id);
@@ -84,18 +98,16 @@ export function FlightHud({ controlsOnly = false }: { controlsOnly?: boolean }) 
 
   return (
     <>
-      {!controlsOnly && <motion.section initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={motionPresets.out} id="flight-status" className={`hud ${styles.readout}`} data-status={status} data-warning={warningLevel} data-sim-time={flight.simulatedTimeS} aria-label="Flight readout">
+      {!controlsOnly && <motion.section initial={reduce ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={collapseTransition} id="flight-status" className={`hud ${styles.readout}`} data-status={status} data-compact={compact} data-warning={warningLevel} data-sim-time={flight.simulatedTimeS} data-altitude-m={readout?.altitudeM ?? undefined} aria-label="Flight readout">
+        <AnimatePresence initial={false}>
+          {!compact && <motion.div key="readout-details" className={styles.collapsible} initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={collapseTransition}>
         {status === "ready" && (
           <div className={styles.stack}>
             <p className="hud__k">Your mission</p>
-            <h2>{playMode === "mission" ? "Pick a mission. Make the flight your own." : "Go up, then turn to build speed around Earth."}</h2>
+            <h2>{playMode === "mission" ? "Choose an optional mission guide." : "Fly your rocket."}</h2>
             <div className={styles.actions} role="group" aria-label="Choose your flight">
               <button type="button" className="btn" aria-pressed={playMode === "free"} onClick={() => useAppMode.getState().selectMission(null)}>Custom flight</button>
               <button type="button" className="btn" aria-pressed={playMode === "mission"} onClick={() => useAppMode.getState().selectMission(missionTrackId ?? historical[0]?.id ?? "practice")}>Mission</button>
-            </div>
-            <div className={styles.actions}>
-              <button id="scenario-classroom" type="button" className="btn" aria-pressed={flight.scenarioId === "classroom"} onClick={() => pick("classroom")}>Classroom launch</button>
-              <button id="scenario-classroom-hop" type="button" className="btn" aria-pressed={flight.scenarioId === "classroom-hop"} onClick={() => pick("classroom-hop")}>Short hop</button>
             </div>
             {playMode === "mission" && (
               <>
@@ -116,6 +128,7 @@ export function FlightHud({ controlsOnly = false }: { controlsOnly?: boolean }) 
             )}
             <details className={styles.more}>
               <summary>About this flight</summary>
+              <p>Launch upright, then turn gently to build speed around Earth.</p>
               <p>The goal is a path around Earth. The lowest point stays at least 200 km up. The highest point stays under 2,000 km. Then coast for 10 seconds with the engines off.</p>
               <p className={styles.note}>Earth is drawn to size. The rocket dot is bigger so you can see it.</p>
               <p className={styles.note}>You fly a simulated classroom rocket. Mission guides use the data each source actually provides.</p>
@@ -154,26 +167,36 @@ export function FlightHud({ controlsOnly = false }: { controlsOnly?: boolean }) 
             </details>
           </div>
         )}
-        <EmissionsPlacement />
+          </motion.div>}
+        </AnimatePresence>
+        {compact ? (
+          <section data-slot="emissions" data-emissions-surface="embedded" className={styles.compactEmissions} aria-label="Estimated carbon dioxide">
+            <p className="hud__k">Carbon dioxide so far</p>
+            <p className="hud__v hud__v--clock">{emissions.status === "estimate" ? "≈ " : ""}{emissionsCopy.valueText}</p>
+          </section>
+        ) : <EmissionsPlacement />}
       </motion.section>}
-      <section className={`hud ${styles.controls}`} aria-label="Flight controls">
+      <section className={`hud ${styles.controls}`} data-compact={compact} data-motion={reduce ? "reduce" : "full"} aria-label="Flight controls">
         <div className={styles.stack}>
-          {status === "ready" && (
-            <button id="launch-flight" type="button" className="btn btn-accent btn-lg" onClick={launch} disabled={!phoneConnected}>Launch</button>
-          )}
-          {status === "paused" && (
-            <button id="pause-flight" type="button" className="btn btn-accent" onClick={resume} disabled={!phoneConnected}>Resume</button>
-          )}
-          {status === "flying" && <button id="pause-flight" type="button" className="btn" onClick={pause}>Pause flight</button>}
-          {!phoneConnected && (status === "ready" || status === "paused") && (
-            <p className={styles.note} role="status">{status === "paused" ? "Phone disconnected. Reconnect your phone to resume." : "Waiting for your phone. Connect it to launch."}</p>
-          )}
-          {phoneConnected && (
-            <>
-              <p className={styles.note}>Hold the rocket upright to start. Tilt it gently to steer. Set engine power below.</p>
-              <button type="button" className="btn" onClick={() => { zeroRocket(); mark(); }}>Calibrate phone</button>
-            </>
-          )}
+          <div className={styles.controlTop}>
+            {status === "ready" && <button id="launch-flight" type="button" className="btn btn-accent btn-lg" onClick={launch} disabled={!phoneConnected}>Launch</button>}
+            {status === "paused" && <button id="pause-flight" type="button" className="btn btn-accent" onClick={resume} disabled={!phoneConnected}>Resume</button>}
+            {status === "flying" && <button id="pause-flight" type="button" className="btn" onClick={pause}>Pause flight</button>}
+            {(status === "flying" || status === "paused") && !flight.outcome && <button id="retry-flight" type="button" className="btn" onClick={retry}>Try again</button>}
+          </div>
+          <AnimatePresence initial={false}>
+            {!compact && <motion.div key="phone-setup" className={styles.collapsible} initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={collapseTransition}>
+              <div className={styles.stack}>
+                {!phoneConnected && (status === "ready" || status === "paused") && (
+                  <p className={styles.note} role="status">{status === "paused" ? "Phone disconnected. Reconnect your phone to resume." : "Waiting for your phone. Connect it to launch."}</p>
+                )}
+                {phoneConnected && <>
+                  <button type="button" className="btn" onClick={() => { zeroRocket(); mark(); }}>Calibrate phone</button>
+                  <p className={styles.note}>Hold the rocket upright to start. Tilt it gently to steer. Set engine power below.</p>
+                </>}
+              </div>
+            </motion.div>}
+          </AnimatePresence>
           <label className="range" htmlFor="throttle-control">
             Engine power
             <input
@@ -187,30 +210,37 @@ export function FlightHud({ controlsOnly = false }: { controlsOnly?: boolean }) 
               onChange={(event) => steerThrottle(Number(event.target.value))}
             />
           </label>
-          <details className={styles.more} open={!compact}>
-          <summary>Flight options</summary>
-          <details className={styles.more}>
-            <summary>How tilt works</summary>
-            <p className={styles.note}>Point the phone rocket where you want to fly. Start upright, then lean gently. Launch leaves the engines off until you set power.</p>
-          </details>
-          <div className={styles.actions} role="group" aria-label="Time scale">
-            {([1, 4, 8] as const).map((value) => (
-              <button id={`warp-${value}`} key={value} type="button" className="btn" aria-pressed={flight.warp === value} onClick={() => warp(value)}>
-                {value}×
-              </button>
-            ))}
-          </div>
-          <div className={styles.actions}>
-            <button type="button" className="btn" aria-pressed={view === "overview"} onClick={() => useAppMode.getState().setView("overview")}>Earth view</button>
-            <button type="button" className="btn" aria-pressed={view === "follow"} onClick={() => useAppMode.getState().setView("follow")}>Follow rocket</button>
-            <button type="button" className="btn" onClick={() => { clearCameraNudge(); resetChaseOrbit(); useAppMode.getState().resetCamera(); }}>Reset view</button>
-            {!compact && status !== "idle" && !flight.outcome && (
-              <button id="retry-flight" type="button" className="btn" onClick={() => { clearHeldAxes(); useScene.getState().retryFlight(); mark(); }}>Try again</button>
-            )}
-            <button type="button" className="btn" onClick={() => useAppMode.getState().openExplore()}>Exit</button>
-          </div>
-          </details>
-          {compact && <button id="retry-flight" type="button" className="btn" onClick={() => { clearHeldAxes(); useScene.getState().retryFlight(); mark(); }}>Try again</button>}
+          <AnimatePresence initial={false}>
+            {!compact && <motion.div key="flight-options" className={styles.collapsible} initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={collapseTransition}>
+              <div className={styles.stack}>
+                <div className={styles.actions} role="group" aria-label="Flight pacing">
+                  {([["Presentation", FLIGHT_PACING.presentation], ["Realistic", FLIGHT_PACING.realistic]] as const).map(([label, value]) => (
+                    <button id={`warp-${value}`} key={value} type="button" className="btn" aria-pressed={flight.warp === value} onClick={() => warp(value)}>{label} · {value}×</button>
+                  ))}
+                </div>
+                <details className={styles.more}>
+                  <summary>Flight options</summary>
+                  <div className={styles.stack}>
+                  <div className={styles.actions} role="group" aria-label="Rocket preset">
+                    <button id="scenario-classroom" type="button" className="btn" aria-pressed={flight.scenarioId === "classroom"} onClick={() => pick("classroom")}>Orbit flight</button>
+                    <button id="scenario-classroom-hop" type="button" className="btn" aria-pressed={flight.scenarioId === "classroom-hop"} onClick={() => pick("classroom-hop")}>Short hop</button>
+                  </div>
+                  <p className={styles.note}>Orbit flight has fuel to reach space. Short hop is a brief, low-fuel practice launch that returns to Earth. Both use simulated rockets.</p>
+                  <details className={styles.more}>
+                    <summary>How tilt works</summary>
+                    <p className={styles.note}>Point the phone rocket where you want to fly. Start upright, then lean gently. Launch leaves the engines off until you set power.</p>
+                  </details>
+                  <div className={styles.actions}>
+                    <button type="button" className="btn" aria-pressed={view === "overview"} onClick={() => useAppMode.getState().setView("overview")}>Earth view</button>
+                    <button type="button" className="btn" aria-pressed={view === "follow"} onClick={() => useAppMode.getState().setView("follow")}>Follow rocket</button>
+                    <button type="button" className="btn" onClick={() => { clearCameraNudge(); resetChaseOrbit(); useAppMode.getState().resetCamera(); }}>Reset view</button>
+                    <button type="button" className="btn" onClick={() => useAppMode.getState().openExplore()}>Exit</button>
+                  </div>
+                  </div>
+                </details>
+              </div>
+            </motion.div>}
+          </AnimatePresence>
         </div>
       </section>
     </>

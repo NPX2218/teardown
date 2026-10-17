@@ -90,7 +90,7 @@ describe("controller frame and input lifecycle (PR #34)", () => {
     frame(0.5);
     expect(useScene.getState().flight.input.pitchRad).toBe(0);
     expect(useScene.getState().flight.input.throttle).toBeCloseTo(0.2);
-    expect(useScene.getState().flight.simulatedTimeS).toBeCloseTo(0.5);
+    expect(useScene.getState().flight.simulatedTimeS).toBeCloseTo(4);
   });
 
   it("C3: launching from the selected paused replay starts both clocks (PR #34)", () => {

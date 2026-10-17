@@ -36,6 +36,11 @@ function session(pitchRad = 0): FlightSession {
   return { ...createPadSession(CLASSROOM_LAUNCH, "steering-regression"), status: "flying", input: { pitchRad, throttle: 1 } };
 }
 
+/** Steering contracts run above the real tower; launch/structure contact has separate guards. */
+function clearLaunchSite(): void {
+  useScene.setState((state) => ({ flight: { ...state.flight, state: toFlightState({ ...createFlight(CLASSROOM_LAUNCH), y: EARTH_RADIUS_M + 400, airborne: true, simulatedTimeS: 10 }) } }));
+}
+
 // REGRESSION GUARD for PR #34: October 17, 2026. Reference guidance must never replace pilot commands.
 describe("PR #34 physical steering integration", () => {
   it.each([-0.4, 0.4])("I1: local practice controls remain authoritative at pitch %s (PR #34)", (pitch) => {
@@ -89,6 +94,7 @@ describe("PR #34 physical steering integration", () => {
     handleRocketMessage(frameFor(0, [0, 0, 0], "s24fe"), 1000);
     expect(launchControlledFlight("mission").ok).toBe(true);
     const run = useScene.getState().flight.runId!;
+    clearLaunchSite();
     useScene.getState().setFlightInput({ throttle: 1 }, "local", run);
     for (let i = 0; i < 80; i += 1) {
       handleRocketMessage(frameFor(pitch, [0, 0, 0], "s24fe", yaw), 1050 + i * 50);
@@ -111,6 +117,7 @@ describe("PR #34 physical steering integration", () => {
     launchControlledFlight("mission");
     useScene.getState().setFlightWarp(warp);
     const run = useScene.getState().flight.runId!;
+    clearLaunchSite();
     useScene.getState().setFlightInput({ throttle: 1 }, "local", run);
     for (let i = 0; i <= 20; i += 1) {
       handleRocketMessage(frameFor(0, [0, 0, 0], "s24fe", 60), 1050 + i * 50);
@@ -127,6 +134,7 @@ describe("PR #34 physical steering integration", () => {
     handleRocketMessage(frameFor(0, [0, 0, 0], "s24fe"), 1000);
     launchControlledFlight("mission");
     const run = useScene.getState().flight.runId!;
+    clearLaunchSite();
     useScene.getState().setFlightInput({ throttle: 1 }, "local", run);
     for (let i = 0; i < 80; i += 1) {
       handleRocketMessage(frameFor(pitch, [0, 0, 0], "s24fe", yaw), 1050 + i * 50);
@@ -154,9 +162,9 @@ describe("PR #34 physical steering integration", () => {
     draw.nose.forEach((value, i) => expect(value).toBeCloseTo(impulse[i] / magnitude, 11));
   });
 
-  it("I8: low-altitude side lean is judged like fore/aft lean (PR #34)", () => {
+  it("I8: low-altitude side lean without actual contact stays airborne (2026-10-17)", () => {
     const body = { ...createFlight(CLASSROOM_LAUNCH), y: EARTH_RADIUS_M + 40, yawRad: 1.4, airborne: true, simulatedTimeS: 2 };
     const flight = { ...session(), input: { pitchRad: 0, yawRad: 1.4, throttle: 0 }, state: toFlightState(body) };
-    expect(integrateSession(flight, CLASSROOM_LAUNCH, 1 / 60).outcome?.reason).toBe("Tower strike.");
+    expect(integrateSession(flight, CLASSROOM_LAUNCH, 1 / 60).outcome).toBeNull();
   });
 });

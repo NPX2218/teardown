@@ -10,7 +10,6 @@ import {
   REENTRY_REASON,
   STABLE_ORBIT_REASON,
   SUBORBITAL_REASON,
-  TOWER_REASON,
   classifyAnomaly,
   type AnomalySample,
 } from "@/lib/flight/anomalies";
@@ -357,8 +356,8 @@ describe("anomaly detectors", () => {
     expect(classifyAnomaly(sample({ altM: -1, t: 2 }))?.reason).toBe(GROUND_REASON);
   });
 
-  it("flags a tower strike, loss of control, breakup, and re-entry", () => {
-    expect(classifyAnomaly(sample({ t: 2, altM: 40, pitchRad: 1.4 }))?.reason).toBe(TOWER_REASON);
+  it("flags loss of control, breakup, and re-entry while leaving collision geometry authoritative", () => {
+    expect(classifyAnomaly(sample({ t: 2, altM: 40, pitchRad: 1.4 }))).toBeNull();
     expect(classifyAnomaly(sample({ altM: 400, pitchRad: 1.5, pitchRateRadS: 2 }))?.reason).toBe(CONTROL_REASON);
     expect(classifyAnomaly(sample({ gLoad: 50 }))?.reason).toBe(BREAKUP_REASON);
     expect(classifyAnomaly(sample({ qPa: 2_000_000, aoaRad: 3 }))?.reason).toBe(BREAKUP_REASON);

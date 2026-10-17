@@ -48,8 +48,8 @@ export function KerbalWorld() {
       <CloudLayer altitudeKm={draw.altitudeKm} />
       {/* Share the committed stage with the mesh so its camera target cannot switch early. */}
       <ChaseCamera stage={draw.stage} />
-      <Vehicle stage={draw.stage} throttle={draw.throttle} altitudeKm={draw.altitudeKm} elapsedS={draw.elapsedS} />
-      <OrbitPath state={draw.orbit} showMarkers={view === "overview"} />
+      <Vehicle stage={draw.stage} throttle={draw.throttle} altitudeKm={draw.altitudeKm} elapsedS={draw.elapsedS} visible={status !== "crashed"} />
+      <OrbitPath state={draw.orbit} visible={view === "overview"} showMarkers={view === "overview"} />
       <Explosion position={boom} active={status === "crashed" && impact !== null} />
       <MapOverlay visible={view === "overview"} labels={labels} />
     </group>

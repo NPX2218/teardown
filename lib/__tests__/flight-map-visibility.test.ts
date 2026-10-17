@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { Html } from "@react-three/drei";
+import { PathLine } from "@/components/flight/map/PathLine";
 import { Marker } from "@/components/flight/map/Marker";
 import { OrbitPath } from "@/components/flight/map/OrbitPath";
 
@@ -26,6 +27,14 @@ describe("orbit marker visibility", () => {
   it.each(["mission", "replay"])("M1: %s follow view omits every orbit marker (PR #34)", () => {
     const tree = OrbitPath({ state, showMarkers: false } as Parameters<typeof OrbitPath>[0]);
     expect(all(tree as unknown as Element).filter((node) => node.type === Marker)).toHaveLength(0);
+  });
+  it("M4: follow view omits globe-scale hairlines (2026-10-17 jagged-line report)", () => {
+    const tree = OrbitPath({ state, visible: false });
+    expect(all(tree as unknown as Element).filter((node) => node.type === PathLine)).toHaveLength(0);
+  });
+  it("M5: overview retains all orbit and ground-track lines (2026-10-17 jagged-line report)", () => {
+    const tree = OrbitPath({ state, showMarkers: true });
+    expect(all(tree as unknown as Element).filter((node) => node.type === PathLine)).toHaveLength(4);
   });
   it("M2: overview still shows impact and apsis markers (PR #34)", () => {
     const tree = OrbitPath({ state, showMarkers: true } as Parameters<typeof OrbitPath>[0]);

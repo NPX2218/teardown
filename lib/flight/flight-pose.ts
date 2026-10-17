@@ -1,4 +1,5 @@
 // Turn one physics sample into the props the flight scene modules draw.
+import { launchPadLiftM } from "@/components/flight/env/kit";
 import { EARTH_RADIUS_M } from "@/lib/flight.helpers";
 import { physicalAttitude, physicalNose } from "@/lib/flight/attitude.helpers";
 import { quatFromBasis } from "@/lib/flight/quaternion.helpers";
@@ -33,6 +34,8 @@ export interface FlightDraw {
   nose: EarthRadiiVec3;
   /** Full physical rotation in the globe frame, including twist. */
   orientation?: Quat;
+  /** Bell plane above the solid launch deck, shared with collisions and camera. */
+  padLiftM?: number;
   altitudeM: number;
   altitudeKm: number;
   throttle: number;
@@ -97,6 +100,7 @@ export function buildFlightDraw(input: FlightDrawInput): FlightDraw {
     position,
     nose,
     orientation: attitudeQuat,
+    padLiftM: launchPadLiftM(input.site),
     altitudeM,
     altitudeKm: altitudeM / 1000,
     throttle: Number.isFinite(input.throttle) ? input.throttle : 0,

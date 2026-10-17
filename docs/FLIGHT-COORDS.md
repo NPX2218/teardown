@@ -70,6 +70,8 @@ Phone rotation passes through a neutral band, a fine-control response below 60 d
 
 The mission selection lives in `missionTrackId`. `GuidanceMarks` draws a single reference line from available samples even before launch; no corridor edges, deviation warnings, countdown, score or off-path failure remain. The reference clock cannot award orbit or end the visitor's flight. Milestones are informational. A mission with missing altitude, velocity or downrange has no invented path. Sentinel-6 currently supplies published milestone times only; the practice path is recorded from the simulated classroom profile and labelled accordingly.
 
+Presentation defaults to 8× simulated time; Realistic restores 1×. Phone steering keeps the same wall-time angular budget at either pace. At 70% engine power, an upright presentation climb reaches 200 km in about 20.35 wall seconds. Between 30 and 150 km the automatic chase camera reveals the true spherical horizon while keeping the rocket legible; dragging the view retains manual framing. After launch the right panel keeps engine power, Pause and Try again, while the left shows the estimated CO₂ total. Setup returns when paused.
+
 The scene uses the existing black background with no surrounding sky shell or additive globe-atmosphere overlay. The camera and rendered vehicle share stage-specific origin and midpoint calculations. They consume the same committed stage so framing cannot switch ahead of the mesh. The intro uses its existing 2.6-second interpolation directly, without a second easing pass. Thrust follows the physical nose, while existing momentum persists after turns.
 
 ## Outcomes
@@ -79,7 +81,7 @@ The scene uses the existing black background with no surrounding sky shell or ad
 | Detector | Result |
 | --- | --- |
 | Ground, including the physics string `The rocket hit the ground.` | crashed |
-| Tower strike in the first 5 s, below 100 m, pitched past about 69° | crashed, `Tower strike.` |
+| Swept active-body contact with pad, tower, tanks or buildings | crashed, `The rocket hit a launch-site structure.` |
 | Tip-over below 1.5 km with a large pitch and pitch rate | crashed, `Loss of control.` |
 | Dynamic pressure × angle of attack above 5e6 Pa·rad, or above 40 g | crashed, `The rocket broke apart.` |
 | Descent faster than 800 m/s and faster than 3.5 km/s below 70 km after having been above 100 km | crashed, `Re-entry burn-up.` |
@@ -87,7 +89,9 @@ The scene uses the existing black background with no surrounding sky shell or ad
 | Free flight leaving Earth (the classroom escape failure) | orbit, `Escape trajectory.` |
 | Free flight, coasting, perigee at least 150 km, not intersecting Earth | orbit, `You are in a stable orbit.` |
 
-A crash stores `impact` at the rocket position and keeps the last 4 s in `guide.trail`. `GuidanceMarks` draws that trail and a small burst beside the globe. The tone is a generated oscillator in `lib/flight/cues.ts`. The phone gets a long `vibrate` pattern. `failureReason` is set so the mascot can look sad without this branch editing mascot files.
+Interactive flight sweeps compound capsules matching the active rendered rocket through each physical substep against Earth and the shared launch-site primitives. The visible deck height is shared by the vehicle, camera and collision poses; an upright departure clears the mount and arms. Stage separation replaces shapes without sweeping the dropped stage into the new pivot. Body contact owns ground classification in this path; the standalone classroom integrator retains its original point check. A conservative launch-kit bounds check skips distant structures. Reference and predicted lines appear only in Earth view.
+
+A crash hides the intact rocket and stores `impact` at the contact point and keeps the last 4 s in `guide.trail`. `GuidanceMarks` draws that trail and a small burst beside the globe. The tone is a generated oscillator in `lib/flight/cues.ts`. The phone gets a long `vibrate` pattern. `failureReason` is set so the mascot can look sad without this branch editing mascot files.
 
 ## Fuel
 

@@ -16,6 +16,8 @@ export interface GuideContext {
 }
 
 export interface GuideSample {
+  /** The complete physical body was swept; negative reference-point altitude alone is not contact. */
+  groundCollisionHandled?: boolean;
   t: number;
   dt: number;
   x: number;
@@ -123,6 +125,7 @@ export function stepGuide(previous: FlightGuide, sample: GuideSample, ctx: Guide
   }
 
   const verdict = classifyAnomaly({
+    groundCollisionHandled: sample.groundCollisionHandled,
     t: sample.t,
     dt: sample.dt,
     altM: sample.altM,

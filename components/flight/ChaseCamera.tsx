@@ -5,6 +5,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import { useReducedMotion } from "@/components/ui/useReducedMotion";
+import { useScene } from "@/lib/store";
 import { useAppMode } from "@/lib/flight/app-mode";
 import {
   blendShots,
@@ -61,10 +62,12 @@ export function ChaseCamera({ stage }: { stage?: number } = {}) {
   const controls = useRef<THREE.EventDispatcher & { target: THREE.Vector3; update: () => void; enabled: boolean } | null>(null);
   const intro = useRef(0);
   const overview = useRef(false);
+  const manualOrbit = useRef(false);
 
   useEffect(() => {
     intro.current = 0;
     overview.current = false;
+    manualOrbit.current = false;
     resetChaseOrbit();
     currentLook.set(0, 0, 0);
     lastAnchor.copy(anchor);
@@ -88,6 +91,7 @@ export function ChaseCamera({ stage }: { stage?: number } = {}) {
       x = event.clientX;
       y = event.clientY;
       if (dx === 0 && dy === 0) return;
+      manualOrbit.current = true;
       chaseOrbit.yaw += dx * 0.005;
       chaseOrbit.pitch = Math.min(1.05, Math.max(-0.85, chaseOrbit.pitch + dy * 0.004));
       intro.current = INTRO_SECONDS;
@@ -143,6 +147,9 @@ export function ChaseCamera({ stage }: { stage?: number } = {}) {
         stage: stage ?? draw.stage,
         yaw: chaseOrbit.yaw,
         pitch: chaseOrbit.pitch,
+        presentation: useScene.getState().flight.warp !== 1,
+        manualOrbit: manualOrbit.current,
+        padLiftM: draw.padLiftM,
       })
       : pad;
     const introWasRunning = intro.current < INTRO_SECONDS;

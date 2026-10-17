@@ -6,17 +6,19 @@ import { FALCON_M } from "@/components/flight/fx/falcon";
 import { flightDrawNow } from "@/components/flight/flightDraw";
 import { buildFlightDraw } from "@/lib/flight/flight-pose";
 import { INTRO_SECONDS, chaseShot, mapShot } from "@/lib/flight/launch-camera";
+import { useScene } from "@/lib/store";
 import { EARTH_RADIUS_M } from "@/lib/flight.helpers";
 import { EARTH_RADIUS, STARBASE, globeFrameFor } from "@/lib/flight/scene-types";
 
 const host = vi.hoisted(() => ({
   callbacks: [] as ((state: unknown, delta: number) => void)[],
   refs: [] as unknown[], cleanups: [] as (() => void)[], camera: null as THREE.PerspectiveCamera | null,
+  el: new EventTarget(),
   mode: { mode: "mission", view: "follow", cameraNonce: 0 },
 }));
 vi.mock("@react-three/fiber", () => ({
   useFrame: (callback: (state: unknown, delta: number) => void) => host.callbacks.push(callback),
-  useThree: () => ({ camera: host.camera, gl: { domElement: new EventTarget() } }),
+  useThree: () => ({ camera: host.camera, gl: { domElement: host.el } }),
 }));
 vi.mock("@react-three/drei", () => ({ OrbitControls: () => null, useGLTF: Object.assign(() => ({}), { preload: () => {} }) }));
 vi.mock("@/components/ui/useReducedMotion", () => ({ useReducedMotion: () => false }));
@@ -59,7 +61,7 @@ function visualCenter() {
 }
 
 beforeEach(() => {
-  host.callbacks = []; host.refs = []; stage = 0;
+  host.callbacks = []; host.refs = []; stage = 0; host.el = new EventTarget();
   vi.stubGlobal("window", new EventTarget());
   host.camera = new THREE.PerspectiveCamera(42, 1.5, 0.02, 200);
   host.camera.position.fromArray(mapShot().position);
@@ -75,7 +77,7 @@ describe("vehicle and camera share the same physical center", () => {
     pose(); mount();
     for (let i = 0; i < Math.round(INTRO_SECONDS * 60); i++) frame();
     const draw = flightDrawNow.current!;
-    const goal = chaseShot({ frame: globeFrameFor(draw.site), position: draw.position, nose: draw.nose, altitudeM: draw.altitudeM });
+    const goal = chaseShot({ frame: globeFrameFor(draw.site), position: draw.position, nose: draw.nose, altitudeM: draw.altitudeM, padLiftM: draw.padLiftM });
     expect(host.camera!.position.distanceTo(new THREE.Vector3(...goal.position)) / 1e-6).toBeLessThan(0.01);
   });
 
@@ -111,4 +113,20 @@ describe("vehicle and camera share the same physical center", () => {
     }
     expect(flightDrawNow.current!.position).not.toEqual(globeFrameFor(STARBASE).up);
   });
+});
+
+// Re-asserting because an automatic reveal must never fight a visitor's drag.
+it("K5: dragging overrides automatic horizon framing until camera reset (2026-10-17 reveal request)", () => {
+  pose(); const draw = flightDrawNow.current!;
+  flightDrawNow.current = { ...draw, altitudeM: 150_000, position: draw.position.map((v) => v * (EARTH_RADIUS_M + 150_000) / (EARTH_RADIUS_M + 1000)) as [number, number, number] };
+  const initial = useScene.getState().flight;
+  useScene.setState({ flight: { ...initial, warp: 8 } });
+  mount();
+  for (let i = 0; i < 240; i++) frame();
+  expect(host.camera!.fov).toBeCloseTo(65, 0);
+  host.el.dispatchEvent(Object.assign(new Event("pointerdown"), { button: 0, clientX: 100, clientY: 100 }));
+  window.dispatchEvent(Object.assign(new Event("pointermove"), { clientX: 120, clientY: 130 }));
+  for (let i = 0; i < 240; i++) frame();
+  expect(host.camera!.fov).toBeCloseTo(50, 0);
+  useScene.setState({ flight: initial });
 });

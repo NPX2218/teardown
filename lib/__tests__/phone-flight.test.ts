@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { resumeFlightExplicit, submitPhonePitch } from "@/lib/flight/phone-pitch";
 import { handleRocketMessage, resetRocketState } from "@/lib/rocket/useRocket";
 import { useScene } from "@/lib/store";
+import { EARTH_RADIUS_M } from "@/lib/flight.helpers";
 import type { RocketMessage } from "@/lib/types";
 import { frameFor } from "../../scripts/sim-phone";
 
@@ -19,6 +20,13 @@ function launchWithPhone(): string {
   const runId = (started.data as { runId: string }).runId;
   useScene.getState().setFlightAxisOwner("pitch", "phone");
   useScene.getState().launchFlight();
+  useScene.getState().setFlightWarp(1);
+  // These tests isolate steering/ownership above the solid 142 m launch tower.
+  // Upright launch and real pad contact are covered by structure integration tests.
+  useScene.setState((scene) => ({ flight: { ...scene.flight, state: {
+    ...scene.flight.state!, positionM: { x: 0, y: EARTH_RADIUS_M + 300, z: 0 },
+    velocityMps: { x: 0, y: 10, z: 0 }, airborne: true,
+  } } }));
   return runId;
 }
 

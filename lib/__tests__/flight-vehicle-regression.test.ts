@@ -50,6 +50,18 @@ function render(mode: AppMode, status: FlightStatus, owner: "local" | "phone", c
 
 // REGRESSION GUARD for PR #34, 2026-10-17: a live phone must not move an unowned or frozen drawing.
 describe("vehicle draws only physical attitude", () => {
+  it("V12: impact removes the intact rocket and marker, and retry restores them (2026-10-17 collision report)", () => {
+    const rig = new THREE.Group(); const marker = new THREE.Mesh(); marker.visible = true;
+    frame.refs = [rig, marker];
+    Vehicle({ stage: 0, throttle: 0, altitudeKm: 0, elapsedS: 0, visible: false });
+    const camera = new THREE.PerspectiveCamera(); camera.position.set(14, 8, 14);
+    frame.callback!({ camera }, 0.1);
+    expect(rig.visible).toBe(false); expect(marker.visible).toBe(false);
+    frame.refs = [rig, marker];
+    Vehicle({ stage: 0, throttle: 0, altitudeKm: 0, elapsedS: 0, visible: true });
+    frame.callback!({ camera }, 0.1);
+    expect(rig.visible).toBe(true);
+  });
   it("V11: actual mesh retains full physical twist across camera positions (PR #34 full orientation)", () => {
     render("mission", "flying", "phone");
     flightDrawNow.current = buildFlightDraw({

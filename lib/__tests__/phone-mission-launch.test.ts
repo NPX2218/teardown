@@ -6,6 +6,7 @@ import { launchControlledFlight } from "@/lib/flight/controls";
 import { getDetector } from "@/lib/gestures";
 import { handleRocketMessage, resetRocketState } from "@/lib/rocket/useRocket";
 import { useScene } from "@/lib/store";
+import { EARTH_RADIUS_M } from "@/lib/flight.helpers";
 import { frameFor } from "../../scripts/sim-phone";
 
 const initial = useScene.getState();
@@ -72,6 +73,12 @@ describe("phone tilt steers a launched mission", () => {
       padWithPhone();
       hold(-20, 200);
       expect(launchControlledFlight().ok).toBe(true);
+      useScene.getState().setFlightWarp(1);
+      // Isolate course steering after clearing the real launch structures.
+      useScene.setState((scene) => ({ flight: { ...scene.flight, state: {
+        ...scene.flight.state!, positionM: { x: 0, y: EARTH_RADIUS_M + 300, z: 0 },
+        velocityMps: { x: 0, y: 10, z: 0 }, airborne: true,
+      } } }));
       for (let i = 0; i < 600; i += 1) {
         handleRocketMessage(frameFor(lean, [0, 0, 0], "s24fe"), t);
         t += 50;

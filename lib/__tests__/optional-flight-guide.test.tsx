@@ -28,7 +28,7 @@ function primitives(node: ReactNode): number {
   Children.forEach(node, (child) => { if (isValidElement<{ children?: ReactNode }>(child)) count += child.type === "primitive" ? 1 : primitives(child.props.children); });
   return count;
 }
-beforeEach(() => { useScene.setState(initial, true); useAppMode.setState({ mode: "mission" }); });
+beforeEach(() => { useScene.setState(initial, true); useAppMode.setState({ mode: "mission", view: "overview" }); });
 
 describe("optional mission guide", () => {
   it("O1: a sustained extreme deviation never warns or fails (PR #34 follow-up)", () => {
@@ -51,7 +51,7 @@ describe("optional mission guide", () => {
     expect(stepGuide(emptyGuide("mission"), sample({ existing: { kind: "crashed", reason: GROUND_REASON } }), ctx).outcome?.reason).toBe(GROUND_REASON);
     expect(stepGuide(emptyGuide("mission"), sample({ existing: { kind: "failed", reason: LEAVING_EARTH_REASON } }), ctx).outcome?.reason).toBe(ESCAPE_REASON);
   });
-  it("O5: the optional practice line is visible on the pad without score state or edges (PR #34 follow-up)", () => {
+  it("O5: the optional practice line is visible in the map on the pad without score state or edges (PR #34 follow-up)", () => {
     useScene.getState().startFlight("classroom"); useScene.getState().setMissionTrack("practice");
     expect(useScene.getState().flight.status).toBe("ready"); expect(useScene.getState().flight.guide?.corridor).not.toBe(true);
     expect(primitives(GuidanceMarks())).toBe(1);
@@ -64,4 +64,10 @@ describe("optional mission guide", () => {
     useScene.getState().startFlight("classroom"); useScene.getState().setPlayMode("free");
     expect(primitives(GuidanceMarks())).toBe(0);
   });
+});
+
+it("O8: reference paths stay out of the metre-scale follow camera (2026-10-17 jagged-line report)", () => {
+  useScene.getState().startFlight("classroom"); useScene.getState().setMissionTrack("practice");
+  useAppMode.setState({ view: "follow" });
+  expect(primitives(GuidanceMarks())).toBe(0);
 });

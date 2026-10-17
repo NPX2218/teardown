@@ -202,7 +202,12 @@ export function propellantKg(state: FlightBody): number {
   return state.stages.reduce((sum, stage) => sum + Math.max(0, stage.propellantRemainingKg), 0);
 }
 
-export function stepFlight(state: FlightBody, input: FlightInput, dt: number): FlightBody {
+export interface FlightStepOptions {
+  /** External callers sweep the complete rendered body; standalone callers keep point contact. */
+  groundCollision?: "point" | "external";
+}
+
+export function stepFlight(state: FlightBody, input: FlightInput, dt: number, options: FlightStepOptions = {}): FlightBody {
   if (state.outcome) return state;
   if (!Number.isFinite(dt) || dt <= 0 || !Number.isFinite(input.pitchRad) || !Number.isFinite(input.yawRad ?? 0) || !Number.isFinite(input.throttle) || (input.attitudeQuat !== undefined && !validQuaternion(input.attitudeQuat))) {
     return stop(state, "Simulation stopped.");
@@ -210,14 +215,14 @@ export function stepFlight(state: FlightBody, input: FlightInput, dt: number): F
   const steps = Math.round(dt / SUBSTEP_S);
   if (steps >= 1 && Math.abs(dt - steps * SUBSTEP_S) < 1e-8) {
     let next = state;
-    for (let i = 0; i < steps && !next.outcome; i += 1) next = stepOnce(next, input, SUBSTEP_S);
+    for (let i = 0; i < steps && !next.outcome; i += 1) next = stepOnce(next, input, SUBSTEP_S, options);
     return next;
   }
   let left = dt;
   let next = state;
   while (left > 1e-9 && !next.outcome) {
     const h = Math.min(SUBSTEP_S, left);
-    next = stepOnce(next, input, h);
+    next = stepOnce(next, input, h, options);
     left -= h;
   }
   return next;
@@ -540,7 +545,7 @@ export function turnNose(state: FlightBody, targetRad: number, throttle: number,
   return { pitchRad: turned.angle, pitchRateRadS: turned.rate };
 }
 
-function stepOnce(state: FlightBody, input: FlightInput, dt: number): FlightBody {
+function stepOnce(state: FlightBody, input: FlightInput, dt: number, options: FlightStepOptions): FlightBody {
   if (state.outcome) return state;
   if (!finiteBody(state)) return stop(state, "Simulation stopped.");
   const throttle = clamp(input.throttle, 0, 1);
@@ -588,13 +593,13 @@ function stepOnce(state: FlightBody, input: FlightInput, dt: number): FlightBody
       activeStageIndex: slice.index,
       stages: cursor.stages.map((stage) => ({ ...stage })),
     };
-    cursor = burnAndMove(cursor, slice.dt, slice.burnKg);
+    cursor = burnAndMove(cursor, slice.dt, slice.burnKg, options);
     if (cursor.outcome) return cursor;
   }
   return cursor;
 }
 
-function burnAndMove(state: FlightBody, dt: number, burnKg: number): FlightBody {
+function burnAndMove(state: FlightBody, dt: number, burnKg: number, options: FlightStepOptions): FlightBody {
   const index = state.activeStageIndex;
   const plan = state.stagePlan[index];
   const ratio = plan?.oxidizerToFuel > 0 ? plan.oxidizerToFuel : Number.NaN;
@@ -621,7 +626,7 @@ function burnAndMove(state: FlightBody, dt: number, burnKg: number): FlightBody 
       next = { ...next, airborne: true };
       const moved = translate(next, dt, powered);
       if (moved.outcome) return moved;
-      if (segmentHitsEarth(next.x, next.y, moved.x, moved.y, next.z ?? 0, moved.z ?? 0)) {
+      if (options.groundCollision !== "external" && segmentHitsEarth(next.x, next.y, moved.x, moved.y, next.z ?? 0, moved.z ?? 0)) {
         return stop(moved, "The rocket hit the ground.", "crashed");
       }
       next = moved;
@@ -631,7 +636,7 @@ function burnAndMove(state: FlightBody, dt: number, burnKg: number): FlightBody 
   } else {
     const moved = translate(next, dt, powered);
     if (moved.outcome) return moved;
-    if (segmentHitsEarth(next.x, next.y, moved.x, moved.y, next.z ?? 0, moved.z ?? 0)) {
+    if (options.groundCollision !== "external" && segmentHitsEarth(next.x, next.y, moved.x, moved.y, next.z ?? 0, moved.z ?? 0)) {
       return stop(moved, "The rocket hit the ground.", "crashed");
     }
     next = moved;
