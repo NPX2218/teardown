@@ -20,5 +20,14 @@ export {
 export type { ApsisMark, OrbitPrediction, PathKind, StateVector } from "@/lib/flight/map/predict";
 export { appendTrail, decimatePath, groundTrack, projectToSurface } from "@/lib/flight/map/trail";
 export type { MapVec2 } from "@/lib/flight/map/trail";
-export { PHYSICS_PLANE_FRAME, physicsToEarth, toOrbitPathState, trailToEarth } from "@/lib/flight/map/view";
+export {
+  PHYSICS_PLANE_FRAME,
+  STARBASE,
+  STARBASE_FRAME,
+  frameFromLatLon,
+  latLonToUnit,
+  physicsToEarth,
+  toOrbitPathState,
+  trailToEarth,
+} from "@/lib/flight/map/view";
 export type { EarthRadiiVec3, MapFrame, MapLabel, OrbitElementsView, OrbitPathState } from "@/lib/flight/map/view";

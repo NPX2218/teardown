@@ -9,6 +9,11 @@ import {
   apsisLabel,
   decimatePath,
   groundTrack,
+  PHYSICS_PLANE_FRAME,
+  STARBASE,
+  STARBASE_FRAME,
+  frameFromLatLon,
+  latLonToUnit,
   physicsToEarth,
   predictFromFlight,
   predictOrbit,
@@ -248,7 +253,7 @@ describe("impact point", () => {
 describe("earth-radii path passed to OrbitPath", () => {
   it("maps the 180 km by 212 km ellipse onto the unit globe", () => {
     const state = ellipseVector(180_000, 212_000);
-    const view = toOrbitPathState(state);
+    const view = toOrbitPathState(state, PHYSICS_PLANE_FRAME);
     const rp = (EARTH_RADIUS_M + 180_000) / EARTH_RADIUS_M;
     const ra = (EARTH_RADIUS_M + 212_000) / EARTH_RADIUS_M;
 
@@ -270,7 +275,7 @@ describe("earth-radii path passed to OrbitPath", () => {
       expect(radius).toBeLessThanOrEqual(ra + 1e-6);
     }
 
-    const trail = trailToEarth(state, 0.5, 24);
+    const trail = trailToEarth(state, 0.5, 24, PHYSICS_PLANE_FRAME);
     expect(trail.length).toBeGreaterThan(4);
     expect(radiusOf3(trail[trail.length - 1])).toBeCloseTo(radiusOf3(view.points[0]), 5);
   });
@@ -280,7 +285,7 @@ describe("earth-radii path passed to OrbitPath", () => {
     const periapsis = EARTH_RADIUS_M * 0.5;
     const axis = (apoapsis + periapsis) / 2;
     const speed = Math.sqrt(EARTH_MU_M3_S2 * (2 / apoapsis - 1 / axis));
-    const view = toOrbitPathState({ x: 0, y: apoapsis, vx: speed, vy: 0 });
+    const view = toOrbitPathState({ x: 0, y: apoapsis, vx: speed, vy: 0 }, PHYSICS_PLANE_FRAME);
     expect(view.hitsEarth).toBe(true);
     expect(view.closed).toBe(false);
     expect(view.periapsis).toBeNull();
@@ -290,6 +295,43 @@ describe("earth-radii path passed to OrbitPath", () => {
     const impact = view.points[view.points.length - 1];
     expect(radiusOf3(impact)).toBeCloseTo(1, 5);
     expect(view.points.every((point) => radiusOf3(point) >= 1 - 1e-6)).toBe(true);
+  });
+
+  it("defaults the free-flight pad to Boca Chica and accepts any other lat/lon", () => {
+    const pad = physicsToEarth({ x: 0, y: EARTH_RADIUS_M });
+    const starbase = latLonToUnit(STARBASE.lat, STARBASE.lon);
+    expect(STARBASE.lat).toBeCloseTo(25.997, 5);
+    expect(STARBASE.lon).toBeCloseTo(-97.157, 5);
+    expect(pad[0]).toBeCloseTo(starbase[0], 6);
+    expect(pad[1]).toBeCloseTo(starbase[1], 6);
+    expect(pad[2]).toBeCloseTo(starbase[2], 6);
+    expect(STARBASE_FRAME.up[1]).toBeCloseTo(starbase[1], 6);
+
+    const cape = frameFromLatLon(28.561941, -80.577357, 90);
+    const capePad = physicsToEarth({ x: 0, y: EARTH_RADIUS_M }, cape);
+    const capeUnit = latLonToUnit(28.561941, -80.577357);
+    expect(capePad[0]).toBeCloseTo(capeUnit[0], 6);
+    expect(capePad[1]).toBeCloseTo(capeUnit[1], 6);
+    expect(capePad[2]).toBeCloseTo(capeUnit[2], 6);
+    expect(Math.hypot(capePad[0] - pad[0], capePad[1] - pad[1], capePad[2] - pad[2])).toBeGreaterThan(0.2);
+
+    const state = ellipseVector(180_000, 212_000);
+    const atStarbase = toOrbitPathState(state);
+    const inPlane = toOrbitPathState(state, PHYSICS_PLANE_FRAME);
+    expect(atStarbase.closed).toBe(inPlane.closed);
+    expect(atStarbase.points).toHaveLength(inPlane.points.length);
+    expect(radiusOf3(atStarbase.points[0])).toBeCloseTo(radiusOf3(inPlane.points[0]), 5);
+    expect(Math.hypot(
+      atStarbase.points[0][0] - inPlane.points[0][0],
+      atStarbase.points[0][1] - inPlane.points[0][1],
+      atStarbase.points[0][2] - inPlane.points[0][2],
+    )).toBeGreaterThan(0.2);
+
+    const east = frameFromLatLon(0, 0, 90).downrange;
+    expect(east[0]).toBeCloseTo(0, 5);
+    expect(Math.abs(east[2])).toBeGreaterThan(0.9);
+    const north = frameFromLatLon(0, 0, 0).downrange;
+    expect(north[1]).toBeGreaterThan(0.9);
   });
 
   it("rotates the physics plane onto a supplied launch frame", () => {
