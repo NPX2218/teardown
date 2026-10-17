@@ -258,7 +258,7 @@ function Physics({ reveal }: { reveal: number }) {
 function GrokCards() {
   const cards = [
     ["Agent", "Function calling. Its tools are the store actions the buttons use."],
-    ["Voice", "Speaks the guide and callouts. Hold to talk, Grok transcribes."],
+    ["Voice", "Live session. It can start the tour and set kid, curious, or engineer."],
     ["Imagine", "“Show in action” draws the selected part, grounded in its data."],
     ["Grok Bot", "A corner face that reacts while Grok listens and talks."],
   ];
