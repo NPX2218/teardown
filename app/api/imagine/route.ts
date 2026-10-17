@@ -11,6 +11,13 @@ const fail = (status: number, error: string): Response => Response.json({ error 
 const isTimeout = (err: unknown): boolean =>
   err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError");
 
+/** Reads server env without requiring @types/node in this lane. Next's types also provide `process`. */
+function env(name: string): string | undefined {
+  const proc = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process;
+  const value = proc?.env?.[name];
+  return typeof value === "string" && value !== "" ? value : undefined;
+}
+
 export async function POST(req: Request): Promise<Response> {
   let raw: unknown;
   try {
@@ -25,8 +32,8 @@ export async function POST(req: Request): Promise<Response> {
   const part = findImaginePart(partId);
   if (!part) return fail(400, `unknown part: ${partId}`);
 
-  const apiKey = process.env.XAI_API_KEY;
-  const model = process.env.XAI_IMAGE_MODEL;
+  const apiKey = env("XAI_API_KEY");
+  const model = env("XAI_IMAGE_MODEL");
   if (!apiKey || !model) return fail(503, "imagine is not set up on the server");
 
   const { url, body } = buildXaiRequest(model, buildImaginePrompt(part, prompt), image);
