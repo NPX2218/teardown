@@ -76,7 +76,7 @@ function RocketMarker({ position, text }: { position: readonly [number, number, 
         <meshBasicMaterial color="white" transparent opacity={0.6} toneMapped={false} depthWrite={false} side={DoubleSide} />
       </mesh>
       {text ? (
-        <Html center zIndexRange={[40, 0]} distanceFactor={8} style={{ pointerEvents: "none" }}>
+        <Html center zIndexRange={[40, 0]} style={{ pointerEvents: "none" }}>
           <span className={styles.primary}>{text}</span>
         </Html>
       ) : null}
