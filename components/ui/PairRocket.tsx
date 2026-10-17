@@ -127,9 +127,9 @@ export function PairRocket() {
           <div className="card">
             <span className="chip chip--ok">ROCKET ON</span>
             <button type="button" className="btn" onClick={zeroRocket}>
-              Zero
+              Calibrate
             </button>
-            <p className="small">Stand the rocket up, then tap Zero</p>
+            <p className="small">Hold the rocket upright for 2 seconds, then tap Calibrate</p>
           </div>
         )}
       </div>

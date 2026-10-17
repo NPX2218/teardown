@@ -72,7 +72,12 @@ export function usePhoneSensors(
       const f = toFrame(orient, { incl, acc }, prevGrav, sign ?? GRAVITY_SIGN);
       if (!f) return;
       prevGrav = f.grav;
-      latest = f;
+      const rr = e.rotationRate;
+      const rate = rr && rr.alpha !== null && rr.beta !== null && rr.gamma !== null
+        && Number.isFinite(rr.alpha) && Number.isFinite(rr.beta) && Number.isFinite(rr.gamma)
+        ? [rr.beta, rr.gamma, rr.alpha] as Vec3
+        : null;
+      latest = rate ? { ...f, rate } : f;
       const now = performance.now();
       lastFrameAt = now;
       if (!sawFrame) {

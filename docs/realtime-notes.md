@@ -13,7 +13,9 @@ Per-device evidence for slice 10. Update after HTTPS testing on physical hardwar
 
 - Desktop Chrome at `/rocket`: after tap, **NO SENSORS** after ~3 s (expected; no motion hardware).
 - Sensor math and message routing covered by vitest fixtures (`lib/__tests__/sensors.test.ts`, `phone.test.ts`, `rocket-voice.test.ts`).
-- Relay join requires `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` (11 Task 0); without them `openLink` rejects and the phone shows OFFLINE with retry.
+- Production relay is Supabase Realtime (`NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`). With those keys set and `NEXT_PUBLIC_ROCKET_RELAY` unset, nothing else is used.
+- Dev/test with no keys uses a BroadcastChannel (`NEXT_PUBLIC_ROCKET_RELAY=broadcast`, also the default outside production). Two devices need `NEXT_PUBLIC_ROCKET_RELAY=local` plus `npm run relay:dev`, or the Supabase keys. See `docs/SIM-PHONE.md`.
+- Production with no keys still rejects `openLink` with "relay not configured", and the phone shows OFFLINE with retry.
 
 ## Observations
 

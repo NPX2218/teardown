@@ -11,3 +11,46 @@
 /* "Listening…": big pulsing status word (plan 10 Task 6 Step 4); not applied under reduced motion. */
 .pulse { animation: pulse 1s ease-in-out infinite alternate; color: var(--accent); }
 @keyframes pulse { from { opacity: 0.55; } to { opacity: 1; } }
+
+/* Landscape shell. The window is the middle 40% of the short axis. The S24 FE camera is on the left at angle 90. */
+.shell { position: relative; }
+.band :global(.flame),
+.band svg { width: 72px; height: 96px; margin: 0 0 var(--sp-3); }
+.band {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(78vw, 640px);
+  height: 40dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+.shell[data-camera="left"] .band { left: 58%; }
+.shell[data-camera="right"] .band { left: 42%; }
+.word {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(3.5rem, 14vh, 7rem);
+  font-weight: 800;
+  line-height: 0.9;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.ok { color: var(--ok); }
+.warn { color: var(--warn); }
+.bad { color: var(--bad-text); }
+.flash {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  animation: shell-flash 0.4s steps(2, end) 3;
+}
+.flash.ok { background: var(--ok); }
+.flash.warn { background: var(--warn); }
+.flash.bad { background: var(--bad); }
+@keyframes shell-flash { from { opacity: 0.85; } to { opacity: 0; } }

@@ -13,7 +13,8 @@ export const GRAVITY_SIGN: GravitySign = -1;
 export const SIGN_DETECT_MIN = 8;
 export const SIGN_DETECT_MAX = 11;
 
-// The phone slides into the shell top-first, so its +Y axis points at the nose. Plan 10 Task 1 / Task 5.
+// Portrait checkpoint tilt (retired moves in lib/gestures.ts). The shell does not use this axis:
+// lib/rocket/mount.ts builds the nose from the upright gravity vector, so landscape matches portrait.
 export const NOSE_AXIS: Vec3 = [0, 1, 0];
 
 // Low-pass weight for phones with no `acceleration` (gravity removed): 80% previous + 20% new. Plan 10 Task 1.

@@ -6,7 +6,7 @@ import { newPairCode } from "@/lib/rocket/protocol";
 function handlers() {
   return {
     playSound: vi.fn(), stopSound: vi.fn(), vibrate: vi.fn(), say: vi.fn(), stopSay: vi.fn(),
-    listen: vi.fn(), stopListen: vi.fn(),
+    listen: vi.fn(), stopListen: vi.fn(), showStatus: vi.fn(), calibrate: vi.fn(),
   } satisfies PhoneHandlers;
 }
 const calls = (h: ReturnType<typeof handlers>) =>
@@ -71,6 +71,14 @@ describe("phone glue (10 Task 4)", () => {
     routePhoneMessage({ k: "stopListen" }, h);
     expect(h.listen).toHaveBeenCalledTimes(1);
     expect(h.stopListen).toHaveBeenCalledTimes(1);
+  });
+
+  it("PR8 status and calibrate reach the shell screen", () => {
+    const h = handlers();
+    routePhoneMessage({ k: "status", word: "WARNING", level: "warn", flash: true }, h);
+    routePhoneMessage({ k: "calibrate" }, h);
+    expect(h.showStatus).toHaveBeenCalledWith("WARNING", "warn", true);
+    expect(h.calibrate).toHaveBeenCalledTimes(1);
   });
 
   it("PR7 phone → laptop kinds do nothing on the phone", () => {

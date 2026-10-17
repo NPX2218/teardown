@@ -68,6 +68,10 @@ export interface SceneState {
   resumeFlight(): ToolResult;
   retryFlight(): ToolResult;
   stopFlight(): void;
+  /** Ends a flying run. The phone shell calls this after the upside-down hold. */
+  abortFlight(reason: string): ToolResult;
+  /** Advances to the next stage while flying. One stage returns an error and changes nothing. */
+  separateStage(): ToolResult;
   applyExhibitReset(): void;
   markActivity(nowMs: number): void;
   setLevel(level: ExplainLevel): ToolResult;
@@ -335,6 +339,34 @@ export const useScene = create<SceneState>()((set, get) => {
     },
 
     stopFlight: () => set({ flight: idleFlight() }),
+
+    abortFlight: (reason) => {
+      const flight = get().flight;
+      if (flight.status !== "flying" && flight.status !== "paused") return { ok: false, error: "flight is not flying" };
+      if (!flight.runId || !flight.readout) return { ok: false, error: "no readout" };
+      const text = reason.trim();
+      if (!text) return { ok: false, error: "abort needs a reason" };
+      set({
+        flight: {
+          ...clearHeldInput(flight, "failed"),
+          outcome: { kind: "failed", reason: text, readout: flight.readout, runId: flight.runId },
+        },
+      });
+      return { ok: true };
+    },
+
+    separateStage: () => {
+      const flight = get().flight;
+      if (flight.status !== "flying" || !flight.state) return { ok: false, error: "flight is not flying" };
+      const ids = flight.state.stages.map((stage) => stage.id);
+      const index = ids.indexOf(flight.state.activeStageId);
+      if (index < 0 || index >= ids.length - 1) return { ok: false, error: "no stage to separate" };
+      const activeStageId = ids[index + 1];
+      const state = { ...flight.state, activeStageId };
+      const readout = flight.readout ? { ...flight.readout, activeStageId } : flight.readout;
+      set({ flight: { ...flight, state, readout } });
+      return { ok: true, data: { activeStageId } };
+    },
 
     applyExhibitReset: () =>
       set({

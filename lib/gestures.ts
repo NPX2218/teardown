@@ -1,3 +1,6 @@
+// Checkpoint moves (liftoff, lean, steady, flip, upright, landed, shake) are retired with the
+// guided mission. The detector stays for tests and for exhibit motion (reading().motion).
+// Live flight does not consume the gesture result; lib/rocket/gesture-gate.ts is that gate.
 import type { Gesture, RocketFrame } from "@/lib/types";
 import { NOSE_AXIS, tiltDeg, upAccel } from "@/lib/rocket/sensors";
 
