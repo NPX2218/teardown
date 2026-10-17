@@ -30,6 +30,8 @@
 </p>
 </div>
 
+Preview of main (static build): https://npx2218.github.io/hackharvard-teardown/
+
 ---
 
 A walk-up Falcon 9 exhibit for a 10-year-old and for an engineer. Take the rocket apart, watch a sourced past launch, and fly your own from the ground into a path around Earth.
