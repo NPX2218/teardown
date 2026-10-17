@@ -76,7 +76,8 @@ export interface MusicAudio {
 export function startMusicFromGesture(audio: MusicAudio | null): boolean {
   if (!audio) return false;
   audio.volume = 0;
-  void audio.play();
+  // The browser can still refuse play() (autoplay policy). That only means no music, so do not leave it unhandled.
+  void audio.play().catch(() => {});
   return true;
 }
 
