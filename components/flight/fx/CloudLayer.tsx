@@ -83,7 +83,7 @@ export function CloudLayer({ altitudeKm, pad, reducedMotion }: CloudLayerProps &
 
   const bankMat = useMemo(() => new THREE.ShaderMaterial({
     uniforms: {
-      uScale: { value: 210 * METRES_TO_SCENE },
+      uScale: { value: 280 * METRES_TO_SCENE },
       uOpacity: { value: 0 },
       uOrange: { value: 0.8 },
       uTime: { value: 0 },
@@ -96,6 +96,7 @@ export function CloudLayer({ altitudeKm, pad, reducedMotion }: CloudLayerProps &
     fragmentShader: padCloudFragment,
     transparent: true,
     depthWrite: false,
+    depthTest: false,
     toneMapped: false,
   }), [cream, flame, map]);
 
@@ -114,6 +115,7 @@ export function CloudLayer({ altitudeKm, pad, reducedMotion }: CloudLayerProps &
     fragmentShader: padCloudFragment,
     transparent: true,
     depthWrite: false,
+    depthTest: false,
     toneMapped: false,
   }), [cream, flame, map]);
 
@@ -220,6 +222,7 @@ export function CloudLayer({ altitudeKm, pad, reducedMotion }: CloudLayerProps &
     bankMat.uniforms.uDrift.value = reducedRef.current ? 0 : 1;
     columnMat.uniforms.uTime.value = clock.elapsedTime;
     columnMat.uniforms.uOpacity.value = columnState.amount;
+    columnMat.uniforms.uScale.value = Math.max(360, columnState.lengthM / 6) * METRES_TO_SCENE;
     columnMat.uniforms.uDrift.value = reducedRef.current ? 0 : 0.35;
     if (bank.current) {
       bank.current.visible = bankOpacity > 0.03;
@@ -278,8 +281,9 @@ function clampAltitudeOrange(altitudeKm: number): number {
 function seededPadGeo(count: number, salt: number): THREE.PlaneGeometry {
   const geo = new THREE.PlaneGeometry(1, 1);
   const seeds = new Float32Array(count);
+  const innerCount = Math.floor(count * 0.28);
   for (let i = 0; i < count; i += 1) {
-    const inner = i < count * 0.22;
+    const inner = i >= count - innerCount;
     seeds[i] = inner ? hash01(i, salt) * 0.18 : 0.22 + hash01(i, salt) * 0.78;
   }
   geo.setAttribute("aSeed", new THREE.InstancedBufferAttribute(seeds, 1));
@@ -292,10 +296,11 @@ function placePadBank(
   count: number,
   dummy: THREE.Object3D,
 ) {
+  const innerCount = Math.floor(count * 0.28);
   for (let i = 0; i < count; i += 1) {
     const ang = hash01(i, 41) * Math.PI * 2;
-    const inner = i < count * 0.3;
-    const radius = (inner ? 4 + hash01(i, 42) * 48 : 55 + hash01(i, 42) * 300) / EARTH_RADIUS_M;
+    const inner = i >= count - innerCount;
+    const radius = (inner ? 4 + hash01(i, 42) * 36 : 30 + hash01(i, 42) * 280) / EARTH_RADIUS_M;
     const lift = (4 + hash01(i, 43) * 80) / EARTH_RADIUS_M;
     dummy.position.set(
       basis.up[0] * (1 + lift) + basis.east[0] * Math.cos(ang) * radius + basis.north[0] * Math.sin(ang) * radius,

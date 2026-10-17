@@ -83,12 +83,12 @@ void main() {
   vUv = uv;
   float life = uReduced > 0.5 ? aSeed * 0.8 : fract(uTime * (0.11 + aSeed * 0.1) + aSeed);
   float spread = 4.0 + life * uSpread;
-  float rise = mix(0.5, 28.0, life);
+  float rise = mix(14.0, 78.0, life);
   vec3 p = aDir * spread + vec3(0.0, rise, 0.0);
   float dist = length(p.xz);
-  vOrange = uOrange * (1.0 - smoothstep(6.0, max(18.0, uSpread * 0.38), dist)) * (1.0 - life * 0.25);
+  vOrange = uOrange * (1.0 - smoothstep(8.0, 52.0, dist)) * (1.0 - life * 0.25);
   vec4 mv = modelViewMatrix * vec4(p, 1.0);
-  float size = (34.0 + life * 120.0) * (0.75 + aSeed * 0.45);
+  float size = (42.0 + life * 130.0) * (0.8 + aSeed * 0.45);
   mv.xy += position.xy * size;
   gl_Position = projectionMatrix * mv;
   vAlpha = uSmoke * (0.55 + 0.45 * sin(clamp(life, 0.0, 1.0) * 3.14159265));
@@ -104,8 +104,8 @@ varying float vOrange;
 varying vec2 vUv;
 void main() {
   float sprite = texture2D(uMap, vUv).a;
-  vec3 col = mix(uCream, uFlame, clamp(vOrange * 0.42, 0.0, 1.0));
-  gl_FragColor = vec4(col, sprite * vAlpha * 0.62);
+  vec3 col = mix(uCream, uFlame, clamp(vOrange * 0.4, 0.0, 1.0));
+  gl_FragColor = vec4(col, sprite * vAlpha * 0.48);
 }
 `;
 
@@ -156,12 +156,12 @@ void main() {
   float along = aSeed;
   float wobble = uReduced > 0.5 ? 0.0 : sin(uTime * 0.45 + aSeed * 16.0) * (1.0 + along * 5.0);
   vec3 p = vec3(
-    aDir.x * (1.5 + along * 14.0) + wobble,
+    aDir.x * (1.2 + along * 6.0) + wobble,
     -along * uLength,
-    aDir.z * (1.5 + along * 14.0)
+    aDir.z * (1.2 + along * 6.0)
   );
   vec4 mv = modelViewMatrix * vec4(p, 1.0);
-  float size = 55.0 + along * 70.0;
+  float size = max(56.0, uLength * 0.062);
   mv.xy += position.xy * size;
   gl_Position = projectionMatrix * mv;
   float body = smoothstep(0.0, 0.06, along) * (1.0 - smoothstep(0.88, 1.0, along));
@@ -198,8 +198,8 @@ void main() {
   float size = uScale * (0.5 + aSeed * 0.85);
   mv.xy += position.xy * size;
   gl_Position = projectionMatrix * mv;
-  vAlpha = uOpacity * (0.4 + 0.6 * fract(aSeed * 3.1));
-  vOrange = uOrange * (1.0 - smoothstep(0.12, 0.5, aSeed));
+  vAlpha = uOpacity * (0.32 + 0.45 * fract(aSeed * 3.1));
+  vOrange = uOrange * (1.0 - smoothstep(0.04, 0.16, aSeed));
 }
 `;
 
@@ -212,7 +212,7 @@ varying float vAlpha;
 varying float vOrange;
 void main() {
   float sprite = texture2D(uMap, vUv).a;
-  vec3 col = mix(uCream, uFlame, clamp(vOrange * 0.5, 0.0, 1.0));
+  vec3 col = mix(uCream, uFlame, clamp(vOrange * 0.55, 0.0, 1.0));
   if (sprite * vAlpha < 0.02) discard;
   gl_FragColor = vec4(col, sprite * vAlpha);
 }

@@ -123,6 +123,7 @@ export function EnginePlume({ throttle, altitudeKm, reducedMotion }: EnginePlume
     fragmentShader: smokeFragment,
     transparent: true,
     depthWrite: false,
+    depthTest: false,
     toneMapped: false,
   }), [cream, flame, map]);
 
@@ -224,7 +225,7 @@ export function EnginePlume({ throttle, altitudeKm, reducedMotion }: EnginePlume
       smokeMat.uniforms.uTime.value = time;
       smokeMat.uniforms.uSmoke.value = profile.smoke;
       smokeMat.uniforms.uOrange.value = profile.orange;
-      smokeMat.uniforms.uSpread.value = 36 + profile.smoke * 130;
+      smokeMat.uniforms.uSpread.value = 48 + profile.smoke * 170;
       smokeMat.uniforms.uReduced.value = reduced ? 1 : 0;
     }
     if (contrail.current) {
@@ -240,10 +241,10 @@ export function EnginePlume({ throttle, altitudeKm, reducedMotion }: EnginePlume
 
   return (
     <group name="engine-plume">
+      <instancedMesh ref={smoke} args={[smokeGeo, smokeMat, fxBudget(false).smoke]} frustumCulled={false} />
       <instancedMesh ref={cores} args={[cone, coreMat, NOZZLES.length]} frustumCulled={false} />
       <mesh ref={envelope} geometry={cone} material={envelopeMat} frustumCulled={false} />
       <points ref={sparks} geometry={sparkGeo} material={sparkMat} frustumCulled={false} />
-      <instancedMesh ref={smoke} args={[smokeGeo, smokeMat, fxBudget(false).smoke]} frustumCulled={false} />
       <instancedMesh ref={contrail} args={[contrailGeo, contrailMat, fxBudget(false).contrail]} frustumCulled={false} />
     </group>
   );
