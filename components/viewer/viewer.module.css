@@ -197,6 +197,9 @@
   margin-left: auto;
   pointer-events: auto;
   flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .flightChrome {
@@ -214,6 +217,19 @@
 }
 
 @media (max-width: 720px) {
-  .header { padding-inline: 12px; }
+  .header {
+    height: auto;
+    align-items: flex-start;
+    padding: 8px 12px 10px;
+  }
+  .bar { flex-wrap: wrap; row-gap: 4px; }
   .wordmark { font-size: 15px; }
+  .modeNav { flex: 0 0 auto; }
+  .modeNav button { white-space: nowrap; }
+  /* About plus the level switch need their own row. The three modes stay on the first. */
+  .barEnd {
+    flex: 1 0 100%;
+    margin-left: 0;
+    justify-content: flex-start;
+  }
 }

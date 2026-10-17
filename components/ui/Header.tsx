@@ -3,6 +3,7 @@ import { useAppMode } from "@/lib/flight/app-mode";
 import { useScene } from "@/lib/store";
 import { vehicleStats } from "@/lib/viewer/stats";
 import styles from "@/components/viewer/viewer.module.css";
+import { AboutButton } from "@/components/about/AboutButton";
 import { LevelSwitch } from "./LevelSwitch";
 
 const MODES = [
@@ -49,6 +50,7 @@ export function Header() {
           </ul>
         )}
         <div className={styles.barEnd}>
+          <AboutButton />
           {mode === "explore" && <LevelSwitch />}
         </div>
       </div>
