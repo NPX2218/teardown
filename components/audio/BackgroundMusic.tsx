@@ -6,11 +6,13 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useReducedMotion } from "@/components/ui/useReducedMotion";
 import {
+  BACKGROUND_MUSIC_FALLBACK_SRC,
   armMusicOnGesture,
   createGainFader,
   musicFadeMs,
   musicTargetGain,
   nextMusicMount,
+  resolveBackgroundMusicSrc,
   shouldMountBackgroundMusic,
   startMusicFromGesture,
   type MusicMount,
@@ -36,6 +38,7 @@ export function BackgroundMusic() {
   const reduce = useReducedMotion();
   const [mount, setMount] = useState<MusicMount>(allow ? "on" : "off");
   const [gestured, setGestured] = useState(false);
+  const [src, setSrc] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const gesturedRef = useRef(false);
   const allowRef = useRef(allow);
@@ -44,6 +47,18 @@ export function BackgroundMusic() {
   useEffect(() => {
     hydrateSettings(safeStorage());
   }, []);
+
+  useEffect(() => {
+    if (!allow) return;
+    let cancelled = false;
+    void resolveBackgroundMusicSrc(async (url) => {
+      const response = await fetch(url, { method: "HEAD", cache: "no-store" });
+      return response.status;
+    }).then((next) => {
+      if (!cancelled) setSrc(next);
+    });
+    return () => { cancelled = true; };
+  }, [allow]);
 
   useEffect(() => {
     setMount((current) => nextMusicMount(current, allow, false));
@@ -113,8 +128,17 @@ export function BackgroundMusic() {
       window.cancelAnimationFrame(raf);
       unsub();
     };
-  }, [mount, gestured, reduce]);
+  }, [mount, gestured, reduce, src]);
 
   if (mount === "off") return null;
-  return <BackgroundMusicView ref={audioRef} mount={mount} />;
+  return (
+    <BackgroundMusicView
+      ref={audioRef}
+      mount={mount}
+      src={src}
+      onError={() => {
+        setSrc((current) => current === BACKGROUND_MUSIC_FALLBACK_SRC ? current : BACKGROUND_MUSIC_FALLBACK_SRC);
+      }}
+    />
+  );
 }

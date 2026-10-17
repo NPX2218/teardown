@@ -1,16 +1,20 @@
-import { readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { BackgroundMusicView } from "@/components/audio/BackgroundMusicView";
 import {
+  BACKGROUND_MUSIC_FALLBACK_SRC,
   BACKGROUND_MUSIC_SRC,
   armMusicOnGesture,
   createGainFader,
   musicFadeMs,
   musicGainFromPercents,
+  musicSrcForStatus,
   musicTargetGain,
   nextMusicMount,
+  resolveBackgroundMusicSrc,
   shouldMountBackgroundMusic,
   startMusicFromGesture,
 } from "@/lib/audio/background";
@@ -123,17 +127,41 @@ describe("background music route and gesture", () => {
     expect(nextMusicMount("fading-out", false, true)).toBe("off");
     expect(nextMusicMount("fading-out", true, false)).toBe("on");
 
-    expect(renderToStaticMarkup(<BackgroundMusicView mount="off" />)).toBe("");
-    const home = renderToStaticMarkup(<BackgroundMusicView mount="on" />);
+    expect(renderToStaticMarkup(<BackgroundMusicView mount="off" src={BACKGROUND_MUSIC_SRC} />)).toBe("");
+    const home = renderToStaticMarkup(<BackgroundMusicView mount="on" src={BACKGROUND_MUSIC_SRC} />);
     expect(home).toContain(`src="${BACKGROUND_MUSIC_SRC}"`);
     expect(home).toContain("loop");
     expect(home.toLowerCase()).not.toContain("autoplay");
+    const fallback = renderToStaticMarkup(<BackgroundMusicView mount="on" src={BACKGROUND_MUSIC_FALLBACK_SRC} />);
+    expect(fallback).toContain(`src="${BACKGROUND_MUSIC_FALLBACK_SRC}"`);
+    expect(fallback).not.toContain(`src="${BACKGROUND_MUSIC_SRC}"`);
 
     const layout = readFileSync(join(process.cwd(), "app/layout.tsx"), "utf8");
     expect(layout).toContain("<BackgroundMusic />");
     const rocket = readFileSync(join(process.cwd(), "app/rocket/page.tsx"), "utf8");
     expect(rocket).not.toContain("BackgroundMusic");
     expect(rocket).not.toContain(BACKGROUND_MUSIC_SRC);
+    expect(rocket).not.toContain(BACKGROUND_MUSIC_FALLBACK_SRC);
+  });
+
+  it("plays background.mp3 when that file exists and the placeholder after a 404", async () => {
+    expect(BACKGROUND_MUSIC_SRC).toBe("/audio/background.mp3");
+    expect(BACKGROUND_MUSIC_FALLBACK_SRC).toBe("/audio/background-placeholder.mp3");
+    expect(musicSrcForStatus(200)).toBe(BACKGROUND_MUSIC_SRC);
+    expect(musicSrcForStatus(204)).toBe(BACKGROUND_MUSIC_SRC);
+    expect(musicSrcForStatus(404)).toBe(BACKGROUND_MUSIC_FALLBACK_SRC);
+
+    await expect(resolveBackgroundMusicSrc(async () => 200)).resolves.toBe(BACKGROUND_MUSIC_SRC);
+    await expect(resolveBackgroundMusicSrc(async () => 404)).resolves.toBe(BACKGROUND_MUSIC_FALLBACK_SRC);
+    await expect(resolveBackgroundMusicSrc(async () => {
+      throw new Error("missing");
+    })).resolves.toBe(BACKGROUND_MUSIC_FALLBACK_SRC);
+
+    const gitignore = readFileSync(join(process.cwd(), ".gitignore"), "utf8");
+    expect(gitignore).toContain("public/audio/background.mp3");
+    expect(existsSync(join(process.cwd(), "public/audio/background-placeholder.mp3"))).toBe(true);
+    const ignored = execFileSync("git", ["check-ignore", "public/audio/background.mp3"], { encoding: "utf8" }).trim();
+    expect(ignored).toBe("public/audio/background.mp3");
   });
 
   it("stays silent until the first gesture, then fades toward music times master", () => {

@@ -1,9 +1,10 @@
 #!/bin/sh
 # Rebuild the original laptop music placeholder.
-# Sine tones only. No downloaded audio. Safe to replace the mp3 with a licensed track instead.
+# Sine tones only. No downloaded audio.
+# A local track belongs at public/audio/background.mp3, which is gitignored.
 set -eu
 cd "$(dirname "$0")/.."
-out="public/audio/background.mp3"
+out="public/audio/background-placeholder.mp3"
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 

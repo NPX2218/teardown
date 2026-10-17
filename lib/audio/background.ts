@@ -2,7 +2,25 @@
 import { masterGainFromPercent } from "@/lib/settings/gain";
 import { MOTION_DURATION_S } from "@/lib/ui/motion";
 
+/** Local track. Gitignored, so a real file here is never committed. */
 export const BACKGROUND_MUSIC_SRC = "/audio/background.mp3";
+
+/** Original sine pad shipped with the repo. Used when the local track is missing. */
+export const BACKGROUND_MUSIC_FALLBACK_SRC = "/audio/background-placeholder.mp3";
+
+/** 404 means the local track is not there. Any other status keeps that path. */
+export function musicSrcForStatus(status: number): string {
+  return status === 404 ? BACKGROUND_MUSIC_FALLBACK_SRC : BACKGROUND_MUSIC_SRC;
+}
+
+/** Ask once. A 404 or a failed check plays the placeholder. */
+export async function resolveBackgroundMusicSrc(probe: (url: string) => Promise<number>): Promise<string> {
+  try {
+    return musicSrcForStatus(await probe(BACKGROUND_MUSIC_SRC));
+  } catch {
+    return BACKGROUND_MUSIC_FALLBACK_SRC;
+  }
+}
 
 /** Same length as the slow motion token, so the fade matches the rest of the app. */
 export const MUSIC_FADE_MS = Math.round(MOTION_DURATION_S.slow * 1000);

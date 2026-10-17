@@ -204,9 +204,9 @@ Run `npm test` for the unit tests and `npm run smoke` for the paired laptop + ph
 
 ## BACKGROUND MUSIC
 
-The laptop plays a quiet loop from [`public/audio/background.mp3`](public/audio/background.mp3) on every page except `/rocket`. The phone engine rumble is separate. It still follows engine power.
+The laptop plays a quiet loop on every page except `/rocket`. The phone engine rumble is separate. It still follows engine power.
 
-The file in the repo is an original 60 second sine pad made with ffmpeg (`scripts/make-background-music.sh`). It is not a song from YouTube or anywhere else. To use your own track, replace that file and keep the same path. Use something you have the rights to play. A seamless loop of 30–60 seconds, or a calm piece up to about 2 minutes, stays small. Do not commit a copyrighted download.
+Drop your track at `public/audio/background.mp3` (gitignored). The player loads that file when it is there. If it is missing (404), the player uses [`public/audio/background-placeholder.mp3`](public/audio/background-placeholder.mp3), an original 60 second sine pad made with ffmpeg (`scripts/make-background-music.sh`). `npm run dev` sees a file you add while it is running. `npm start` only sees files that were there when the server booted, so restart it after you add the track. Use a track you have the rights to play. Do not commit it, and do not download music from YouTube.
 
 The Music slider in Settings is 0–100%. It starts at 40%. What you hear is that level times the Master sound slider. The choice is saved in this browser with the other settings. Music waits for the first tap or key press, then fades in. Reduced motion makes that fade instant.
 
@@ -257,7 +257,7 @@ The full list is in the [review guide](docs/REVIEW-GUIDE.md#known-gaps).
 - **3D model:** "[Falcon 9 - SpaceX](https://sketchfab.com/3d-models/falcon-9-spacex-394f7cf52d124bbd9db69f24d1ff2f08)" by Stanley Creative, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 - **Earth:** NASA Visible Earth (Blue Marble, Black Marble, clouds, land/water mask), public domain. See [`public/textures/CREDITS.md`](public/textures/CREDITS.md).
 - **Sounds:** original synthesis, CC0. See [`public/sounds/CREDITS.md`](public/sounds/CREDITS.md).
-- **Background music:** original sine pad, CC0, at `public/audio/background.mp3`. See [`public/audio/CREDITS.md`](public/audio/CREDITS.md). Swap in a licensed track at that same path.
+- **Background music:** original sine pad, CC0, at `public/audio/background-placeholder.mp3`. Drop your own track at `public/audio/background.mp3` (gitignored). See [`public/audio/CREDITS.md`](public/audio/CREDITS.md).
 - **Guide avatar:** [bloub](https://github.com/jeremy-prt/bloub) by Jérémy Perret (MIT), an unofficial recreation of the Grok Bot.
 - **Type:** D-DIN, Barlow, Barlow Semi Condensed and Roboto Mono, all under the SIL Open Font License.
 - **AI:** Grok by xAI.
