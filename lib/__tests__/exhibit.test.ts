@@ -59,14 +59,18 @@ describe("exhibit walk-up", () => {
   });
 
   it("illustrates a historical mission when one exists, otherwise the labelled practice sample", () => {
-    expect(exhibitIllustrationId(MISSIONS)).toBe("practice");
+    const practiceOnly = { practice: MISSIONS.practice };
+    expect(exhibitIllustrationId(practiceOnly)).toBe("practice");
     const historical: Mission = {
       ...MISSIONS.practice,
       id: "sentinel-6",
       kind: "historical",
       label: "Real mission · approximate milestones.",
     };
-    expect(exhibitIllustrationId({ practice: MISSIONS.practice, "sentinel-6": historical })).toBe("sentinel-6");
+    const registered = { practice: MISSIONS.practice, "sentinel-6": historical };
+    expect(exhibitIllustrationId(registered)).toBe("sentinel-6");
+    const attract = Object.values(MISSIONS).find((mission) => mission.kind === "historical")?.id ?? "practice";
+    expect(exhibitIllustrationId(MISSIONS)).toBe(attract);
   });
 
   it("does not reset while the attract screen is up, and does reset after a long quiet", () => {
