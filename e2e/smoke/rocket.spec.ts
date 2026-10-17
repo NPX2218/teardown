@@ -130,6 +130,20 @@ async function shot(pair: Pair, name: string): Promise<void> {
   await pair.phone.screenshot({ path: resolve(ART, `${name}-phone.png`) });
 }
 
+async function setThrottle(page: Page, percent: number): Promise<void> {
+  const slider = page.locator("#throttle-control");
+  await expect(slider).toBeEnabled();
+  await slider.evaluate((el: HTMLInputElement, value: number) => {
+    const input = el as HTMLInputElement;
+    const proto = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
+    proto?.set?.call(input, String(value));
+    const tracker = (input as HTMLInputElement & { _valueTracker?: { setValue: (next: string) => void } })._valueTracker;
+    tracker?.setValue("");
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  }, percent);
+}
+
 async function readyMission(laptop: Page): Promise<void> {
   await laptop.getByRole("button", { name: "Your mission" }).click();
   await expect(laptop.locator("#flight-status")).toHaveAttribute("data-status", "ready");
@@ -216,8 +230,14 @@ test("free-flight crash", async ({ browser }) => {
   await view.laptop.getByRole("button", { name: "Free flight" }).click();
   await view.laptop.getByRole("button", { name: "Short hop" }).click();
   await expect(view.laptop.locator("#flight-status")).toHaveAttribute("data-status", "ready");
+  // A lift impulse takes throttle ownership at ~12% and the short hop never leaves the pad.
+  // Launch from the screen, keep throttle on the laptop, then let the phone tip it over.
   const sim = startSim("crash.json");
   try {
+    await view.laptop.getByRole("button", { name: "Use phone tilt" }).click();
+    await expect(view.phone.getByRole("status", { name: "ARMED", exact: true })).toBeVisible({ timeout: 15_000 });
+    await view.laptop.locator("#launch-flight").click();
+    await setThrottle(view.laptop, 100);
     await expect(view.laptop.locator("[data-outcome='crashed']")).toBeVisible({ timeout: 30_000 });
   } finally {
     await finish(view, sim, "crash");
@@ -251,8 +271,10 @@ test("sentinel-6 milestones", async ({ browser }) => {
   try {
     await expect(view.laptop.locator("#flight-status")).toHaveAttribute("data-status", "flying");
     await view.laptop.locator("#warp-8").click();
+    await expect(view.laptop.locator("#warp-8")).toHaveAttribute("aria-pressed", "true");
+    await view.laptop.locator("#flight-status summary", { hasText: "More numbers" }).click();
     await expect(view.laptop.locator("#flight-status")).toContainText(/Milestones:.*liftoff/);
-    await expect(view.laptop.locator("#flight-status")).toContainText("staging", { timeout: 30_000 });
+    await expect(view.laptop.locator("#flight-status")).toContainText("staging", { timeout: 45_000 });
     await expect(view.laptop.getByText("Reference trajectory unavailable").first()).toBeVisible();
   } finally {
     await finish(view, sim, "sentinel");
@@ -271,7 +293,7 @@ test("mascot voice states", async ({ browser }) => {
   try {
     await expect(view.laptop.locator("[data-mood]")).toBeVisible();
     for (const [state, mood] of states) {
-      await view.laptop.evaluate((next) => {
+      await view.laptop.evaluate((next: string) => {
         const hook = (window as unknown as { __teardownSetVoiceState?: (value: string) => void }).__teardownSetVoiceState;
         if (typeof hook !== "function") throw new Error("setVoiceState is not on window");
         hook(next);

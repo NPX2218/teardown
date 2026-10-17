@@ -2,5 +2,5 @@
   { "t": 0, "pitchDeg": 0 },
   { "t": 4500, "pitchDeg": 0, "gesture": "lift" },
   { "t": 6000, "pitchDeg": 15 },
-  { "t": 28000, "pitchDeg": 15 }
+  { "t": 70000, "pitchDeg": 15 }
 ]
