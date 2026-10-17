@@ -122,9 +122,11 @@ export function ChaseCamera() {
         camera.updateProjectionMatrix();
         rig?.target.set(0, 0, 0);
         currentLook.set(0, 0, 0);
+        camera.lookAt(currentLook);
       }
       overview.current = true;
       if (rig) rig.enabled = true;
+      camera.updateMatrixWorld();
       return;
     }
     if (draw) anchor.set(draw.position[0], draw.position[1], draw.position[2]).multiplyScalar(EARTH_RADIUS);
@@ -146,7 +148,9 @@ export function ChaseCamera() {
     else intro.current = Math.min(INTRO_SECONDS, intro.current + delta);
     const shot = intro.current >= INTRO_SECONDS ? chase : blendShots(mapShot(), chase, introBlend(intro.current));
     applyShot(camera, shot, reduce, delta);
-  });
+    // Visual callbacks at priority 0 need both the current pose and view matrix.
+    camera.updateMatrixWorld();
+  }, -1);
 
   return (
     <OrbitControls
