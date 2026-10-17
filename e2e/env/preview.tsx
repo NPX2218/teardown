@@ -112,10 +112,21 @@ function Globe({ onReady }: { onReady: () => void }) {
       texture?.dispose();
     };
   }, []);
+  // Mount the mapped material only after the image arrives. Three compiles
+  // MeshBasicMaterial without USE_MAP on the first frame, and a later `map`
+  // assignment does not rebuild that program, so the globe stayed flat white.
+  if (!map) {
+    return (
+      <mesh>
+        <sphereGeometry args={[1, 96, 48]} />
+        <meshBasicMaterial color="#1c4f78" />
+      </mesh>
+    );
+  }
   return (
     <mesh>
       <sphereGeometry args={[1, 96, 48]} />
-      <meshBasicMaterial map={map ?? undefined} color={map ? "#ffffff" : "#1c4f78"} />
+      <meshBasicMaterial map={map} toneMapped={false} />
     </mesh>
   );
 }
