@@ -1,0 +1,11 @@
+These files are the self-hosted stand-ins named in docs/specs/00-theme.spec.md.
+They are not SpaceX or xAI fonts. D-DIN and xVf are not included.
+
+Barlow and Barlow Semi Condensed
+Copyright 2017 The Barlow Project Authors (https://github.com/jpt/barlow)
+SIL Open Font License 1.1. See OFL-barlow.txt and OFL-barlow-semi-condensed.txt.
+Files from Fontsource package versions barlow 5.2.6 and barlow-semi-condensed 5.2.6.
+
+Roboto Mono
+SIL Open Font License 1.1, as distributed by Fontsource @fontsource/roboto-mono 5.2.6.
+See LICENSE-roboto-mono.txt.

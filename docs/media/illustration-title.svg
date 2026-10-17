@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">Earth and a simple rocket</title>
+  <desc id="desc">Illustration for the Teardown story. Not a screenshot of the exhibit.</desc>
+  <rect width="1200" height="675" fill="#000"/>
+  <circle cx="430" cy="360" r="180" fill="none" stroke="#F0F0FA" stroke-width="3"/>
+  <ellipse cx="430" cy="360" rx="180" ry="70" fill="none" stroke="rgba(240,240,250,0.7)" stroke-width="2"/>
+  <path d="M430 180 A180 180 0 0 1 430 540" fill="none" stroke="rgba(240,240,250,0.7)" stroke-width="2"/>
+  <path d="M780 430 L830 250 L880 430 Z" fill="none" stroke="#F0F0FA" stroke-width="3"/>
+  <path d="M808 430 L830 520 L852 430" fill="none" stroke="#F0F0FA" stroke-width="3"/>
+  <path d="M820 520 L830 575 L840 520" fill="#FF6308"/>
+  <text x="80" y="90" fill="rgba(240,240,250,0.7)" font-family="ui-monospace, Menlo, monospace" font-size="18" letter-spacing="2">ILLUSTRATION · NOT A SCREENSHOT</text>
+</svg>

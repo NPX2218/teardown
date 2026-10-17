@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t d">
+  <title id="t">Phone controller placeholder</title>
+  <desc id="d">Placeholder for the phone controller. Not a photograph of a handset.</desc>
+  <rect width="1200" height="675" fill="#000"/>
+  <rect x="48" y="48" width="1104" height="579" fill="#0A0A0A" stroke="#F0F0FA" stroke-width="2" stroke-dasharray="8 8"/>
+  <text x="80" y="110" fill="#FFB547" font-family="ui-monospace, Menlo, monospace" font-size="20" letter-spacing="2">PLACEHOLDER · NOT A PHOTOGRAPH</text>
+  <text x="80" y="280" fill="#F0F0FA" font-family="Arial Narrow, Arial, sans-serif" font-size="48">1 SCAN   2 ALLOW</text>
+  <text x="80" y="360" fill="#F0F0FA" font-family="Arial Narrow, Arial, sans-serif" font-size="48">3 ZERO   4 TILT</text>
+  <text x="80" y="480" fill="rgba(240,240,250,0.7)" font-family="Arial, Helvetica, sans-serif" font-size="24">The laptop flies the mission with no phone.</text>
+</svg>
