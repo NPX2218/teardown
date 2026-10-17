@@ -1,4 +1,6 @@
 "use client";
+import { motion } from "motion/react";
+import { motionPresets } from "@/lib/ui/motion";
 import { useSyncExternalStore } from "react";
 import { MISSIONS } from "@/data/missions/index";
 import { SENTINEL_REFERENCE_UNAVAILABLE } from "@/lib/flight/classroom";
@@ -22,6 +24,7 @@ import {
 import { handoffPitchToLocal, resumeFlightExplicit } from "@/lib/flight/phone-pitch";
 import { zeroRocket } from "@/lib/rocket/useRocket";
 import { clearCameraNudge } from "./cameraNudge";
+import { resetChaseOrbit } from "./chaseOrbit";
 import { useScene } from "@/lib/store";
 import type { FlightWarp } from "@/lib/types";
 import { EmissionsPlacement } from "./EmissionsPlacement";
@@ -94,7 +97,7 @@ export function FlightHud() {
   return (
     <>
       {warningLevel === "warning" && <div className={styles.vignette} aria-hidden="true" />}
-      <section id="flight-status" className={`hud ${styles.readout}`} data-status={status} data-warning={warningLevel} data-sim-time={flight.simulatedTimeS} aria-label="Flight readout">
+      <motion.section initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={motionPresets.out} id="flight-status" className={`hud ${styles.readout}`} data-status={status} data-warning={warningLevel} data-sim-time={flight.simulatedTimeS} aria-label="Flight readout">
         {status === "ready" && (
           <div className={styles.stack}>
             <p className="hud__k">Your mission</p>
@@ -176,7 +179,7 @@ export function FlightHud() {
           </div>
         )}
         <EmissionsPlacement />
-      </section>
+      </motion.section>
       <section className={`hud ${styles.controls}`} aria-label="Flight controls">
         <div className={styles.stack}>
           {status === "ready" && (
@@ -279,7 +282,7 @@ export function FlightHud() {
           <div className={styles.actions}>
             <button type="button" className="btn" aria-pressed={view === "overview"} onClick={() => useAppMode.getState().setView("overview")}>Earth view</button>
             <button type="button" className="btn" aria-pressed={view === "follow"} onClick={() => useAppMode.getState().setView("follow")}>Follow rocket</button>
-            <button type="button" className="btn" onClick={() => { clearCameraNudge(); useAppMode.getState().resetCamera(); }}>Reset view</button>
+            <button type="button" className="btn" onClick={() => { clearCameraNudge(); resetChaseOrbit(); useAppMode.getState().resetCamera(); }}>Reset view</button>
             {status !== "idle" && !flight.outcome && (
               <button id="retry-flight" type="button" className="btn" onClick={() => { clearHeldAxes(); useScene.getState().retryFlight(); mark(); }}>Try again</button>
             )}

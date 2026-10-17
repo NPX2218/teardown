@@ -9,6 +9,7 @@
     "lint": "next lint",
     "test": "vitest run",
     "relay:dev": "tsx scripts/dev-relay.ts",
+    "tunnel": "tsx scripts/tunnel.ts",
     "sim:phone": "tsx scripts/sim-phone.ts",
     "smoke": "bash scripts/smoke/smoke.sh"
   },

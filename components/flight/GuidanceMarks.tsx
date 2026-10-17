@@ -1,20 +1,31 @@
 "use client";
-// Ghost path, corridor edges, and the impact burst. Sibling of Earth, never inside it.
+// Ghost path and corridor edges, on the launch-site globe. Sibling of Earth, never inside it.
+// The impact burst is the Explosion module.
 import { useEffect, useMemo } from "react";
 import * as THREE from "three";
 import { MISSIONS } from "@/data/missions/index";
+import { useAppMode } from "@/lib/flight/app-mode";
 import { CORRIDOR } from "@/lib/flight/corridor";
+import { launchSiteFor } from "@/lib/flight/launch-site";
 import { missionById } from "@/lib/flight/mission-select";
 import { corridorEdges, referencePath } from "@/lib/flight/reference";
-import { toScene } from "@/lib/flight/scene-scale";
+import { earthRadiiToScene, globeFrameFor, physicsMetersToEarthRadii, type GlobeFrame } from "@/lib/flight/scene-types";
 import { useScene } from "@/lib/store";
+import type { Mission } from "@/lib/types";
+import { FLIGHT_SCENE } from "@/lib/viewer/colors";
 
 const EMPTY: { x: number; y: number }[] = [];
 
-function makeLine(points: { x: number; y: number }[], color: string): THREE.Line {
+function siteText(mission: Mission | null): string | null {
+  if (!mission) return null;
+  const extra = mission as Mission & { launchSite?: { text?: string } };
+  return typeof extra.launchSite?.text === "string" ? extra.launchSite.text : null;
+}
+
+function makeLine(points: { x: number; y: number }[], color: string, frame: GlobeFrame): THREE.Line {
   const data = new Float32Array(points.length * 3);
   points.forEach((point, index) => {
-    const [x, y, z] = toScene(point.x, point.y, 0);
+    const [x, y, z] = earthRadiiToScene(physicsMetersToEarthRadii(point.x, point.y, frame));
     data[index * 3] = x;
     data[index * 3 + 1] = y;
     data[index * 3 + 2] = z;
@@ -27,25 +38,34 @@ function makeLine(points: { x: number; y: number }[], color: string): THREE.Line
 export function GuidanceMarks() {
   const playMode = useScene((s) => s.playMode);
   const trackId = useScene((s) => s.missionTrackId);
+  const replayId = useScene((s) => s.replay.missionId);
+  const mode = useAppMode((s) => s.mode);
   const corridorOn = useScene((s) => s.playMode === "mission" && s.flight.guide?.corridor === true);
   const trail = useScene((s) => (s.warningLevel === "failed" ? s.flight.guide?.trail ?? EMPTY : EMPTY));
-  const impact = useScene((s) => s.impact);
-  const mission = playMode === "mission" ? missionById(MISSIONS, trackId) : null;
+  const mission = mode === "replay"
+    ? missionById(MISSIONS, replayId)
+    : playMode === "mission"
+      ? missionById(MISSIONS, trackId)
+      : null;
   const reference = mission?.reference;
+  const frame = useMemo(
+    () => globeFrameFor(launchSiteFor({ missionId: mission?.id ?? null, launchSiteText: siteText(mission) })),
+    [mission],
+  );
   const marks = useMemo(() => {
     const objects: THREE.Line[] = [];
     if (corridorOn) {
       const ghost = referencePath(reference);
       const edges = corridorEdges(reference, CORRIDOR.altM);
-      if (ghost && ghost.length > 1) objects.push(makeLine(ghost, "#9ec7ff"));
+      if (ghost && ghost.length > 1) objects.push(makeLine(ghost, FLIGHT_SCENE.path, frame));
       if (edges) {
-        objects.push(makeLine(edges.inner, "#e7b3a2"));
-        objects.push(makeLine(edges.outer, "#e7b3a2"));
+        objects.push(makeLine(edges.inner, FLIGHT_SCENE.pathHit, frame));
+        objects.push(makeLine(edges.outer, FLIGHT_SCENE.pathHit, frame));
       }
     }
-    if (trail.length > 1) objects.push(makeLine(trail, "#e85d4c"));
+    if (trail.length > 1) objects.push(makeLine(trail, FLIGHT_SCENE.boom, frame));
     return objects;
-  }, [corridorOn, reference, trail]);
+  }, [corridorOn, reference, trail, frame]);
 
   useEffect(() => () => {
     marks.forEach((item) => {
@@ -56,28 +76,11 @@ export function GuidanceMarks() {
     });
   }, [marks]);
 
-  const burst = impact ? toScene(impact.x, impact.y, 0) : null;
   return (
     <>
       {marks.map((item, index) => (
-        <primitive key={index} object={item} />
+        <primitive key={`${index}-${item.uuid}`} object={item} />
       ))}
-      {burst && (
-        <group position={burst}>
-          <mesh>
-            <sphereGeometry args={[0.07, 10, 10]} />
-            <meshBasicMaterial color="#e85d4c" />
-          </mesh>
-          <mesh position={[0.05, 0.03, 0]}>
-            <sphereGeometry args={[0.03, 8, 8]} />
-            <meshBasicMaterial color="#f0c36a" />
-          </mesh>
-          <mesh position={[-0.04, 0.02, 0.02]}>
-            <sphereGeometry args={[0.025, 8, 8]} />
-            <meshBasicMaterial color="#f4efe6" />
-          </mesh>
-        </group>
-      )}
     </>
   );
 }

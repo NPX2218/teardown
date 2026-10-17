@@ -726,6 +726,8 @@ dialog.overlay::backdrop { background: rgba(0, 0, 0, 0.72); }
 }
 
 .dock { position: absolute; z-index: var(--z-hud); max-width: calc(100% - 48px); }
+/* An empty dock (part card closed, presence still mounted) must not cover the canvas on phones. */
+.dock:empty { display: none; }
 .dock--tr { top: 80px; right: 24px; }
 .dock--bl { bottom: 56px; left: 24px; }
 .dock--br {
@@ -762,6 +764,50 @@ body[data-exhibit-phase="attract"] .nav,
 body[data-exhibit-phase="attract"] [data-slot="pair"],
 body[data-exhibit-phase="attract"] [data-guide] {
   visibility: hidden;
+}
+
+/* UI motion. Transform and opacity only, so nothing here makes the browser redo layout or touches the 3D canvas.
+   Motion-driven pieces (pairing card, mode pill, part card) live in the components and use lib/ui/motion.ts. */
+
+/* Sliding highlight behind the active mode tab and explain level (layoutId pills in Header and LevelSwitch). */
+.nav__link, .seg--slide > button { position: relative; isolation: isolate; }
+.slide-pill {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: var(--radius-pill);
+  background: #fff;
+  pointer-events: none;
+}
+.slide-pill--soft { background: var(--surface-2); }
+.slide-label { position: relative; }
+.seg--slide > button[aria-pressed="true"] { background: transparent; }
+
+/* Press feedback: a small give on every button and chip. */
+.btn:not(.btn-sx), button.chip, .seg > button, .nav__link {
+  transition-property: background-color, color, border-color, transform;
+  transition-duration: 150ms;
+  transition-timing-function: var(--ease-ui);
+}
+.btn:not(.btn-sx):active, button.chip:active, .seg > button:active, .nav__link:active { transform: scale(0.97); }
+
+/* Popovers and dialog scrims fade in instead of snapping. */
+.popover { animation: fade-in 150ms var(--ease-ui) both; }
+dialog[open]::backdrop { animation: fade-in var(--dur-2) var(--ease-overlay) both; }
+
+/* Each 3D scene fades up when its mode opens, so switching modes is not a hard cut. A black veil over the scene
+   fades out instead of fading the WebGL canvas itself: animating the canvas cost ~25 ms on the mode-switch frame
+   in a dev-server rAF check (Oct 2026), the veil cost nothing measurable. HUDs sit above it on --z-hud. */
+@keyframes veil-out { from { opacity: 1; } to { opacity: 0; visibility: hidden; } }
+[data-slot="viewer"]:has(canvas)::after,
+[data-slot="mission"]:has(canvas)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-canvas);
+  background: var(--bg);
+  pointer-events: none;
+  animation: veil-out var(--dur) var(--ease-out) both;
 }
 
 @media (prefers-reduced-motion: reduce) {

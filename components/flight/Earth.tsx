@@ -25,8 +25,6 @@ import {
   EARTH_MAPS,
   EARTH_RENDER_RADIUS,
   EARTH_WIDTH_SEGMENTS,
-  PAD_LIFT,
-  PAD_RADIUS,
   SCHEMATIC_HEIGHT_SEGMENTS,
   SCHEMATIC_WIDTH_SEGMENTS,
   earthMaterialMode,
@@ -133,15 +131,6 @@ function useNasaMaps(tier: EarthTier, anisotropy: number): NasaSet | null {
   }, [nasa]);
 
   return nasa;
-}
-
-function LaunchPad() {
-  return (
-    <mesh position={[0, EARTH_RENDER_RADIUS + PAD_LIFT, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-      <circleGeometry args={[PAD_RADIUS, 28]} />
-      <meshBasicMaterial color={FLIGHT_SCENE.pad} />
-    </mesh>
-  );
 }
 
 function SchematicEarth() {
@@ -308,7 +297,6 @@ export function Earth() {
   return (
     <group>
       {nasa ? <TexturedEarth maps={nasa.maps} /> : <SchematicEarth />}
-      <LaunchPad />
       {nasa ? <EarthImageryCaption tier={nasa.tier} /> : null}
     </group>
   );

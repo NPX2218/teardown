@@ -11,6 +11,7 @@ import {
   zeroRocket,
 } from "@/lib/rocket/useRocket";
 import { attachLink, checkRocketTimeout, receiveRocketMessage } from "@/lib/rocket/commands";
+import { useAppMode } from "@/lib/flight/app-mode";
 import { useScene } from "@/lib/store";
 import type { MountId } from "@/lib/rocket/mount";
 import type { Quat, RocketMessage } from "@/lib/types";
@@ -202,6 +203,21 @@ describe("useRocket frame handling (11)", () => {
     }
     expect(useScene.getState().flight.status).toBe("failed");
     expect(useScene.getState().flight.outcome?.reason).toMatch(/upside down/);
+  });
+
+  it("H18 a stalled upright hold still catches the tilt-replay lift and the later lean", () => {
+    useAppMode.setState({ mode: "mission" });
+    readyRun();
+    useScene.getState().setRocket({ connected: true, code: "ABCD" });
+    handleRocketMessage(frameFor(0, [0, 0, 0], "s24fe"), 1_000);
+    handleRocketMessage(frameFor(0, [0, 0, 0], "s24fe"), 2_200);
+    for (let t = 2_200; t <= 3_200; t += 50) handleRocketMessage(frameFor(0, [0, 0, 0], "s24fe"), t);
+    expect(useScene.getState().flight.status).toBe("ready");
+    for (let t = 4_500; t <= 4_900; t += 50) handleRocketMessage(frameFor(0, [0, 4, 0], "s24fe"), t);
+    expect(useScene.getState().flight.status).toBe("flying");
+    handleRocketMessage(frameFor(40, [0, 0, 0], "s24fe"), 5_800);
+    expect(Math.abs(useScene.getState().flight.input.pitchRad)).toBeGreaterThan((15 * Math.PI) / 180);
+    useAppMode.setState({ mode: "explore" });
   });
 
   it("H15 disconnect pauses flight when the phone owned pitch", () => {

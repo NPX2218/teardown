@@ -1,4 +1,6 @@
 "use client";
+import { motion } from "motion/react";
+import { motionPresets } from "@/lib/ui/motion";
 import { MISSIONS } from "@/data/missions/index";
 import { useAppMode } from "@/lib/flight/app-mode";
 import { formatClock } from "@/lib/flight/format";
@@ -44,7 +46,7 @@ export function ReplayPanel() {
   };
 
   return (
-    <section className={`hud ${styles.readout}`} aria-label="Flight replay">
+    <motion.section initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={motionPresets.out} className={`hud ${styles.readout}`} aria-label="Flight replay">
       <div className={styles.stack}>
         <p className="hud__k">Flight replay</p>
         <h2>Illustrated motion, not a recording.</h2>
@@ -102,6 +104,6 @@ export function ReplayPanel() {
         )}
       </div>
       <EmissionsPlacement />
-    </section>
+    </motion.section>
   );
 }

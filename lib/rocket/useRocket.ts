@@ -15,6 +15,7 @@ import {
   type RocketBasis,
 } from "@/lib/rocket/mount";
 import { quatConj, quatFromTo, quatMul, quatNormalize, relativeOrientation } from "@/lib/rocket/orient";
+import { commitPhoneAxes, commitShellEvent } from "@/lib/flight/controls";
 import { SHELL_GESTURE, ShellGestureDetector, throttleFromShell, type ShellEvent } from "@/lib/rocket/shell-gestures";
 import { useScene } from "@/lib/store";
 import type { Quat, RocketMessage, ShellStatusLevel, ShellStatusWord, Vec3 } from "@/lib/types";
@@ -56,26 +57,21 @@ function publishStatus(word: ShellStatusWord, level: ShellStatusLevel, flash = f
 
 function applyShellEvent(event: ShellEvent | null): void {
   if (!event) return;
-  const store = useScene.getState();
-  const { flight, rocket } = store;
-  if ((event === "launch" || event === "shake") && flight.status === "ready" && rocket.connected) {
-    store.setFlightAxisOwner("pitch", "phone");
-    if (store.launchFlight().ok) {
-      publishStatus("LIFTOFF", "ok", true);
-      sendToRocket({ k: "vibrate", pattern: [80, 40, 80] });
-    }
+  const before = useScene.getState().flight.status;
+  const result = commitShellEvent(event);
+  if (!result.ok) return;
+  if ((event === "launch" || event === "shake") && before !== "flying" && useScene.getState().flight.status === "flying") {
+    publishStatus("LIFTOFF", "ok", true);
+    sendToRocket({ k: "vibrate", pattern: [80, 40, 80] });
     return;
   }
-  if (event === "flick" && flight.status === "flying") {
-    store.separateStage();
+  if (event === "flick") {
     sendToRocket({ k: "vibrate", pattern: [40, 30, 40] });
     return;
   }
-  if (event === "abort" && (flight.status === "flying" || flight.status === "paused")) {
-    if (store.abortFlight("Aborted: the rocket was held upside down.").ok) {
-      publishStatus("ABORT", "bad", true);
-      sendToRocket({ k: "vibrate", pattern: [200, 80, 200, 80, 600] });
-    }
+  if (event === "abort") {
+    publishStatus("ABORT", "bad", true);
+    sendToRocket({ k: "vibrate", pattern: [200, 80, 200, 80, 600] });
   }
 }
 
@@ -161,21 +157,14 @@ export function handleRocketMessage(m: RocketMessage, now: number): void {
       lean.rollRad = 0;
       attitude = lean;
       applyShellEvent(shell.push({ linRocket, gravRocket, tMs: now }));
-      const live = useScene.getState().flight;
-      if (live.status === "flying" && live.runId && live.owners.pitch === "phone") {
-        store.setFlightInput({ pitchRad: lean.pitchRad, calibrated: true }, "phone", live.runId);
-      }
       const throttle = throttleFromShell(linRocket, lean.pitchRad);
       const pushed = linRocket[1] >= SHELL_GESTURE.throttlePush || linRocket[2] >= SHELL_GESTURE.throttlePush;
-      if (throttle !== null && live.status === "flying" && live.runId) {
-        if (pushed && store.rocket.connected && live.owners.throttle !== "phone") {
-          store.setFlightAxisOwner("throttle", "phone");
-        }
-        const owned = useScene.getState().flight;
-        if (owned.runId && owned.owners.throttle === "phone") {
-          store.setFlightInput({ throttle, calibrated: true }, "phone", owned.runId);
-        }
-      }
+      commitPhoneAxes({
+        pitchRad: lean.pitchRad,
+        throttle,
+        throttlePush: pushed,
+        calibrated: true,
+      });
     }
 
     if (flight.status === "idle" && basis && q0) {

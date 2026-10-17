@@ -1,0 +1,54 @@
+/* SpaceXAI map labels. White-alpha hierarchy, Geist, sentence case. No hex. */
+
+.label {
+  display: inline-flex;
+  gap: 0.35em;
+  align-items: baseline;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 1.2;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+  pointer-events: none;
+  text-shadow: 0 1px 2px var(--scrim-80);
+  margin-left: 10px;
+}
+
+.name {
+  color: var(--text-3);
+  font-weight: 400;
+}
+
+.value {
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
+.quiet {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 1.2;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-3);
+  white-space: nowrap;
+  pointer-events: none;
+  text-shadow: 0 1px 2px var(--scrim-80);
+  margin-left: 10px;
+}
+
+.primary {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 1.2;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-2);
+  white-space: nowrap;
+  pointer-events: none;
+  text-shadow: 0 1px 2px var(--scrim-80);
+  margin-left: 10px;
+}

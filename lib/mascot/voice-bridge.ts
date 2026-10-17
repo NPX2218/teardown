@@ -16,8 +16,8 @@
 // No output node (speechSynthesis or the phone speaker): speaking uses a
 // synthetic mouth instead of analysed audio.
 //
-// The guide launcher also calls connectVoiceActivity(), which tries a runtime
-// import and no-ops while the module is absent, so this branch still builds.
+// The guide launcher calls bindVoiceActivity(onVoiceState) from its mount effect.
+// connectVoiceActivity() remains for a runtime import when this file is used alone.
 import { setMicLive, setSpeechLive, setVoiceState, type MascotVoice } from "./activity";
 import { attachAnalyser } from "./analyser";
 
