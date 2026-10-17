@@ -2,18 +2,20 @@
 // TOOLS and HANDLERS are both keyed by TOOL_NAMES (test A1).
 // set_engines_out, checkpoint coaching, and mission stars are not tools.
 // start_mission opens a flight briefing. It does not launch or award success.
+import { MISSIONS } from "@/data/missions/index";
+import { PARTS } from "@/lib/agent/fixtures/exhibit";
+import { getScene, sceneMode } from "@/lib/agent/scene";
+import { useScene } from "@/lib/store";
 import {
   DEFAULT_SCENARIO_ID,
   EXPLAIN_LEVELS,
-  SCENARIO_IDS,
   isExplainLevel,
-  isScenarioId,
   type ExplainLevel,
-  type FlightView,
+  type FlightOutcome,
+  type FlightReadout,
+  type FlightStatus,
   type ToolResult,
-} from "@/lib/agent/contract";
-import { MISSIONS, PARTS } from "@/lib/agent/fixtures/exhibit";
-import { getScene, sceneMode } from "@/lib/agent/scene";
+} from "@/lib/types";
 
 export const TOOL_NAMES = [
   "get_state",
@@ -37,7 +39,7 @@ export interface ToolDef {
 export const IMAGINE_PROMPT_MAX = 200;
 export const IMAGINE_NOT_READY = "imagine not available yet";
 
-const PART_IDS: string[] = PARTS.groups.map((g) => g.id);
+const PART_IDS: string[] = useScene.getState().parts?.groups.map((group) => group.id) ?? PARTS.groups.map((group) => group.id);
 const MISSION_IDS: string[] = Object.keys(MISSIONS);
 
 const NO_ARGS = { type: "object", properties: {}, additionalProperties: false } as const;
@@ -100,10 +102,7 @@ export const TOOLS: ToolDef[] = [
       name: "start_mission",
       description:
         "Open the Earth-orbit briefing for a scenario. Optional scenario_id; the default is the reference scenario. This does not launch, steer, or decide success.",
-      parameters: obj(
-        { scenario_id: { type: "string", enum: [...SCENARIO_IDS] } },
-        [],
-      ),
+      parameters: obj({ scenario_id: { type: "string" } }, []),
     },
   },
   {
@@ -130,12 +129,22 @@ export const TOOLS: ToolDef[] = [
   },
 ];
 
+export interface AgentFlightView {
+  runId: string | null;
+  scenarioId: string | null;
+  status: FlightStatus;
+  readout: FlightReadout | null;
+  outcome: FlightOutcome | null;
+  /** Shared provenance string. Null when no estimate is loaded. */
+  emissionsProvenance: "simulated-consumed-rp1" | "historical-estimate" | "unavailable" | null;
+}
+
 export interface AgentState {
   mode: "explore" | "replay" | "flight";
   selectedId: string | null;
   explode: number;
   replay: { missionId: string | null; t: number; playing: boolean };
-  flight: FlightView;
+  flight: AgentFlightView;
   rocketConnected: boolean;
   level: ExplainLevel;
   partIds: string[];
@@ -150,14 +159,16 @@ export function getAgentState(): AgentState {
     explode: s.explode,
     replay: { ...s.replay },
     flight: {
-      ...s.flight,
-      readout: { ...s.flight.readout },
-      emissions: { ...s.flight.emissions },
-      outcome: s.flight.outcome ? { ...s.flight.outcome } : null,
+      runId: s.flight.runId,
+      scenarioId: s.flight.scenarioId,
+      status: s.flight.status,
+      readout: s.flight.readout ? { ...s.flight.readout } : null,
+      outcome: s.flight.outcome ? { ...s.flight.outcome, readout: { ...s.flight.outcome.readout } } : null,
+      emissionsProvenance: s.flight.emissions?.provenance ?? null,
     },
     rocketConnected: s.rocketConnected,
     level: s.level,
-    partIds: PARTS.groups.map((g) => g.id),
+    partIds: PART_IDS,
     missionIds: Object.keys(MISSIONS),
   };
 }
@@ -213,15 +224,13 @@ export const HANDLERS: Record<ToolName, Handler> = {
 
   start_mission: ({ scenario_id }) => {
     if (scenario_id !== undefined && !str(scenario_id)) return fail("scenario_id must be a scenario id");
-    const id = scenario_id === undefined ? DEFAULT_SCENARIO_ID : scenario_id;
-    if (!isScenarioId(id)) return fail(`unknown scenario: ${id}`);
-    const r = scene().startFlight(id);
+    const r = scenario_id === undefined ? scene().startFlight() : scene().startFlight(scenario_id);
     if (!r.ok) return r;
     const flight = scene().flight;
     return {
       ok: true,
       data: {
-        scenarioId: flight.scenarioId,
+        scenarioId: flight.scenarioId ?? DEFAULT_SCENARIO_ID,
         status: flight.status,
         runId: flight.runId,
         launched: false,
@@ -239,6 +248,8 @@ export const HANDLERS: Record<ToolName, Handler> = {
       return fail(`prompt must be text up to ${IMAGINE_PROMPT_MAX} characters`);
     }
     if (!str(part_id) || !PART_IDS.includes(part_id)) return fail(`unknown part: ${String(part_id)}`);
+    // Picture generation lives on the Imagine branch. This handler stays a clear
+    // refusal until that branch's showPartInAction can be called from here.
     return fail(IMAGINE_NOT_READY);
   },
 };

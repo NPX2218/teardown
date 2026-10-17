@@ -1,7 +1,6 @@
 // lib/agent/messages.ts — checks and trims chat messages (04 Task 3). Owner: Anders.
 import type { ChatMessage, ToolCall } from "@/lib/agent/types";
-import type { ExplainLevel } from "@/lib/agent/contract";
-import { isExplainLevel } from "@/lib/agent/contract";
+import { isExplainLevel, type ExplainLevel } from "@/lib/types";
 
 export const MAX_HISTORY_MESSAGES = 30;
 export const MAX_TOTAL_CHARS = 24000;
