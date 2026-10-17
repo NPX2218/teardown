@@ -27,15 +27,14 @@ function play(text: string, gen: number): Promise<void> {
       return;
     }
     let settled = false;
-    let timer: ReturnType<typeof setTimeout> | undefined;
     const done = () => {
       if (settled) return;
       settled = true;
-      if (timer !== undefined) clearTimeout(timer);
+      clearTimeout(timer);
       if (finishCurrent === done) finishCurrent = null;
       resolve();
     };
-    timer = setTimeout(() => {
+    const timer = setTimeout(() => {
       // Cap hit: stop the stuck utterance before releasing the queue, but only if it is still the
       // current line (a newer line has already cancelled it and must not be cut off).
       if (finishCurrent === done && canSpeak()) window.speechSynthesis.cancel();
