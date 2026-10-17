@@ -1,9 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { playBlob, playCapMs, playUrl, browserSpeak, fetchVoice } from "@/lib/voice/browser-audio";
 import { AUDIO_MS_PER_CHAR, SPEAK_BASE_MS, SPEAK_MS_PER_CHAR, ROCKET_SAY_EXTRA_MS, sayCapMs } from "@/lib/voice/format";
-import { hashLine } from "@/lib/voice/hash";
-import type { RocketMessage } from "@/lib/voice/rocket-port";
-import { createSpeaker, ROCKET_POLL_MS, type Playback, type PlaybackResult, type SpeakerDeps } from "@/lib/voice/speaker";
+import { createSpeaker, type Playback, type PlaybackResult, type SpeakerDeps } from "@/lib/voice/speaker";
 import { speakLine } from "@/lib/voice/speak";
 import { TEXT_TIMEOUT_MS } from "@/lib/timeout";
 
@@ -12,26 +10,15 @@ const flush = () => new Promise<void>((r) => setTimeout(r, 0));
 interface Play { kind: "url" | "blob" | "browser"; text: string; stopped: boolean; end(r?: PlaybackResult): void }
 
 function fakeDeps(over: Partial<SpeakerDeps> = {}) {
-  const log: string[] = [];
   const plays: Play[] = [];
-  const state = { connected: false };
-  const saidFns = new Map<string, () => void>();
-  const sent: RocketMessage[] = [];
-  let seq = 0;
   const mk = (kind: Play["kind"], text: string): Playback => {
     let resolve!: (r: PlaybackResult) => void;
     const done = new Promise<PlaybackResult>((r) => { resolve = r; });
     const play: Play = { kind, text, stopped: false, end: (r = "ended") => resolve(r) };
     plays.push(play);
-    log.push(`${kind}:${text}`);
     return { done, stop() { play.stopped = true; resolve("ended"); } };
   };
   const deps: SpeakerDeps = {
-    isRocketConnected: () => state.connected,
-    sendToRocket: (m) => { sent.push(m); log.push(`send:${m.k}`); },
-    onSaid: (id, fn) => { saidFns.set(id, fn); return () => { saidFns.delete(id); }; },
-    nextRequestId: (key) => { seq += 1; return `${key.slice(0, 8)}-${seq}`; },
-    minSayMs: 0,
     cachedUrl: async () => null,
     playUrl: (url, text) => mk("url", text + "@" + url),
     fetchVoice: async () => null,
@@ -39,7 +26,7 @@ function fakeDeps(over: Partial<SpeakerDeps> = {}) {
     browserSpeak: (text) => mk("browser", text),
     ...over,
   };
-  return { deps, log, plays, state, sent, said: (id: string) => saidFns.get(id)?.() };
+  return { deps, plays };
 }
 
 afterEach(() => {
@@ -103,65 +90,43 @@ describe("speakLine ordering (01 SP1–SP3, kept by 05)", () => {
 });
 
 describe("speakLine routing (05 Task 1)", () => {
-  it("SV21 500 chars fit the phone contract; 501 bypasses phone and remote voice", async () => {
+  it("SV21 500 chars play on the laptop; 501 skips the remote voice", async () => {
     const fetchVoiceFn = vi.fn(async () => null);
     const f = fakeDeps({ fetchVoice: fetchVoiceFn });
-    f.state.connected = true;
     const sp = createSpeaker(f.deps);
     const valid = sp.speakLine("x".repeat(500), { via: "rocket" });
     await flush();
-    expect(f.sent[0]).toMatchObject({ k: "say", text: "x".repeat(500) });
-    f.said((f.sent[0] as { id: string }).id);
+    expect(fetchVoiceFn).toHaveBeenCalledTimes(1);
+    expect(f.plays.map((p) => p.kind)).toEqual(["browser"]);
+    f.plays[0].end();
     await valid;
     const long = sp.speakLine("x".repeat(501), { via: "rocket" });
     await flush();
-    expect(f.sent).toHaveLength(1);
-    expect(fetchVoiceFn).not.toHaveBeenCalled();
-    expect(f.plays).toHaveLength(1);
-    f.plays[0].end();
+    expect(fetchVoiceFn).toHaveBeenCalledTimes(1);
+    expect(f.plays.map((p) => p.kind)).toEqual(["browser", "browser"]);
+    f.plays[1].end();
     await long;
   });
 
-  it("SV1 via rocket + connected: sends one say and waits for said", async () => {
+  it("SV1 via rocket plays on the laptop and does not wait for the phone", async () => {
     const f = fakeDeps();
-    f.state.connected = true;
     const sp = createSpeaker(f.deps);
-    let done = false;
-    const p = sp.speakLine("Liftoff!", { via: "rocket" }).then(() => { done = true; });
+    const p = sp.speakLine("Liftoff!", { via: "rocket" });
     await flush();
-    expect(f.sent).toHaveLength(1);
-    const m = f.sent[0];
-    expect(m).toMatchObject({ k: "say", cacheKey: hashLine("Liftoff!"), text: "Liftoff!" });
-    const id = (m as { id: string }).id;
-    expect(id.length).toBeGreaterThanOrEqual(1);
-    expect(id.length).toBeLessThanOrEqual(32);
-    expect(done).toBe(false);
-    f.said(id);
+    expect(f.plays.map((play) => play.text)).toEqual(["Liftoff!"]);
+    f.plays[0].end();
     await p;
-    expect(f.plays).toHaveLength(0);
-    expect(f.sent.map((x) => x.k)).toEqual(["say"]);
   });
 
-  it("SV2 via rocket but not connected: straight to the laptop, nothing sent", async () => {
+  it("SV2 via screen and via rocket use the same laptop playback", async () => {
     const f = fakeDeps();
     const sp = createSpeaker(f.deps);
     void sp.speakLine("Liftoff!", { via: "rocket" });
     await flush();
-    expect(f.sent).toHaveLength(0);
-    expect(f.plays.map((p) => p.text)).toEqual(["Liftoff!"]);
-  });
-
-  it("SV3 via screen never uses the rocket, even when connected", async () => {
-    const f = fakeDeps();
-    f.state.connected = true;
-    const sp = createSpeaker(f.deps);
+    f.plays[0].end();
     void sp.speakLine("explain", { via: "screen" });
     await flush();
-    f.plays[0].end();
-    void sp.speakLine("again");
-    await flush();
-    expect(f.sent).toHaveLength(0);
-    expect(f.plays.map((p) => p.text)).toEqual(["explain", "again"]);
+    expect(f.plays.map((p) => p.text)).toEqual(["Liftoff!", "explain"]);
   });
 
   it("SV4 laptop order: a cached file plays first and Grok Voice is not called", async () => {
@@ -200,73 +165,33 @@ describe("speakLine routing (05 Task 1)", () => {
     await p;
   });
 
-  it("SV7 phone says nothing back: after sayCapMs it sends stopSay, then speaks on the laptop", async () => {
-    vi.useFakeTimers();
+  it("SV7 via rocket starts laptop playback at once", async () => {
     const f = fakeDeps();
-    f.state.connected = true;
     const sp = createSpeaker(f.deps);
     const text = "Hold it steady!";
     const p = sp.speakLine(text, { via: "rocket" });
-    await vi.advanceTimersByTimeAsync(sayCapMs(text) - 1);
-    expect(f.plays).toHaveLength(0);
-    await vi.advanceTimersByTimeAsync(1);
-    const say = f.sent[0] as { id: string };
-    expect(f.sent[1]).toEqual({ k: "stopSay", id: say.id });
-    expect(f.log).toEqual(["send:say", "send:stopSay", `browser:${text}`]);
+    await flush();
     expect(f.plays.map((x) => x.text)).toEqual([text]);
     f.plays[0].end();
     await p;
   });
 
-  it("SV8 the phone disconnects mid-line: within one poll it sends stopSay", async () => {
-    vi.useFakeTimers();
+  it("SV9 a new non-queued line cuts the laptop line", async () => {
     const f = fakeDeps();
-    f.state.connected = true;
-    const sp = createSpeaker(f.deps);
-    const p = sp.speakLine("Liftoff!", { via: "rocket" });
-    await vi.advanceTimersByTimeAsync(100);
-    f.state.connected = false;
-    await vi.advanceTimersByTimeAsync(ROCKET_POLL_MS);
-    expect(f.sent.map((m) => m.k)).toEqual(["say", "stopSay"]);
-    expect(f.plays.map((x) => x.text)).toEqual(["Liftoff!"]);
-    f.plays[0].end();
-    await p;
-  });
-
-  it("SV9 a new non-queued line cuts a phone line before the new say", async () => {
-    const f = fakeDeps();
-    f.state.connected = true;
     const sp = createSpeaker(f.deps);
     const first = sp.speakLine("first line", { via: "rocket" });
     await flush();
-    const firstId = (f.sent[0] as { id: string }).id;
     const second = sp.speakLine("second line", { via: "rocket" });
-    expect(f.sent.map((m) => m.k)).toEqual(["say", "stopSay", "say"]);
-    expect(f.sent[1]).toEqual({ k: "stopSay", id: firstId });
-    const secondId = (f.sent[2] as { id: string }).id;
-    expect(secondId).not.toBe(firstId);
+    await flush();
+    expect(f.plays[0].stopped).toBe(true);
     await first;
-    f.said(secondId);
+    expect(f.plays.map((play) => play.text)).toEqual(["first line", "second line"]);
+    f.plays[1].end();
     await second;
-  });
-
-  it("SV10 a said for a different request id does not end the line", async () => {
-    const f = fakeDeps();
-    f.state.connected = true;
-    const sp = createSpeaker(f.deps);
-    let done = false;
-    const p = sp.speakLine("Liftoff!", { via: "rocket" }).then(() => { done = true; });
-    await flush();
-    f.said("someone-else-9");
-    await flush();
-    expect(done).toBe(false);
-    f.said((f.sent[0] as { id: string }).id);
-    await p;
   });
 
   it("SV11 stopSpeaking cuts the current line and drops queued lines", async () => {
     const f = fakeDeps();
-    f.state.connected = true;
     const sp = createSpeaker(f.deps);
     const phone = sp.speakLine("phone line", { via: "rocket" });
     const queued = sp.speakLine("queued", { via: "screen", queue: true });
@@ -275,8 +200,8 @@ describe("speakLine routing (05 Task 1)", () => {
     await phone;
     await queued;
     await flush();
-    expect(f.sent.map((m) => m.k)).toEqual(["say", "stopSay"]);
-    expect(f.plays).toHaveLength(0);
+    expect(f.plays).toHaveLength(1);
+    expect(f.plays[0].stopped).toBe(true);
   });
 
   it("SV12 stopSpeaking silences a laptop line at once", async () => {
@@ -292,23 +217,19 @@ describe("speakLine routing (05 Task 1)", () => {
   it("SV13 empty or blank text resolves at once and touches nothing", async () => {
     const cachedUrl = vi.fn(async () => null);
     const f = fakeDeps({ cachedUrl });
-    f.state.connected = true;
     const sp = createSpeaker(f.deps);
     await expect(sp.speakLine("", { via: "rocket" })).resolves.toBeUndefined();
     await expect(sp.speakLine("   \n", { queue: true })).resolves.toBeUndefined();
     expect(cachedUrl).not.toHaveBeenCalled();
-    expect(f.sent).toHaveLength(0);
     expect(f.plays).toHaveLength(0);
   });
 
-  it("SV14 never rejects: a throwing rocket, manifest or browser voice still resolves", async () => {
+  it("SV14 never rejects: a throwing manifest or browser voice still resolves", async () => {
     const f = fakeDeps({
-      sendToRocket: () => { throw new Error("socket closed"); },
       cachedUrl: async () => { throw new Error("manifest boom"); },
       fetchVoice: async () => { throw new Error("fetch boom"); },
       browserSpeak: () => { throw new Error("speech boom"); },
     });
-    f.state.connected = true;
     const sp = createSpeaker(f.deps);
     await expect(sp.speakLine("hello", { via: "rocket" })).resolves.toBeUndefined();
   });

@@ -14,11 +14,10 @@
 // gate), thinking (transcript or answer in flight), speaking (a line is
 // playing). idle when the stack is empty.
 //
-// getMicStream() is the laptop MediaStream only. The phone path has no stream
-// here, so it stays "listening" for the whole hold.
-// getOutputNode() is the HTMLAudioElement for a cached file or a TTS blob.
-// Phone playback and speechSynthesis have no node, so lip-sync has nothing to
-// attach until those paths play through an element.
+// getMicStream() is the laptop MediaStream only.
+// getOutputNode() is the laptop HTMLAudioElement for a cached file or a TTS blob.
+// Every Grok line plays through that element so lip-sync follows the real audio.
+// The browser-voice fallback has no element. The phone does not play these lines.
 
 export type VoiceActivityState =
   | "idle"
