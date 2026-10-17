@@ -1,0 +1,99 @@
+import { describe, expect, it } from "vitest";
+import { damp, homeView, partDistance } from "@/lib/viewer/camera";
+import { runTourStep, TOUR_GAP_MS, tourGroups, type TourDeps } from "@/lib/viewer/tour";
+import type { PartGroup, PartsFile } from "@/lib/types";
+
+describe("camera math (03 Task 5)", () => {
+  it("CM1 home framing pulls back 1.5x when fully exploded", () => {
+    expect(homeView(0).distance).toBeCloseTo(27, 6);
+    expect(homeView(0).targetY).toBeCloseTo(-0.84, 6);
+    expect(homeView(1).distance).toBeCloseTo(40.5, 6);
+    expect(homeView(1).targetY).toBeCloseTo(-1.26, 6);
+  });
+
+  it("CM2 home framing clamps bad explode values", () => {
+    expect(homeView(NaN)).toEqual(homeView(0));
+    expect(homeView(-3)).toEqual(homeView(0));
+    expect(homeView(7)).toEqual(homeView(1));
+  });
+
+  it("CM3 part distance uses the largest side with a floor", () => {
+    expect(partDistance([1, 2, 0.5])).toBeCloseTo(5.2, 6);
+    expect(partDistance([0.1, 0.1, 0.1])).toBeCloseTo(3.6, 6);
+    expect(partDistance([NaN, -1, 0])).toBeCloseTo(3.6, 6);
+    expect(partDistance([1, 2, 0.5], 0.5)).toBeCloseTo(10.4, 6);
+    expect(partDistance([1, 2, 0.5], NaN)).toBeCloseTo(5.2, 6);
+  });
+
+  it("CM4 damp is frame-rate independent and safe", () => {
+    expect(damp(0.06, 1 / 60)).toBeCloseTo(0.06, 6);
+    expect(damp(0.06, 1 / 120)).toBeLessThan(0.06);
+    expect(damp(0.06, 1 / 120)).toBeCloseTo(1 - Math.sqrt(0.94), 6);
+    expect(damp(0.06, NaN)).toBe(0);
+    expect(damp(0.06, -1)).toBe(0);
+    expect(damp(0.06, 100)).toBeLessThanOrEqual(1);
+  });
+});
+
+const g = (id: string, tourOrder: number | null): PartGroup => ({
+  id, nodes: [id], name: id, eyebrow: "", role: "", specs: {},
+  explode: { up: 0, radial: 0 }, tourOrder, say: `say ${id}`, source: "",
+});
+const PARTS: PartsFile = {
+  model: "fixture", glb: "/models/fixture.glb",
+  vehicle: { heightM: 70, diameterM: 3.7, liftoffMassKg: 549054, payloadLeoKg: 22800, merlinThrustSlKN: 845, merlinCount: 9 },
+  groups: [g("c", 3), g("rcs", null), g("a", 1), g("b", 2)],
+  glossary: {},
+};
+
+function fakeDeps(parts: PartsFile | null, opts: { staleAfterSpeak?: boolean } = {}) {
+  const calls: string[] = [];
+  let current = true;
+  const deps: TourDeps = {
+    parts,
+    selectPart: (id) => calls.push(`select:${id}`),
+    flyTo: (id) => calls.push(`fly:${id}`),
+    nextTourStep: () => { calls.push("next"); },
+    stopTour: () => { calls.push("stop"); },
+    speak: async (t) => { calls.push(`speak:${t}`); if (opts.staleAfterSpeak) current = false; },
+    wait: async (ms) => { calls.push(`wait:${ms}`); },
+    isCurrent: () => current,
+  };
+  return { deps, calls, setCurrent: (v: boolean) => { current = v; } };
+}
+
+describe("tour (03 Task 5)", () => {
+  it("TD1 tour order: by tourOrder, nulls left out", () => {
+    expect(tourGroups(PARTS).map((x) => x.id)).toEqual(["a", "b", "c"]);
+    expect(tourGroups(null)).toEqual([]);
+  });
+
+  it("TD2 a step selects, flies, speaks, waits 700 ms, then moves on", async () => {
+    const { deps, calls } = fakeDeps(PARTS);
+    await runTourStep(1, deps);
+    expect(TOUR_GAP_MS).toBe(700);
+    expect(calls).toEqual(["select:b", "fly:b", "speak:say b", "wait:700", "next"]);
+  });
+
+  it("TD3 a cancelled step stops after the line", async () => {
+    const { deps, calls } = fakeDeps(PARTS, { staleAfterSpeak: true });
+    await runTourStep(0, deps);
+    expect(calls).toEqual(["select:a", "fly:a", "speak:say a"]);
+    const stale = fakeDeps(PARTS);
+    stale.setCurrent(false);
+    await runTourStep(0, stale.deps);
+    expect(stale.calls).toEqual([]);
+  });
+
+  it("TD4 past the last step: stop, clear, fly home", async () => {
+    const { deps, calls } = fakeDeps(PARTS);
+    await runTourStep(3, deps);
+    expect(calls).toEqual(["stop", "select:null", "fly:home"]);
+  });
+
+  it("TD5 no parts file: same as the end", async () => {
+    const { deps, calls } = fakeDeps(null);
+    await runTourStep(0, deps);
+    expect(calls).toEqual(["stop", "select:null", "fly:home"]);
+  });
+});
