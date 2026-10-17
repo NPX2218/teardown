@@ -1,9 +1,37 @@
 // lib/agent/fixtures/exhibit.ts — stand-in parts and practice mission until 01/02/06 land.
 // Vehicle numbers, part ids, names, and glossary terms are the reviewed 02 spec, not a new measurement.
 // The practice mission is a SAMPLE. It is not Sentinel-6 and not a real flight.
-import type { Mission, PartsFile } from "@/lib/agent/contract";
+export interface ExhibitPart {
+  id: string;
+  name: string;
+  eyebrow: string;
+  role: string;
+  specs: Record<string, string>;
+  say: string;
+}
 
-export const PARTS: PartsFile = {
+export interface ExhibitParts {
+  vehicle: {
+    heightM: number;
+    diameterM: number;
+    liftoffMassKg: number;
+    payloadLeoKg: number;
+    merlinThrustSlKN: number;
+    merlinCount: number;
+  };
+  groups: ExhibitPart[];
+  glossary: Record<string, string>;
+}
+
+export interface ExhibitMission {
+  id: string;
+  name: string;
+  booster: string;
+  landing: string;
+  events: { t: number; id: string; say: string }[];
+}
+
+export const PARTS: ExhibitParts = {
   vehicle: {
     heightM: 70,
     diameterM: 3.7,
@@ -117,7 +145,7 @@ export const PARTS: PartsFile = {
   },
 };
 
-export const MISSIONS: Record<string, Mission> = {
+export const MISSIONS: Record<string, ExhibitMission> = {
   practice: {
     id: "practice",
     name: "Practice sample (not a real flight)",

@@ -1,6 +1,7 @@
 // lib/agent/prompt.ts — Grok's system prompt (04 Task 3, flight migration). Owner: Anders.
 // The DATA block is the only place numbers come from. The guide never steers or awards success.
-import type { ExplainLevel, Mission, PartsFile } from "@/lib/agent/contract";
+import type { ExhibitMission, ExhibitParts } from "@/lib/agent/fixtures/exhibit";
+import type { ExplainLevel } from "@/lib/types";
 
 export const NUMBERS_RULE = "never state a number that is not in the DATA; if the data doesn't cover it, say so";
 
@@ -21,7 +22,7 @@ export const FLIGHT_BOUNDARY_RULE =
 export const RETIRED_SURFACES_RULE =
   "There is no engine-out sandbox and no checkpoint coach. Do not invent those, and do not award stars.";
 
-function partsData(parts: PartsFile): string {
+function partsData(parts: ExhibitParts): string {
   const groups = parts.groups.map((g) => ({
     id: g.id,
     name: g.name,
@@ -32,11 +33,11 @@ function partsData(parts: PartsFile): string {
   return JSON.stringify({ vehicle: parts.vehicle, parts: groups });
 }
 
-function glossaryData(parts: PartsFile): string {
+function glossaryData(parts: ExhibitParts): string {
   return Object.entries(parts.glossary).map(([term, def]) => `- ${term}: ${def}`).join("\n");
 }
 
-function missionsData(missions: Record<string, Mission>): string {
+function missionsData(missions: Record<string, ExhibitMission>): string {
   return Object.values(missions)
     .map((m) =>
       JSON.stringify({
@@ -51,8 +52,8 @@ function missionsData(missions: Record<string, Mission>): string {
 }
 
 export function buildSystemPrompt(
-  parts: PartsFile,
-  missions: Record<string, Mission>,
+  parts: ExhibitParts,
+  missions: Record<string, ExhibitMission>,
   level: ExplainLevel,
 ): string {
   return [
