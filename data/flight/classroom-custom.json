@@ -1,0 +1,144 @@
+{
+  "id": "classroom-custom",
+  "kind": "custom",
+  "name": "Classroom custom",
+  "simulationLabel": "Made-up practice launch. Not a real flight.",
+  "kidSummary": "This is a made-up practice launch, not a real flight. You fly it yourself. The fuel load is blank because that published number is missing.",
+  "trajectory": null,
+  "flyable": false,
+  "unavailableReason": "Propellant mass and fuel flow are not in the selected sources.",
+  "values": {
+    "vehicleHeightM": {
+      "value": 70,
+      "unit": "m",
+      "classification": "published",
+      "source": "https://www.spacex.com/vehicles/falcon-9/",
+      "note": "Falcon 9 vehicle-page height, used as a limit for a made-up flight."
+    },
+    "vehicleDiameterM": {
+      "value": 3.7,
+      "unit": "m",
+      "classification": "published",
+      "source": "https://www.spacex.com/vehicles/falcon-9/",
+      "note": "Falcon 9 vehicle-page diameter."
+    },
+    "vehicleMassKg": {
+      "value": 549054,
+      "unit": "kg",
+      "classification": "published",
+      "source": "https://www.spacex.com/vehicles/falcon-9/",
+      "note": "Falcon 9 vehicle-page mass. Not split into fuel and dry mass."
+    },
+    "payloadLeoCapabilityKg": {
+      "value": 22800,
+      "unit": "kg",
+      "classification": "published",
+      "source": "https://www.spacex.com/vehicles/falcon-9/",
+      "note": "Published payload to LEO. The cap for a custom choice, not a chosen payload."
+    },
+    "payloadMaxKg": {
+      "value": 22800,
+      "unit": "kg",
+      "classification": "published",
+      "source": "https://www.spacex.com/vehicles/falcon-9/",
+      "note": "Same published LEO capability. A custom payload may not be set above this."
+    },
+    "payloadChoiceKg": {
+      "value": null,
+      "unit": "kg",
+      "classification": "unknown",
+      "source": "",
+      "note": "No default payload is invented."
+    },
+    "merlinSeaLevelThrustKn": {
+      "value": 845,
+      "unit": "kN",
+      "classification": "published",
+      "source": "https://www.spacex.com/vehicles/falcon-9/",
+      "note": "Published sea-level thrust of one Merlin."
+    },
+    "merlinCount": {
+      "value": 9,
+      "unit": "engines",
+      "classification": "published",
+      "source": "https://www.spacex.com/vehicles/falcon-9/",
+      "note": "Falcon 9 first stage has nine Merlin engines."
+    },
+    "merlinVacuumThrustKn": {
+      "value": 981,
+      "unit": "kN",
+      "classification": "published",
+      "source": "https://www.spacex.com/vehicles/falcon-9/",
+      "note": "Published Merlin Vacuum thrust."
+    },
+    "vacuumEngineCount": {
+      "value": 1,
+      "unit": "engines",
+      "classification": "published",
+      "source": "https://www.spacex.com/vehicles/falcon-9/",
+      "note": "The second stage has one Merlin Vacuum engine."
+    },
+    "stage1SeaLevelThrustKn": {
+      "value": 7607,
+      "unit": "kN",
+      "classification": "published",
+      "source": "https://web.archive.org/web/20200524024922/https://www.spacex.com/vehicles/falcon-9/",
+      "note": "The 24 May 2020 SpaceX vehicle page states this sea-level total. It is that stated figure, not a product of the per-engine thrust."
+    },
+    "stage1Rp1Kg": {
+      "value": null,
+      "unit": "kg",
+      "classification": "unknown",
+      "source": "",
+      "note": "RP-1 mass is unknown. It is not stored as a combined propellant total."
+    },
+    "stage1LoxKg": {
+      "value": null,
+      "unit": "kg",
+      "classification": "unknown",
+      "source": "",
+      "note": "Liquid-oxygen mass is unknown and separate from RP-1."
+    },
+    "stage2Rp1Kg": {
+      "value": null,
+      "unit": "kg",
+      "classification": "unknown",
+      "source": "",
+      "note": "Second-stage RP-1 mass is unknown."
+    },
+    "stage2LoxKg": {
+      "value": null,
+      "unit": "kg",
+      "classification": "unknown",
+      "source": "",
+      "note": "Second-stage liquid-oxygen mass is unknown."
+    },
+    "propellantFlowKgPerS": {
+      "value": null,
+      "unit": "kg/s",
+      "classification": "unknown",
+      "source": "",
+      "note": "Fuel flow is not in the selected sources. No flow number is stored."
+    },
+    "dragCoefficient": {
+      "value": null,
+      "unit": "1",
+      "classification": "unknown",
+      "source": "",
+      "note": "No drag coefficient is included. Do not invent one."
+    }
+  },
+  "tuning": {
+    "classification": "gameplay_tuning",
+    "authority": "docs/specs/07-replay.spec.md#4-simulation-contract",
+    "maxSubstepNumerator": 1,
+    "maxSubstepDenominator": 60,
+    "maxWallDeltaSeconds": 0.1,
+    "maxPhysicalStepsPerFrame": 48,
+    "warp": [1, 4, 8],
+    "minPeriapsisAltitudeKm": 200,
+    "maxApoapsisAltitudeKm": 2000,
+    "thrustOffSeconds": 10,
+    "note": "Classroom and responsiveness choices from the 2026-10-17 flight spec. Not a Falcon 9 specification."
+  }
+}
