@@ -1,0 +1,457 @@
+{
+  "id": "56623c2d-7174-489c-b0ed-bf6f039b2412",
+  "url": "https://ll.thespacedevs.com/2.2.0/launch/56623c2d-7174-489c-b0ed-bf6f039b2412/",
+  "slug": "falcon-9-block-5-sentinel-6-michael-freilich",
+  "flightclub_url": null,
+  "r_spacex_api_id": null,
+  "name": "Falcon 9 Block 5 | Sentinel-6 Michael Freilich",
+  "status": {
+    "id": 3,
+    "name": "Launch Successful",
+    "abbrev": "Success",
+    "description": "The launch vehicle successfully inserted its payload(s) into the target orbit(s)."
+  },
+  "last_updated": "2024-06-15T14:12:12Z",
+  "updates": [
+    {
+      "id": 43,
+      "profile_image": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/profile_images/swgustav_profile_20210218062738.jpg",
+      "comment": "weather 80%",
+      "info_url": "https://twitter.com/jeff_foust/status/1329917716950605832",
+      "created_by": "SwGustav",
+      "created_on": "2020-11-20T22:47:37Z"
+    },
+    {
+      "id": 19,
+      "profile_image": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/profile_images/spacevogel_profile_20210217192809.jpg",
+      "comment": "Added webcast link",
+      "info_url": null,
+      "created_by": "spacevogel",
+      "created_on": "2020-11-15T15:08:19Z"
+    },
+    {
+      "id": 3,
+      "profile_image": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/profile_images/swgustav_profile_20210218062738.jpg",
+      "comment": "setting go",
+      "info_url": "https://www.nasa.gov/launchschedule/",
+      "created_by": "SwGustav",
+      "created_on": "2020-11-12T09:46:33Z"
+    }
+  ],
+  "net": "2020-11-21T17:17:08Z",
+  "net_precision": {
+    "id": 0,
+    "name": "Second",
+    "abbrev": "SEC",
+    "description": "The T-0 is accurate to the second."
+  },
+  "window_end": "2020-11-21T17:17:08Z",
+  "window_start": "2020-11-21T17:17:08Z",
+  "probability": 80,
+  "weather_concerns": null,
+  "holdreason": "",
+  "failreason": "",
+  "hashtag": "#SeeingTheSeas",
+  "launch_service_provider": {
+    "id": 121,
+    "url": "https://ll.thespacedevs.com/2.2.0/agencies/121/",
+    "name": "SpaceX",
+    "featured": true,
+    "type": "Commercial",
+    "country_code": "USA",
+    "abbrev": "SpX",
+    "description": "Space Exploration Technologies Corp., known as SpaceX, is an American aerospace manufacturer and space transport services company headquartered in Hawthorne, California. It was founded in 2002 by entrepreneur Elon Musk with the goal of reducing space transportation costs and enabling the colonization of Mars. SpaceX operates from many pads, on the East Coast of the US they operate from SLC-40 at Cape Canaveral Space Force Station and historic LC-39A at Kennedy Space Center. They also operate from SLC-4E at Vandenberg Space Force Base, California, usually for polar launches. Another launch site is being developed at Boca Chica, Texas.",
+    "administrator": "CEO: Elon Musk",
+    "founding_year": "2002",
+    "launchers": "Falcon | Starship",
+    "spacecraft": "Dragon",
+    "launch_library_url": null,
+    "total_launch_count": 739,
+    "consecutive_successful_launches": 224,
+    "successful_launches": 724,
+    "failed_launches": 15,
+    "pending_launches": 135,
+    "consecutive_successful_landings": 33,
+    "successful_landings": 684,
+    "failed_landings": 29,
+    "attempted_landings": 712,
+    "info_url": "https://www.spacex.com/",
+    "wiki_url": "https://en.wikipedia.org/wiki/SpaceX",
+    "logo_url": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/spacex_logo_20220826094919.png",
+    "image_url": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/falcon_9_image_20230807133459.jpeg",
+    "nation_url": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/spacex_social_l_image_20260407054626.jpg"
+  },
+  "rocket": {
+    "id": 164,
+    "configuration": {
+      "id": 164,
+      "url": "https://ll.thespacedevs.com/2.2.0/config/launcher/164/",
+      "name": "Falcon 9",
+      "active": true,
+      "reusable": true,
+      "description": "Falcon 9 is a two-stage rocket designed and manufactured by SpaceX for the reliable and safe transport of satellites and the Dragon spacecraft into orbit. The Block 5 variant is the fifth major interval aimed at improving upon the ability for rapid reusability.",
+      "family": "Falcon",
+      "full_name": "Falcon 9 Block 5",
+      "manufacturer": {
+        "id": 121,
+        "url": "https://ll.thespacedevs.com/2.2.0/agencies/121/",
+        "name": "SpaceX",
+        "featured": true,
+        "type": "Commercial",
+        "country_code": "USA",
+        "abbrev": "SpX",
+        "description": "Space Exploration Technologies Corp., known as SpaceX, is an American aerospace manufacturer and space transport services company headquartered in Hawthorne, California. It was founded in 2002 by entrepreneur Elon Musk with the goal of reducing space transportation costs and enabling the colonization of Mars. SpaceX operates from many pads, on the East Coast of the US they operate from SLC-40 at Cape Canaveral Space Force Station and historic LC-39A at Kennedy Space Center. They also operate from SLC-4E at Vandenberg Space Force Base, California, usually for polar launches. Another launch site is being developed at Boca Chica, Texas.",
+        "administrator": "CEO: Elon Musk",
+        "founding_year": "2002",
+        "launchers": "Falcon | Starship",
+        "spacecraft": "Dragon",
+        "launch_library_url": null,
+        "total_launch_count": 739,
+        "consecutive_successful_launches": 224,
+        "successful_launches": 724,
+        "failed_launches": 15,
+        "pending_launches": 135,
+        "consecutive_successful_landings": 33,
+        "successful_landings": 684,
+        "failed_landings": 29,
+        "attempted_landings": 712,
+        "info_url": "https://www.spacex.com/",
+        "wiki_url": "https://en.wikipedia.org/wiki/SpaceX",
+        "logo_url": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/spacex_logo_20220826094919.png",
+        "image_url": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/falcon_9_image_20230807133459.jpeg",
+        "nation_url": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/spacex_social_l_image_20260407054626.jpg"
+      },
+      "program": [
+        {
+          "id": 5,
+          "url": "https://ll.thespacedevs.com/2.2.0/program/5/",
+          "name": "Commercial Crew Program",
+          "description": "The Commercial Crew Program (CCP) is a human spaceflight program operated by NASA, in association with American aerospace manufacturers Boeing and SpaceX. The program conducts rotations between the expeditions of the International Space Station program, transporting crews to and from the International Space Station (ISS) aboard Boeing Starliner and SpaceX Crew Dragon capsules, in the first crewed orbital spaceflights operated by private companies.",
+          "agencies": [
+            {
+              "id": 80,
+              "url": "https://ll.thespacedevs.com/2.2.0/agencies/80/",
+              "name": "Boeing",
+              "type": "Commercial"
+            },
+            {
+              "id": 44,
+              "url": "https://ll.thespacedevs.com/2.2.0/agencies/44/",
+              "name": "National Aeronautics and Space Administration",
+              "type": "Government"
+            },
+            {
+              "id": 121,
+              "url": "https://ll.thespacedevs.com/2.2.0/agencies/121/",
+              "name": "SpaceX",
+              "type": "Commercial"
+            }
+          ],
+          "image_url": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/commercial2520_program_20200820201209.png",
+          "start_date": "2011-04-18T00:00:00Z",
+          "end_date": null,
+          "info_url": "https://www.nasa.gov/exploration/commercial/crew/index.html",
+          "wiki_url": "https://en.wikipedia.org/wiki/Commercial_Crew_Program",
+          "mission_patches": [],
+          "type": {
+            "id": 2,
+            "name": "Human Spaceflight"
+          }
+        },
+        {
+          "id": 11,
+          "url": "https://ll.thespacedevs.com/2.2.0/program/11/",
+          "name": "Commercial Resupply Services",
+          "description": "Commercial Resupply Services (CRS) are a series of flights awarded by NASA for the delivery of cargo and supplies to the International Space Station.The first CRS contracts were signed in 2008 and awarded $1.6 billion to SpaceX for twelve cargo Dragon and $1.9 billion to Orbital Sciences for eight Cygnus flights, covering deliveries to 2016. The Falcon 9 and Antares rockets were also developed under the CRS program to deliver cargo spacecraft to the ISS.",
+          "agencies": [
+            {
+              "id": 44,
+              "url": "https://ll.thespacedevs.com/2.2.0/agencies/44/",
+              "name": "National Aeronautics and Space Administration",
+              "type": "Government"
+            },
+            {
+              "id": 257,
+              "url": "https://ll.thespacedevs.com/2.2.0/agencies/257/",
+              "name": "Northrop Grumman Space Systems",
+              "type": "Commercial"
+            },
+            {
+              "id": 1020,
+              "url": "https://ll.thespacedevs.com/2.2.0/agencies/1020/",
+              "name": "Sierra Nevada Corporation",
+              "type": "Commercial"
+            },
+            {
+              "id": 121,
+              "url": "https://ll.thespacedevs.com/2.2.0/agencies/121/",
+              "name": "SpaceX",
+              "type": "Commercial"
+            }
+          ],
+          "image_url": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/commercial2520_program_20201129212219.png",
+          "start_date": "2008-12-23T00:00:00Z",
+          "end_date": null,
+          "info_url": null,
+          "wiki_url": "https://en.wikipedia.org/wiki/Commercial_Resupply_Services#Commercial_Resupply_Services",
+          "mission_patches": [],
+          "type": {
+            "id": 2,
+            "name": "Human Spaceflight"
+          }
+        }
+      ],
+      "variant": "Block 5",
+      "alias": "",
+      "min_stage": 2,
+      "max_stage": 2,
+      "length": 70.0,
+      "diameter": 3.65,
+      "maiden_flight": "2018-05-11",
+      "launch_cost": "52000000",
+      "launch_mass": 549,
+      "leo_capacity": 22800,
+      "gto_capacity": 8300,
+      "to_thrust": 7607,
+      "apogee": 200,
+      "vehicle_range": null,
+      "image_url": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/falcon_9_image_20230807133459.jpeg",
+      "info_url": "https://www.spacex.com/vehicles/falcon-9/",
+      "wiki_url": "https://en.wikipedia.org/wiki/Falcon_9",
+      "total_launch_count": 640,
+      "consecutive_successful_launches": 342,
+      "successful_launches": 639,
+      "failed_launches": 1,
+      "pending_launches": 119,
+      "attempted_landings": 630,
+      "successful_landings": 625,
+      "failed_landings": 5,
+      "consecutive_successful_landings": 325
+    },
+    "launcher_stage": [
+      {
+        "id": 142,
+        "type": "Core",
+        "reused": false,
+        "launcher_flight_number": 1,
+        "launcher": {
+          "id": 84,
+          "url": "https://ll.thespacedevs.com/2.2.0/launcher/84/",
+          "details": "Notable launches include Sentinel-6 and Dart.",
+          "flight_proven": true,
+          "serial_number": "B1063",
+          "status": "active",
+          "image_url": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/84_image_20201122121517.jpeg",
+          "successful_landings": 35,
+          "attempted_landings": 35,
+          "flights": 35,
+          "last_launch_date": "2026-09-02T08:42:12Z",
+          "first_launch_date": "2020-11-21T17:17:08Z"
+        },
+        "landing": {
+          "id": 173,
+          "attempt": true,
+          "success": true,
+          "description": "B1063 successfully landed after its first launch.",
+          "downrange_distance": 0.4,
+          "location": {
+            "id": 7,
+            "name": "Landing Zone 4",
+            "abbrev": "LZ-4",
+            "description": "LZ at Vandenberg",
+            "location": {
+              "id": 11,
+              "url": "https://ll.thespacedevs.com/2.2.0/location/11/",
+              "name": "Vandenberg SFB, CA, USA",
+              "country_code": "USA",
+              "description": "Vandenberg Space Force Base is a United States Space Force Base in Santa Barbara County, California. Established in 1941, Vandenberg Space Force Base is a space launch base, launching spacecraft from the Western Range, and also performs missile testing. The United States Space Force's Space Launch Delta 30 serves as the host delta for the base, equivalent to an Air Force air base wing. In addition to its military space launch mission, Vandenberg Space Force Base also hosts space launches for civil and commercial space entities, such as NASA and SpaceX.",
+              "map_image": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/map_images/location_11_20200803142416.jpg",
+              "timezone_name": "America/Los_Angeles",
+              "total_launch_count": 919,
+              "total_landing_count": 37
+            },
+            "successful_landings": 37
+          },
+          "type": {
+            "id": 2,
+            "name": "Return to Launch Site",
+            "abbrev": "RTLS",
+            "description": "A return to launch site usually means that after stage separation the booster flips and does a burn back towards the launch site, landing near where it initially launched from."
+          }
+        },
+        "previous_flight_date": null,
+        "turn_around_time_days": null,
+        "previous_flight": null
+      }
+    ],
+    "spacecraft_stage": null
+  },
+  "mission": {
+    "id": 910,
+    "name": "Sentinel-6 Michael Freilich (Sentinel-6A; Jason-CS)",
+    "description": "The Sentinel-6 Michael Freilich and Sentinel-6B make up the Sentinel-6 mission, also known as Jason Continuity of Service (Jason-CS), which is a partnership between NASA, NOAA, ESA, and EUMETSAT. This mission  continues the long-term global sea surface height data record begun by first Jason satellites in 1992. \r\n\r\nNamed after former NASA Earth Science Division Director Michael Freilich, Sentinel-6 Michail Freilich will provide altimeter data necessary for ocean climate monitoring, ocean modelling and numerical ocean prediction, weather forecasting, marine meteorology, coastal altimetry and modelling. A secondary objective of the mission is to collect high-resolution vertical profiles of temperature, using the Global Navigation Satellite System (GNSS) Radio-Occultation sounding technique, to assess temperature changes in the troposphere and stratosphere and to support numerical weather prediction.\r\n\r\nSentinel-6 Michael Freilich is to operate in a highly-inclined circular orbit at an altitude of 1336 km, with an operational mission lasting 5 years. Near-identical Sentinel-6B is planned to follow-up shortly after.",
+    "launch_designator": null,
+    "type": "Earth Science",
+    "orbit": {
+      "id": 8,
+      "name": "Low Earth Orbit",
+      "abbrev": "LEO"
+    },
+    "agencies": [],
+    "info_urls": [],
+    "vid_urls": []
+  },
+  "pad": {
+    "id": 16,
+    "url": "https://ll.thespacedevs.com/2.2.0/pad/16/",
+    "agency_id": null,
+    "name": "Space Launch Complex 4E",
+    "description": "Space Launch Complex 4 East (SLC-4E) is a launch site at Vandenberg Space Force Base, California, U.S.\r\n\r\nThe pad was previously used by Atlas and Titan rockets between 1963 and 2005. The pad was built for use by Atlas-Agena rockets, but was later rebuilt to handle Titan rockets.",
+    "info_url": null,
+    "wiki_url": "https://en.wikipedia.org/wiki/Vandenberg_Space_Launch_Complex_4#SLC-4E",
+    "map_url": "https://www.google.com/maps?q=34.632,-120.611",
+    "latitude": "34.632",
+    "longitude": "-120.611",
+    "location": {
+      "id": 11,
+      "url": "https://ll.thespacedevs.com/2.2.0/location/11/",
+      "name": "Vandenberg SFB, CA, USA",
+      "country_code": "USA",
+      "description": "Vandenberg Space Force Base is a United States Space Force Base in Santa Barbara County, California. Established in 1941, Vandenberg Space Force Base is a space launch base, launching spacecraft from the Western Range, and also performs missile testing. The United States Space Force's Space Launch Delta 30 serves as the host delta for the base, equivalent to an Air Force air base wing. In addition to its military space launch mission, Vandenberg Space Force Base also hosts space launches for civil and commercial space entities, such as NASA and SpaceX.",
+      "map_image": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/map_images/location_11_20200803142416.jpg",
+      "timezone_name": "America/Los_Angeles",
+      "total_launch_count": 919,
+      "total_landing_count": 37
+    },
+    "country_code": "USA",
+    "map_image": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/map_images/pad_16_20200803143532.jpg",
+    "total_launch_count": 303,
+    "orbital_launch_attempt_count": 303
+  },
+  "infoURLs": [
+    {
+      "priority": 10,
+      "source": null,
+      "title": "",
+      "description": "SpaceX designs, manufactures and launches advanced rockets and spacecraft. The company was founded in 2002 to revolutionize space technology, with the ultimate goal of enabling people to live on other planets.",
+      "feature_image": null,
+      "url": "https://www.spacex.com/launches/sentinel-6-michael-freilich/",
+      "type": null,
+      "language": null
+    }
+  ],
+  "vidURLs": [
+    {
+      "priority": 9,
+      "source": "youtube.com",
+      "publisher": "SpaceX",
+      "title": "Sentinel-6 Michael Freilich Mission",
+      "description": "SpaceX is targeting Saturday, November 21 for Falcon 9\u2019s launch of  the Sentinel-6 Michael Freilich mission from Space Launch Complex 4E (SLC-4E) at Vandenberg Air Force Base in California. The instan...",
+      "feature_image": "https://i.ytimg.com/vi/aVFPzTDCihQ/maxresdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=aVFPzTDCihQ",
+      "type": {
+        "id": 1,
+        "name": "Official Webcast"
+      },
+      "language": {
+        "id": 1,
+        "name": "English",
+        "code": "en"
+      },
+      "start_time": "2020-11-21T16:40:09Z",
+      "end_time": "2020-11-21T18:57:19Z"
+    },
+    {
+      "priority": 10,
+      "source": "youtube.com",
+      "publisher": "NASA",
+      "title": "Watch the Launch of the Ocean-Observing Sentinel-6 Michael Freilich Satellite",
+      "description": "We're sending the Sentinel-6 Michael Freilich satellite to space to collect the most accurate data yet on global sea level and how our oceans are rising in response to climate change. This #SeeingTheS...",
+      "feature_image": "https://i.ytimg.com/vi/Vm5FnJSIYkw/maxresdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=Vm5FnJSIYkw",
+      "type": {
+        "id": 1,
+        "name": "Official Webcast"
+      },
+      "language": {
+        "id": 1,
+        "name": "English",
+        "code": "en"
+      },
+      "start_time": "2020-11-21T16:46:43Z",
+      "end_time": "2020-11-21T18:58:42Z"
+    }
+  ],
+  "webcast_live": false,
+  "timeline": [],
+  "image": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/falcon2520925_image_20201121073649.jpeg",
+  "infographic": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/infographic_images/falcon2520925_infographic_20201120193858.png",
+  "program": [
+    {
+      "id": 22,
+      "url": "https://ll.thespacedevs.com/2.2.0/program/22/",
+      "name": "Copernicus",
+      "description": "Copernicus is the European Union's Earth observation programme coordinated and managed for the European Commission by the European Union Agency for the Space Programme in partnership with the European Space Agency (ESA), the EU Member States. It aims at achieving a global, continuous, autonomous, high quality, wide range Earth observation capacity. Providing accurate, timely and easily accessible information to, among other things, improve the management of the environment, understand and mitigate the effects of climate change, and ensure civil security.",
+      "agencies": [
+        {
+          "id": 27,
+          "url": "https://ll.thespacedevs.com/2.2.0/agencies/27/",
+          "name": "European Space Agency",
+          "type": "Multinational"
+        },
+        {
+          "id": 1043,
+          "url": "https://ll.thespacedevs.com/2.2.0/agencies/1043/",
+          "name": "European Union Agency for the Space Programme",
+          "type": "Multinational"
+        }
+      ],
+      "image_url": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/copernicus_program_20221129162831.png",
+      "start_date": "2014-04-03T00:00:00Z",
+      "end_date": null,
+      "info_url": "https://www.copernicus.eu",
+      "wiki_url": "https://en.wikipedia.org/wiki/Copernicus_Programme",
+      "mission_patches": [],
+      "type": {
+        "id": 8,
+        "name": "Earth Observation"
+      }
+    }
+  ],
+  "orbital_launch_attempt_count": 6017,
+  "location_launch_attempt_count": 687,
+  "pad_launch_attempt_count": 84,
+  "agency_launch_attempt_count": 112,
+  "orbital_launch_attempt_count_year": 95,
+  "location_launch_attempt_count_year": 1,
+  "pad_launch_attempt_count_year": 1,
+  "agency_launch_attempt_count_year": 24,
+  "pad_turnaround": "P528DT3H8S",
+  "mission_patches": [
+    {
+      "id": 25,
+      "name": "Sentinel-6 ESA NASA Mission Patch",
+      "priority": 9,
+      "image_url": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/mission_patch_images/sentinel-62520_mission_patch_20210608154906.png",
+      "agency": {
+        "id": 27,
+        "url": "https://ll.thespacedevs.com/2.2.0/agencies/27/",
+        "name": "European Space Agency",
+        "type": "Multinational"
+      }
+    },
+    {
+      "id": 27,
+      "name": "Sentinel-6 SpaceX Mission Patch",
+      "priority": 10,
+      "image_url": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/mission_patch_images/sentinel-62520_mission_patch_20210608154946.png",
+      "agency": {
+        "id": 121,
+        "url": "https://ll.thespacedevs.com/2.2.0/agencies/121/",
+        "name": "SpaceX",
+        "type": "Commercial"
+      }
+    }
+  ],
+  "type": "detailed"
+}
