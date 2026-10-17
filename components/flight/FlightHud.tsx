@@ -1,6 +1,9 @@
 "use client";
 import { useSyncExternalStore } from "react";
+import { MISSIONS } from "@/data/missions/index";
 import { SENTINEL_REFERENCE_UNAVAILABLE } from "@/lib/flight/classroom";
+import { historicalMissions, missionById } from "@/lib/flight/mission-select";
+import { referenceTrajectoryNote } from "@/lib/replay";
 import { useAppMode } from "@/lib/flight/app-mode";
 import {
   formatKm,
@@ -31,6 +34,10 @@ function useHeldPitch(): number {
 export function FlightHud() {
   const flight = useScene((s) => s.flight);
   const phoneConnected = useScene((s) => s.rocket.connected);
+  const playMode = useScene((s) => s.playMode);
+  const missionTrackId = useScene((s) => s.missionTrackId);
+  const warningLevel = useScene((s) => s.warningLevel);
+  const guidanceNote = useScene((s) => s.guidanceNote);
   const view = useAppMode((s) => s.view);
   const heldPitch = useHeldPitch();
   const status = flight.status;
@@ -78,22 +85,44 @@ export function FlightHud() {
     useScene.getState().setFlightWarp(value);
     mark();
   };
+  const historical = historicalMissions(MISSIONS);
+  const tracked = missionById(MISSIONS, missionTrackId);
+  const readyNote = playMode === "mission" ? (tracked ? referenceTrajectoryNote(tracked) : "Reference trajectory unavailable") : null;
+  const guide = flight.guide;
+  const deviation = playMode === "mission" ? guide?.deviation ?? null : null;
 
   return (
     <>
-      <section id="flight-status" className={`hud ${styles.readout}`} data-status={status} data-sim-time={flight.simulatedTimeS} aria-label="Flight readout">
+      {warningLevel === "warning" && <div className={styles.vignette} aria-hidden="true" />}
+      <section id="flight-status" className={`hud ${styles.readout}`} data-status={status} data-warning={warningLevel} data-sim-time={flight.simulatedTimeS} aria-label="Flight readout">
         {status === "ready" && (
           <div className={styles.stack}>
             <p className="hud__k">Your mission</p>
             <h2>Go up, then turn to build speed around Earth.</h2>
             <p>The goal is a path around Earth. The lowest point stays at least 200 km up. The highest point stays under 2,000 km. Then coast for 10 seconds with the engines off.</p>
             <p className={styles.note}>Earth is drawn to size. The rocket dot is bigger so you can see it.</p>
+            <div className={styles.actions} role="group" aria-label="Flight mode">
+              <button type="button" className="btn" aria-pressed={playMode === "free"} onClick={() => useScene.getState().setPlayMode("free")}>Free flight</button>
+              <button type="button" className="btn" aria-pressed={playMode === "mission"} onClick={() => useScene.getState().setPlayMode("mission")}>Mission</button>
+            </div>
             <div className={styles.actions}>
               <button id="scenario-classroom" type="button" className="btn" aria-pressed={flight.scenarioId === "classroom"} onClick={() => pick("classroom")}>Classroom launch</button>
               <button id="scenario-classroom-hop" type="button" className="btn" aria-pressed={flight.scenarioId === "classroom-hop"} onClick={() => pick("classroom-hop")}>Short hop</button>
-              <button type="button" className="btn" disabled>Sentinel-6</button>
             </div>
+            {playMode === "mission" && (
+              <div className={styles.actions} role="group" aria-label="Mission">
+                <button type="button" className="btn" aria-pressed={missionTrackId === "practice"} onClick={() => useScene.getState().setMissionTrack("practice")}>Practice sample</button>
+                {historical.length > 0
+                  ? historical.map((mission) => (
+                    <button key={mission.id} type="button" className="btn" aria-pressed={missionTrackId === mission.id} onClick={() => useScene.getState().setMissionTrack(mission.id)}>
+                      {mission.name}
+                    </button>
+                  ))
+                  : <button type="button" className="btn" disabled>Sentinel-6</button>}
+              </div>
+            )}
             <p className={styles.note}>{SENTINEL_REFERENCE_UNAVAILABLE} These classroom rockets are practice vehicles, not a recorded flight.</p>
+            {readyNote && <p className={styles.note}>{readyNote}</p>}
           </div>
         )}
         {readout && status !== "ready" && (
@@ -116,6 +145,25 @@ export function FlightHud() {
             <p className={styles.note}>The highest part of your path around Earth.</p>
             <p>{goalLine(readout)}</p>
             {notice && <p className="hud__v hud__v--bad">{notice}</p>}
+            {guide?.banner && <p className={warningLevel === "warning" || warningLevel === "failed" ? "hud__v hud__v--bad" : styles.note} data-banner={warningLevel}>{guide.banner}</p>}
+            {playMode === "mission" && guidanceNote && <p className={styles.note}>{guidanceNote}</p>}
+            {deviation && deviation.band !== "none" && (
+              <div className={styles.stack} data-deviation={deviation.band}>
+                <div className="hud__row"><span className="hud__k">Altitude error</span><span className="hud__v">{deviation.altM === null ? "—" : `${(deviation.altM / 1000).toFixed(1)} km`}</span></div>
+                <div className="hud__row"><span className="hud__k">Speed error</span><span className="hud__v">{deviation.velMs === null ? "—" : `${deviation.velMs.toFixed(0)} m/s`}</span></div>
+                <div className="hud__row"><span className="hud__k">Tilt error</span><span className="hud__v">{deviation.pitchDeg === null ? "—" : `${deviation.pitchDeg.toFixed(1)}°`}</span></div>
+                {guide?.targetPitchRad !== null && guide?.targetPitchRad !== undefined && (
+                  <p className={styles.note}>Target tilt {((guide.targetPitchRad * 180) / Math.PI).toFixed(0)}°.</p>
+                )}
+                {deviation.correction && <p className={styles.note}>{deviation.correction}</p>}
+                {guide?.countdownS !== null && guide?.countdownS !== undefined && warningLevel === "warning" && (
+                  <p className="hud__v hud__v--bad">Return within {guide.countdownS.toFixed(1)} s</p>
+                )}
+              </div>
+            )}
+            {playMode === "mission" && guide && guide.milestones.length > 0 && (
+              <p className={styles.note}>Milestones: {guide.milestones.join(", ")}</p>
+            )}
             <p className={styles.note}>Earth is drawn to size. The rocket dot is bigger so you can see it. The pale line is the coast if you cut thrust now.</p>
             <details className={styles.more}>
               <summary>More numbers</summary>

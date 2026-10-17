@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef } from "react";
 import { useScene } from "@/lib/store";
-import { runTourStep } from "@/lib/viewer/tour";
+import { runTourStep, stopTourSpeech } from "@/lib/viewer/tour";
 import { speakLine } from "@/lib/voice/speak";
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -11,8 +11,11 @@ export function TourDirector() {
 
   useEffect(() => {
     const start = (active: boolean, step: number) => {
-      token.current += 1;
-      if (!active) return;
+      token.current += 1; // any change cancels the step in flight
+      if (!active) {
+        stopTourSpeech(); // the line must not finish after Stop tour
+        return;
+      }
       const mine = token.current;
       const s = useScene.getState();
       void runTourStep(step, {
@@ -34,6 +37,7 @@ export function TourDirector() {
     return () => {
       unsub();
       token.current += 1;
+      stopTourSpeech();
     };
   }, []);
 

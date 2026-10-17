@@ -3,6 +3,7 @@
 // the historical outcome. The drawing is not a trajectory and not telemetry.
 // Duration comes from the selected mission. There is no fixed sample-length end.
 import type { Mission, MissionEvent } from "@/lib/types";
+import { REFERENCE_UNAVAILABLE, referenceHasKinematics, referencePoint, sampleReference } from "@/lib/flight/reference";
 
 export interface ReplayPose {
   illustrated: true;
@@ -44,15 +45,26 @@ export function defaultReplayMissionId(missions: Record<string, Mission>): null 
   return null;
 }
 
+/** HUD line. Historical flights quote `mission.source`. Practice stays a sample. */
+export function replayDataCaption(mission: Mission): string {
+  if (mission.kind === "practice" || mission.id === "practice") return "Data: Practice sample";
+  const source = mission.source.trim();
+  return source ? `Data: ${source}` : "Data: Practice sample";
+}
+
+/** Timing-only records, and records with no reference, do not grow a fake path. */
+export function referenceTrajectoryNote(mission: Mission): string | null {
+  if (referenceHasKinematics(mission.reference)) return null;
+  return REFERENCE_UNAVAILABLE;
+}
+
 export function replayPose(mission: Mission, time: number): ReplayPose {
   const duration = replayDuration(mission);
   const t = clampTime(time, duration);
   const arc = duration > 0 ? t / duration : 0;
   const eventIndex = lastEventIndex(mission, t);
   const event = eventIndex >= 0 ? mission.events[eventIndex] : null;
-  const theta = arc * 0.85;
-  const schematicAltitudeM = Math.sin(arc * Math.PI) * 350_000;
-  const radius = 6_378_137 + schematicAltitudeM;
+  const drawn = drawnPosition(mission, t, arc);
   return {
     illustrated: true,
     t,
@@ -62,13 +74,35 @@ export function replayPose(mission: Mission, time: number): ReplayPose {
     grouped: event?.grouped === true,
     label: poseLabel(mission),
     arc,
-    pitchRad: Math.min(Math.PI / 2, arc * 1.4),
-    schematicAltitudeM,
+    pitchRad: drawn.pitchRad,
+    schematicAltitudeM: drawn.altitudeM,
     flame: illustratedFlame(mission, t),
     flameObserved: false,
     opacity: 1,
+    x: drawn.x,
+    y: drawn.y,
+  };
+}
+
+function drawnPosition(mission: Mission, t: number, arc: number): { x: number; y: number; altitudeM: number; pitchRad: number } {
+  const sample = sampleReference(mission.reference, t);
+  const point = sample ? referencePoint(sample.altM, sample.downrangeM) : null;
+  if (sample && point) {
+    return {
+      x: point.x,
+      y: point.y,
+      altitudeM: sample.altM,
+      pitchRad: sample.pitchRad ?? Math.min(Math.PI / 2, arc * 1.4),
+    };
+  }
+  const theta = arc * 0.85;
+  const altitudeM = Math.sin(arc * Math.PI) * 350_000;
+  const radius = 6_378_137 + altitudeM;
+  return {
     x: Math.sin(theta) * radius,
     y: Math.cos(theta) * radius,
+    altitudeM,
+    pitchRad: Math.min(Math.PI / 2, arc * 1.4),
   };
 }
 

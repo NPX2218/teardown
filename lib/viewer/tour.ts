@@ -1,4 +1,29 @@
 import type { PartGroup, PartId, PartsFile } from "@/lib/types";
+import { speakLine, type SpeakOptions } from "@/lib/voice/speak";
+
+/** The 01 speak seam, plus the stop functions 05 may add. stopSpeaking sends stopSay to the phone. */
+export interface SpeechSeam {
+  speakLine(text: string, opts?: SpeakOptions): Promise<void>;
+  stopSpeaking?: () => void;
+  stopSay?: () => void;
+}
+
+/**
+ * Cuts the line the tour is speaking.
+ * Uses stopSpeaking or stopSay when the voice seam exports one. The 01 placeholder
+ * has neither, so a non-queued speakLine("") cancels the current utterance instead.
+ */
+export function stopTourSpeech(seam: SpeechSeam = { speakLine }): void {
+  if (typeof seam.stopSpeaking === "function") {
+    seam.stopSpeaking();
+    return;
+  }
+  if (typeof seam.stopSay === "function") {
+    seam.stopSay();
+    return;
+  }
+  void seam.speakLine("");
+}
 
 export const TOUR_GAP_MS = 700;
 

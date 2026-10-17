@@ -9,6 +9,7 @@ import { FLIGHT_SCENARIOS } from "@/data/flight/index";
 import { MISSIONS } from "@/data/missions/index";
 import { useReducedMotion } from "@/components/ui/useReducedMotion";
 import { CLASSROOM_SCENARIOS } from "@/lib/flight/classroom";
+import { disposeScene } from "@/lib/flight/dispose";
 import { useAppMode } from "@/lib/flight/app-mode";
 import { EARTH_RADIUS_M, bodyFromFlightState, coastPreview } from "@/lib/flight.helpers";
 import { METRES_TO_SCENE, toScene } from "@/lib/flight/scene-scale";
@@ -19,6 +20,7 @@ import type { FlightScenario } from "@/lib/types";
 import { cameraNudge } from "./cameraNudge";
 import { drawEarthMap } from "./earthMap";
 import { FlightController } from "./FlightController";
+import { GuidanceMarks } from "./GuidanceMarks";
 import styles from "./flight.module.css";
 
 const scratch = {
@@ -225,6 +227,13 @@ function SceneBodies() {
   );
 }
 
+/** Drops GPU buffers when the canvas unmounts, including the path line and the stars. */
+function ReleaseFlightGpu() {
+  const scene = useThree((s) => s.scene);
+  useEffect(() => () => disposeScene(scene), [scene]);
+  return null;
+}
+
 function CameraRig() {
   const view = useAppMode((s) => s.view);
   const nonce = useAppMode((s) => s.cameraNonce);
@@ -291,6 +300,8 @@ export function FlightScene() {
         <Stars radius={90} depth={30} count={400} factor={2} saturation={0} fade speed={0} />
         <Earth />
         <SceneBodies />
+        <GuidanceMarks />
+        <ReleaseFlightGpu />
         <CameraRig />
         <FlightController />
       </Canvas>

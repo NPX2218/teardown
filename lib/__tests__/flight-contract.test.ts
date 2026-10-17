@@ -76,9 +76,9 @@ function readyRun(): string {
   return (started.data as { runId: string }).runId;
 }
 
-describe("flight contract 2026-10-17.1", () => {
+describe("flight contract 2026-10-17.2", () => {
   it("FC0 pins the shared contract version and removes retired actions", () => {
-    expect(SHARED_CONTRACT_VERSION).toBe("2026-10-17.1");
+    expect(SHARED_CONTRACT_VERSION).toBe("2026-10-17.2");
     const state = s() as unknown as Record<string, unknown>;
     for (const name of ["startMission", "waitAtCheckpoint", "completeCheckpoint", "endMission", "resetMission", "markNarrated", "setEnginesOut", "setLens", "mission", "enginesOut", "lens"]) {
       expect(name in state).toBe(false);
