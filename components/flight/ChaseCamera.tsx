@@ -15,7 +15,7 @@ import {
   padShot,
   type CameraShot,
 } from "@/lib/flight/launch-camera";
-import { globeFrameFor } from "@/lib/flight/scene-types";
+import { STARBASE, globeFrameFor } from "@/lib/flight/scene-types";
 import { chaseOrbit, resetChaseOrbit } from "./chaseOrbit";
 import { flightDrawNow } from "./flightDraw";
 
@@ -76,7 +76,7 @@ export function ChaseCamera() {
       y = event.clientY;
       if (dx === 0 && dy === 0) return;
       chaseOrbit.yaw += dx * 0.005;
-      chaseOrbit.pitch = Math.min(1.15, Math.max(-0.15, chaseOrbit.pitch + dy * 0.004));
+      chaseOrbit.pitch = Math.min(1.05, Math.max(-0.85, chaseOrbit.pitch + dy * 0.004));
       intro.current = INTRO_SECONDS;
     };
     const up = () => {
@@ -97,7 +97,7 @@ export function ChaseCamera() {
     const rig = controls.current;
     const view = useAppMode.getState().view;
     const draw = flightDrawNow.current;
-    const frame = globeFrameFor(draw?.site ?? { lat: 28.561941, lon: -80.577357, name: "Cape Canaveral SLC-40", azimuthDeg: 90 });
+    const frame = globeFrameFor(draw?.site ?? STARBASE);
     const airborne = draw?.airborne ?? false;
     if (view === "overview") {
       if (!overview.current) {
@@ -124,7 +124,7 @@ export function ChaseCamera() {
         nose: draw.nose,
         altitudeM: draw.altitudeM,
         yaw: chaseOrbit.yaw,
-        pitch: Math.max(0.15, chaseOrbit.pitch),
+        pitch: chaseOrbit.pitch,
       })
       : pad;
     const follow = airborne ? chase : pad;

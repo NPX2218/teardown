@@ -1,7 +1,7 @@
 "use client";
 // Globe, launch pad, and the visible rocket. Physics is never read from these meshes.
 // The explorer GLB stays out of this scene: the flight vehicle clones its own copy.
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Stars } from "@react-three/drei";
 import * as THREE from "three";
@@ -9,11 +9,12 @@ import { useReducedMotion } from "@/components/ui/useReducedMotion";
 import { useAppMode } from "@/lib/flight/app-mode";
 import { disposeScene } from "@/lib/flight/dispose";
 import { EARTH_SUN_DIRECTION } from "./earthShaders";
+import { sunFromHorizon } from "./env/frame";
+import { flightDrawNow } from "./flightDraw";
 import { FLIGHT_SCENE, SCENE_COLORS } from "@/lib/viewer/colors";
 import { ChaseCamera } from "./ChaseCamera";
 import { Earth } from "./Earth";
 import { FlightController } from "./FlightController";
-import { flightDrawNow } from "./flightDraw";
 import { GuidanceMarks } from "./GuidanceMarks";
 import { KerbalWorld } from "./KerbalWorld";
 import { readFlightDraw } from "./readFlightDraw";
@@ -35,13 +36,28 @@ function ReleaseFlightGpu() {
 }
 
 const SUN = new THREE.Vector3(...EARTH_SUN_DIRECTION).multiplyScalar(24);
+const SUN_COLOR = new THREE.Color();
 
 function SunLight() {
   const reduce = useReducedMotion();
+  const light = useRef<THREE.DirectionalLight>(null);
+  useFrame(() => {
+    const lamp = light.current;
+    const site = flightDrawNow.current?.site;
+    if (!lamp || !site) return;
+    const dir = site.name === "Starbase"
+      ? sunFromHorizon(site.lat, site.lon, 248, 12)
+      : EARTH_SUN_DIRECTION;
+    SUN.set(dir[0], dir[1], dir[2]).multiplyScalar(24);
+    lamp.position.copy(SUN);
+    const gold = site.name === "Starbase" ? 1 : 0;
+    SUN_COLOR.setRGB(1, 0.96 - gold * 0.34, 0.9 - gold * 0.58);
+    lamp.color.copy(SUN_COLOR);
+  });
   return (
     <>
       <hemisphereLight args={[SCENE_COLORS.rim, FLIGHT_SCENE.trench, reduce ? 0.7 : 0.85]} />
-      <directionalLight position={SUN.toArray()} intensity={2.4} />
+      <directionalLight ref={light} position={SUN.toArray()} intensity={2.4} />
       <ambientLight intensity={0.22} />
     </>
   );

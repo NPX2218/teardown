@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import { EARTH_SUN_DIRECTION } from "@/components/flight/earthShaders";
+import { sunFromHorizon } from "@/components/flight/env/frame";
 import { EARTH_RADIUS, globeFrameFor, physicsMetersToEarthRadii, type MapLabel } from "@/lib/flight/scene-types";
 import { useAppMode } from "@/lib/flight/app-mode";
 import { useScene } from "@/lib/store";
@@ -42,11 +43,14 @@ export function KerbalWorld() {
   const boom = status === "crashed" && impact
     ? physicsMetersToEarthRadii(impact.x, impact.y, globeFrameFor(draw.site))
     : draw.position;
+  const sun = draw.site.name === "Starbase"
+    ? sunFromHorizon(draw.site.lat, draw.site.lon, 248, 12)
+    : EARTH_SUN_DIRECTION;
 
   return (
     <group scale={EARTH_RADIUS}>
       <LaunchSite site={draw.site} />
-      <Atmosphere altitudeKm={draw.altitudeKm} sunDirection={EARTH_SUN_DIRECTION} />
+      <Atmosphere altitudeKm={draw.altitudeKm} sunDirection={sun} />
       <CloudLayer altitudeKm={draw.altitudeKm} />
       <Vehicle stage={draw.stage} throttle={draw.throttle} altitudeKm={draw.altitudeKm} elapsedS={draw.elapsedS} />
       <OrbitPath state={draw.orbit} />

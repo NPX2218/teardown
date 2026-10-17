@@ -95,17 +95,24 @@ function aboveGround(anchor: EarthRadiiVec3, direction: Vec3, distanceM: number,
   return earthRadiiToScene(placed);
 }
 
-/** Standing on the pad: a few metres up, the rocket in frame, the horizon ahead. */
-export function padShot(frame: GlobeFrame, yaw = 0.62, pitch = 0.22): CameraShot {
+/**
+ * 3/4 elevated pad view. Default yaw looks toward the tank farm (pilot right)
+ * and negative pitch lifts the camera, so the tower (pilot left), the tanks,
+ * and the downrange coast sit in one frame. Drag still orbits this shot.
+ */
+export const PAD_YAW = 0.57;
+export const PAD_PITCH = -0.36;
+
+export function padShot(frame: GlobeFrame, yaw = PAD_YAW, pitch = PAD_PITCH): CameraShot {
   const anchor = frame.up;
   const behind = scale(frame.downrange, -1);
   const down = scale(frame.up, -1);
-  const eye = aboveGround(anchor, orbitDirection(behind, frame.right, down, yaw, pitch), 210, 6);
-  const target = earthRadiiToScene(physicsMetersToEarthRadii(16, EARTH_RADIUS_M + 32, frame, -6));
-  return { position: eye, target, fov: 52 };
+  const eye = aboveGround(anchor, orbitDirection(behind, frame.right, down, yaw, pitch), 340, 18);
+  const target = earthRadiiToScene(physicsMetersToEarthRadii(48, EARTH_RADIUS_M + 72, frame, -16));
+  return { position: eye, target, fov: 46 };
 }
 
-/** Behind and slightly below the nose. Distance grows with altitude. */
+/** Above and behind the nose. Distance grows with altitude so the coast falls away. */
 export function chaseShot(args: {
   frame: GlobeFrame;
   position: EarthRadiiVec3;
@@ -114,8 +121,8 @@ export function chaseShot(args: {
   yaw?: number;
   pitch?: number;
 }): CameraShot {
-  const yaw = args.yaw ?? 0.35;
-  const pitch = args.pitch ?? 0.42;
+  const yaw = args.yaw ?? PAD_YAW;
+  const pitch = args.pitch ?? PAD_PITCH;
   const nose = normalize(args.nose);
   const up = args.frame.up;
   const horizontal = [

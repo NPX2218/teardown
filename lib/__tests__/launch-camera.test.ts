@@ -80,13 +80,46 @@ describe("camera shots", () => {
     const pad = padShot(frame);
     const radius = length(pad.position);
     const eyeHeightM = (radius - EARTH_RADIUS) / 1e-6;
-    expect(eyeHeightM).toBeGreaterThan(4);
-    expect(eyeHeightM).toBeLessThan(40);
+    expect(eyeHeightM).toBeGreaterThan(60);
+    expect(eyeHeightM).toBeLessThan(180);
     const site = earthRadiiToScene(frame.up);
     const offsetM = Math.hypot(pad.position[0] - site[0], pad.position[1] - site[1], pad.position[2] - site[2]) / 1e-6;
-    expect(offsetM).toBeGreaterThan(80);
-    expect(offsetM).toBeLessThan(400);
+    expect(offsetM).toBeGreaterThan(200);
+    expect(offsetM).toBeLessThan(500);
     expect(pad.target[1]).toBeGreaterThan(site[1]);
+  });
+
+  it("frames the Starbase tower, tank farm, and coast from above", () => {
+    const siteFrame = globeFrameFor(STARBASE);
+    const pad = padShot(siteFrame);
+    const site = earthRadiiToScene(siteFrame.up);
+    const offset = [
+      pad.position[0] - site[0],
+      pad.position[1] - site[1],
+      pad.position[2] - site[2],
+    ] as const;
+    const aim = [
+      pad.target[0] - site[0],
+      pad.target[1] - site[1],
+      pad.target[2] - site[2],
+    ] as const;
+    expect(dot(offset, siteFrame.downrange)).toBeLessThan(0);
+    expect(dot(offset, siteFrame.right)).toBeGreaterThan(0);
+    expect(dot(offset, siteFrame.up)).toBeGreaterThan(0);
+    expect(dot(aim, siteFrame.right)).toBeLessThan(0);
+    expect(dot(aim, siteFrame.downrange)).toBeGreaterThan(0);
+    const chase = chaseShot({
+      frame: siteFrame,
+      position: physicsMetersToEarthRadii(0, EARTH_RADIUS_M, siteFrame),
+      nose: noseFromPitch(siteFrame, 0),
+      altitudeM: 0,
+    });
+    const chaseHeightM = (length(chase.position) - EARTH_RADIUS) / 1e-6;
+    expect(chaseHeightM).toBeGreaterThan(40);
+    expect(dot(
+      [chase.position[0] - site[0], chase.position[1] - site[1], chase.position[2] - site[2]],
+      siteFrame.downrange,
+    )).toBeLessThan(0);
   });
 
   it("pulls the chase camera back as the rocket climbs", () => {
