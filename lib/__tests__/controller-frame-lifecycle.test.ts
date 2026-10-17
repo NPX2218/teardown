@@ -130,4 +130,41 @@ describe("controller frame and input lifecycle (PR #34)", () => {
     expect(useScene.getState().replay.t).toBeGreaterThan(paused.t);
     expect(useScene.getState().flight.simulatedTimeS).toBeGreaterThan(flight.simulatedTimeS);
   });
+
+  it("C7: an open dialog keeps Space and steering from changing the flight", () => {
+    useAppMode.getState().openMission();
+    expect(launchControlledFlight().ok).toBe(true);
+    const doc = document as unknown as { querySelector: (selector: string) => unknown };
+    doc.querySelector = (selector: string) => (selector === "dialog[open]" ? { open: true } : null);
+    key("Space");
+    key("KeyW");
+    frame(0.1);
+    expect(useScene.getState().flight.status).toBe("flying");
+    expect(useScene.getState().flight.input.throttle).toBe(0);
+  });
+
+  it("C9: Escape closes a dialog without leaving the flight", () => {
+    useAppMode.getState().openMission();
+    expect(launchControlledFlight().ok).toBe(true);
+    const doc = document as unknown as { querySelector: (selector: string) => unknown };
+    doc.querySelector = (selector: string) => (selector === "dialog[open]" ? { open: true } : null);
+    key("Escape");
+    expect(useAppMode.getState().mode).toBe("mission");
+    expect(useScene.getState().flight.status).toBe("flying");
+  });
+
+  it("C8: a key held before a dialog opens does not keep changing engine power", () => {
+    useAppMode.getState().openMission();
+    expect(launchControlledFlight().ok).toBe(true);
+    key("KeyW");
+    frame(0.1);
+    const throttle = useScene.getState().flight.input.throttle;
+    expect(throttle).toBeGreaterThan(0);
+    const doc = document as unknown as { querySelector: (selector: string) => unknown };
+    doc.querySelector = (selector: string) => (selector === "dialog[open]" ? { open: true } : null);
+    frame(0.1);
+    expect(useScene.getState().flight.input.throttle).toBe(throttle);
+    expect(useScene.getState().flight.status).toBe("flying");
+    expect(useScene.getState().flight.simulatedTimeS).toBeGreaterThan(0);
+  });
 });

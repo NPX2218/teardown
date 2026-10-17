@@ -56,6 +56,8 @@ export function FlightController() {
     };
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.defaultPrevented) return;
+      // A modal owns the keyboard. Space must not pause a flight behind Settings, About, or a patch.
+      if (document.querySelector("dialog[open]")) return;
       const typing = isTypingTarget(event.target);
       const mode = useAppMode.getState().mode;
       const status = useScene.getState().flight.status;
@@ -89,7 +91,6 @@ export function FlightController() {
         event.preventDefault();
       }
       if (event.repeat) return;
-      if (event.code === "Escape" && document.querySelector("dialog[open]")) return;
       const action = shortcutFor({ code: event.code, mode: mode as AppMode, status, typing });
       if (action === "ignore") return;
       if (action === "briefing") useAppMode.getState().openMission();
@@ -125,7 +126,9 @@ export function FlightController() {
       if (document.hidden) release();
       else skipCatchUp.current = true;
     };
-    window.addEventListener("keydown", onKeyDown);
+    // Capture runs before the browser closes a <dialog> on Escape. On the bubble,
+    // that dialog is already gone, so Escape would also leave the flight.
+    window.addEventListener("keydown", onKeyDown, true);
     window.addEventListener("keyup", onKeyUp);
     window.addEventListener("blur", release);
     document.addEventListener("visibilitychange", onVis);
@@ -141,7 +144,7 @@ export function FlightController() {
     return () => {
       unMode();
       unFlight();
-      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keydown", onKeyDown, true);
       window.removeEventListener("keyup", onKeyUp);
       window.removeEventListener("blur", release);
       document.removeEventListener("visibilitychange", onVis);
@@ -163,8 +166,10 @@ export function FlightController() {
       for (const wall of slices) playReplay(wall);
     }
     if (controls === "explore") return;
+    // Keys already held when a modal opens must not keep changing engine power behind it.
+    const modalOpen = !!document.querySelector("dialog[open]");
     for (const wall of slices) {
-      commitHeldAxes(wall, controls);
+      if (!modalOpen) commitHeldAxes(wall, controls);
       if (!shouldAdvanceFlight(useScene.getState().flight.status, false)) break;
       useScene.getState().advanceFlight(wall);
     }

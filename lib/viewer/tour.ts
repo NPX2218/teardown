@@ -1,4 +1,5 @@
 import type { PartGroup, PartId, PartsFile } from "@/lib/types";
+import { useScene } from "@/lib/store";
 import * as voice from "@/lib/voice/speak";
 import type { SpeakOptions } from "@/lib/voice/speak";
 
@@ -49,6 +50,7 @@ export interface TourDeps {
   flyTo(id: PartId | "home"): unknown;
   nextTourStep(): void;
   stopTour(): void;
+  setExplode(amount: number): unknown;
   speak(text: string): Promise<void>;
   wait(ms: number): Promise<void>;
   isCurrent(): boolean;
@@ -60,6 +62,7 @@ export async function runTourStep(step: number, deps: TourDeps): Promise<void> {
   const g = Number.isInteger(step) && step >= 0 ? groups[step] : undefined;
   if (!g) {
     deps.stopTour();
+    deps.setExplode(0);
     deps.selectPart(null);
     deps.flyTo("home");
     return;
@@ -75,4 +78,13 @@ export async function runTourStep(step: number, deps: TourDeps): Promise<void> {
   await deps.wait(TOUR_GAP_MS);
   if (!deps.isCurrent()) return;
   deps.nextTourStep();
+}
+
+/** Stop button, dismissing the tour, or leaving Explore: speech is already cut by the caller. Put the model back together. */
+export function endGuidedTour(): void {
+  const scene = useScene.getState();
+  scene.stopTour();
+  scene.setExplode(0);
+  scene.selectPart(null);
+  scene.flyTo("home");
 }

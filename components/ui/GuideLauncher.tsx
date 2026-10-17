@@ -104,6 +104,7 @@ export function GuideLauncher() {
       if (event.key.toLowerCase() !== "v" || event.repeat || event.metaKey || event.ctrlKey || event.altKey) return;
       const target = event.target as HTMLElement | null;
       if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
+      if (document.querySelector("dialog[open]")) return;
       setStep("voice");
     };
     window.addEventListener("keydown", onKey);

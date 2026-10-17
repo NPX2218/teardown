@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { damp, homeView, partDistance } from "@/lib/viewer/camera";
-import { runTourStep, stopTourSpeech, TOUR_GAP_MS, tourGroups, type TourDeps } from "@/lib/viewer/tour";
+import { endGuidedTour, runTourStep, stopTourSpeech, TOUR_GAP_MS, tourGroups, type TourDeps } from "@/lib/viewer/tour";
+import { useScene } from "@/lib/store";
 import { speakLine } from "@/lib/voice/speak";
 import * as voice from "@/lib/voice/speak";
 import type { PartGroup, PartsFile } from "@/lib/types";
@@ -58,6 +59,7 @@ function fakeDeps(parts: PartsFile | null, opts: { staleAfterSpeak?: boolean } =
     flyTo: (id) => calls.push(`fly:${id}`),
     nextTourStep: () => { calls.push("next"); },
     stopTour: () => { calls.push("stop"); },
+    setExplode: (amount) => { calls.push(`explode:${amount}`); },
     speak: async (t) => { calls.push(`speak:${t}`); if (opts.staleAfterSpeak) current = false; },
     wait: async (ms) => { calls.push(`wait:${ms}`); },
     isCurrent: () => current,
@@ -91,13 +93,22 @@ describe("tour (03 Task 5)", () => {
   it("TD4 past the last step: stop, clear, fly home", async () => {
     const { deps, calls } = fakeDeps(PARTS);
     await runTourStep(3, deps);
-    expect(calls).toEqual(["stop", "select:null", "fly:home"]);
+    expect(calls).toEqual(["stop", "explode:0", "select:null", "fly:home"]);
   });
 
   it("TD5 no parts file: same as the end", async () => {
     const { deps, calls } = fakeDeps(null);
     await runTourStep(0, deps);
-    expect(calls).toEqual(["stop", "select:null", "fly:home"]);
+    expect(calls).toEqual(["stop", "explode:0", "select:null", "fly:home"]);
+  });
+
+  it("TD8 stopping the tour puts the rocket back together", () => {
+    useScene.getState().startTour();
+    useScene.getState().setExplode(1);
+    endGuidedTour();
+    expect(useScene.getState().tour.active).toBe(false);
+    expect(useScene.getState().explode).toBe(0);
+    expect(useScene.getState().camera.focus).toBe("home");
   });
 
   it("TD6 stop uses stopSpeaking, then stopSay, then a cutting speakLine", () => {

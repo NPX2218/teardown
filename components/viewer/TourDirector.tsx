@@ -24,6 +24,7 @@ export function TourDirector() {
         flyTo: (id) => useScene.getState().flyTo(id),
         nextTourStep: () => useScene.getState().nextTourStep(),
         stopTour: () => useScene.getState().stopTour(),
+        setExplode: (amount) => useScene.getState().setExplode(amount),
         speak: (text) => speakLine(text),
         wait: sleep,
         isCurrent: () => token.current === mine && useScene.getState().tour.active,

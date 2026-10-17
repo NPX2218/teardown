@@ -162,6 +162,15 @@ describe("mode lifecycle (PR #34)", () => {
     expect(html.match(/id="retry-flight"/g)).toHaveLength(1);
   });
 
+  it("leaving a guided tour puts the rocket back together", () => {
+    useScene.getState().startTour();
+    expect(useScene.getState().explode).toBe(1);
+    useAppMode.getState().openMission();
+    expect(useScene.getState().tour.active).toBe(false);
+    expect(useScene.getState().explode).toBe(0);
+    expect(useScene.getState().camera.focus).toBe("home");
+  });
+
   it("L10 interactive replay labels its player fuel ledger (PR #34)", () => {
     steerReplay();
     const html = renderToStaticMarkup(<EmissionsPlacement />);

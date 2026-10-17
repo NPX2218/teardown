@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { motionPresets } from "@/lib/ui/motion";
 import { useScene } from "@/lib/store";
 import { splitGlossary } from "@/lib/viewer/glossary";
-import { tourGroups } from "@/lib/viewer/tour";
+import { endGuidedTour, tourGroups } from "@/lib/viewer/tour";
 import styles from "./viewer.module.css";
 
 export function PartCard() {
@@ -26,7 +26,10 @@ export function PartCard() {
   const group = parts?.groups.find((g) => g.id === selectedId);
   const close = () => {
     const st = useScene.getState();
-    if (st.tour.active) st.stopTour();
+    if (st.tour.active) {
+      endGuidedTour();
+      return;
+    }
     st.selectPart(null);
     st.flyTo("home");
   };
