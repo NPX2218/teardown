@@ -33,6 +33,7 @@ function SnapshotRegistrar() {
 
 export function Stage() {
   const selectedId = useScene((s) => s.selectedId);
+  const phoneDriving = useScene((s) => s.orientation !== null);
   const reduceMotion = useReducedMotion();
   return (
     <Canvas
@@ -54,7 +55,12 @@ export function Stage() {
         </Suspense>
       </NoCrash>
       <Stars radius={100} depth={50} count={3000} factor={4} saturation={0} fade speed={reduceMotion ? 0 : 1} />
-      <OrbitControls makeDefault enableDamping autoRotate={!selectedId && !reduceMotion} autoRotateSpeed={0.8} />
+      <OrbitControls
+        makeDefault
+        enableDamping
+        autoRotate={!selectedId && !reduceMotion && !phoneDriving}
+        autoRotateSpeed={0.8}
+      />
       <Suspense fallback={null}>
         <Rocket />
       </Suspense>

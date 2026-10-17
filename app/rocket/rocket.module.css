@@ -1,0 +1,13 @@
+/* app/rocket/rocket.module.css — page-only styles for /rocket (10 Task 4). Tokens only, no raw colours. */
+.flame { display: block; margin: 0 auto var(--sp-5); transform-origin: 50% 0; filter: drop-shadow(0 0 24px var(--flame)); }
+.soft { animation: flicker 0.6s ease-in-out infinite alternate; }
+.hard { animation: flicker 0.18s ease-in-out infinite alternate; transform: scaleY(1.25); }
+@keyframes flicker {
+  from { opacity: 0.8; transform: scale(0.94, 0.9); }
+  to { opacity: 1; transform: scale(1.04, 1.12); }
+}
+/* Full-screen "Tap to wake the rocket" after the phone was locked (iOS suspends audio). */
+.wake { position: fixed; inset: 0; z-index: var(--z-overlay); width: 100%; border-radius: 0; }
+/* "Listening…": big pulsing status word (plan 10 Task 6 Step 4); not applied under reduced motion. */
+.pulse { animation: pulse 1s ease-in-out infinite alternate; color: var(--accent); }
+@keyframes pulse { from { opacity: 0.55; } to { opacity: 1; } }
