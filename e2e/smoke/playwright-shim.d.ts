@@ -13,7 +13,7 @@ declare module "@playwright/test" {
     goto(url: string): Promise<unknown>;
     locator(selector: string, options?: unknown): Locator;
     getByRole(role: string, options?: unknown): Locator;
-    getByText(text: unknown): Locator;
+    getByText(text: unknown, options?: unknown): Locator;
     screenshot(options?: unknown): Promise<unknown>;
     evaluate(fn: unknown, arg?: unknown): Promise<unknown>;
     video(): { saveAs(path: string): Promise<void> } | null;
