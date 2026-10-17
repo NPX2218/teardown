@@ -8,6 +8,10 @@ export const PITCH_LIMIT_RAD = Math.PI / 2;
 /** A sample inside this band counts as neutral after an owner change. */
 export const NEUTRAL_PITCH_RAD = 0.02;
 
+/** The phone reads absolute tilt from a hand-held rocket, which never sits within 1°. 10° is "about upright":
+ *  a leftover big lean still cannot steer at handoff, but a hand on the pad arms at once. */
+export const PHONE_NEUTRAL_PITCH_RAD = (10 * Math.PI) / 180;
+
 export const NEUTRAL_FLIGHT_INPUT: FlightInput = { pitchRad: 0, throttle: 0 };
 
 export function clampPitchRad(value: unknown): number | null {
@@ -28,8 +32,9 @@ export interface MixResult {
   ignoredAxes: ControlAxis[];
 }
 
-function isNeutral(axis: ControlAxis, value: number): boolean {
-  return axis === "pitch" ? Math.abs(value) <= NEUTRAL_PITCH_RAD : value === 0;
+function isNeutral(axis: ControlAxis, value: number, source: ControlSource): boolean {
+  if (axis !== "pitch") return value === 0;
+  return Math.abs(value) <= (source === "phone" ? PHONE_NEUTRAL_PITCH_RAD : NEUTRAL_PITCH_RAD);
 }
 
 /**
@@ -64,7 +69,7 @@ export function mixFlightInput(flight: FlightSession, command: FlightAxisCommand
     const key = axis === "pitch" ? "pitchRad" : "throttle";
     if (!armed[axis]) {
       const phoneReady = source !== "phone" || command.calibrated === true;
-      if (phoneReady && isNeutral(axis, clamped)) {
+      if (phoneReady && isNeutral(axis, clamped, source)) {
         armed = { ...armed, [axis]: true };
         input = { ...input, [key]: clamped };
       } else {

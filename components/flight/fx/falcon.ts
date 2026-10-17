@@ -168,6 +168,11 @@ export function padBankOpacity(altitudeKm: number): number {
   return clamp01(1 - (h - 8) / 17) * 0.95;
 }
 
+/** Pad steam only exists once the engines have lit. Before ignition the pad is clear, so the rocket is not seen through it. */
+export function padSteamOpacity(altitudeKm: number, ignited: boolean): number {
+  return ignited ? padBankOpacity(altitudeKm) : 0;
+}
+
 /** White column from the pad up toward the vehicle. Holds at 6 km so the draw stays bounded. */
 export function padColumn(altitudeKm: number): { lengthM: number; amount: number } {
   const h = Math.max(0, finiteOr(altitudeKm, 0));

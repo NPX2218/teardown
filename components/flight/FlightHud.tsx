@@ -22,6 +22,7 @@ import {
   setPointerPitch,
   subscribeHeld,
 } from "@/lib/flight/local-controls";
+import { launchControlledFlight } from "@/lib/flight/controls";
 import { handoffPitchToLocal, resumeFlightExplicit } from "@/lib/flight/phone-pitch";
 import { zeroRocket } from "@/lib/rocket/useRocket";
 import { clearCameraNudge } from "./cameraNudge";
@@ -47,6 +48,8 @@ export function FlightHud() {
   const status = flight.status;
   const readout = flight.readout;
   const steering = status === "flying";
+  // In flight the panel is only the two things you steer with. Everything else returns when the flight pauses or ends.
+  const compact = status === "flying";
   const pitchOwned = flight.owners.pitch === "local";
   const throttleOwned = flight.owners.throttle === "local";
   const pitchDeg = Math.round(((flight.input.pitchRad * 180) / Math.PI) * 10) / 10;
@@ -56,12 +59,8 @@ export function FlightHud() {
   const mark = () => useScene.getState().markActivity(performance.now());
   const launch = () => {
     clearHeldAxes();
-    useScene.getState().launchFlight();
-    mark();
-  };
-  const pause = () => {
-    clearHeldAxes();
-    useScene.getState().pauseFlight();
+    // Same path as the lift gesture: a connected phone gets pitch, so tilting steers after a button launch too.
+    launchControlledFlight();
     mark();
   };
   const resume = () => {
@@ -202,19 +201,16 @@ export function FlightHud() {
           {status === "ready" && (
             <button id="launch-flight" type="button" className="btn btn-accent btn-lg" onClick={launch}>Launch</button>
           )}
-          {status === "flying" && (
-            <button id="pause-flight" type="button" className="btn" onClick={pause}>Pause</button>
-          )}
           {status === "paused" && (
             <button id="pause-flight" type="button" className="btn btn-accent" onClick={resume}>Resume</button>
           )}
           {status === "paused" && !phoneConnected && (
             <p className="hud__v hud__v--bad">Phone disconnected. Flight paused. Tap Resume to fly with the screen.</p>
           )}
-          {flight.owners.pitch === "phone" && phoneConnected && (
+          {!compact && flight.owners.pitch === "phone" && phoneConnected && (
             <p className={styles.note}>The phone tilts the rocket. Engine power stays on this screen.</p>
           )}
-          <div className={styles.actions}>
+          {!compact && <div className={styles.actions}>
             {phoneConnected && status !== "idle" && flight.owners.pitch !== "phone" && (
               <button type="button" className="btn" onClick={() => { zeroRocket(); mark(); }}>
                 Use phone tilt
@@ -225,7 +221,7 @@ export function FlightHud() {
                 Use screen tilt
               </button>
             )}
-          </div>
+          </div>}
           <label className="range" htmlFor="pitch-control">
             Tilt
             <input
@@ -240,7 +236,7 @@ export function FlightHud() {
               onChange={(event) => steerPitch(Number(event.target.value))}
             />
           </label>
-          <div className={styles.actions}>
+          {!compact && <div className={styles.actions}>
             <button
               type="button"
               className={`btn ${styles.hold}`}
@@ -271,7 +267,7 @@ export function FlightHud() {
             >
               Tilt right
             </button>
-          </div>
+          </div>}
           <label className="range" htmlFor="throttle-control">
             Engine power
             <input
@@ -285,6 +281,7 @@ export function FlightHud() {
               onChange={(event) => steerThrottle(Number(event.target.value))}
             />
           </label>
+          {!compact && <>
           <details className={styles.more}>
             <summary>How tilt works</summary>
             <p className={styles.note}>0 tilt is straight up. A positive tilt turns downrange. Launch leaves the engines off until you set power.</p>
@@ -305,6 +302,7 @@ export function FlightHud() {
             )}
             <button type="button" className="btn" onClick={() => useAppMode.getState().openExplore()}>Exit</button>
           </div>
+          </>}
         </div>
       </section>
     </>

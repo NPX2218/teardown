@@ -7,6 +7,8 @@ import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { EARTH_RADIUS_M } from "@/lib/flight.helpers";
 import { EARTH_RADIUS } from "@/lib/flight/scene-types";
+import { aimAtCamera, ORIENT_SLERP } from "@/lib/rocket/orient";
+import { flightAttitudeNow } from "@/lib/rocket/useRocket";
 import { FLIGHT_SCENE } from "@/lib/viewer/colors";
 import { flightDrawNow } from "./flightDraw";
 import { FALCON_HEIGHT_M, fitFalcon } from "./fitFalcon";
@@ -22,6 +24,9 @@ const scratch = {
   radial: new THREE.Vector3(),
   quat: new THREE.Quaternion(),
   world: new THREE.Vector3(),
+  cam: new THREE.Vector3(),
+  inv: new THREE.Quaternion(),
+  phone: new THREE.Quaternion(),
 };
 
 function FalconModel({ stage }: { stage: number }) {
@@ -52,6 +57,8 @@ export function Vehicle({ stage, throttle, altitudeKm, elapsedS }: {
 }) {
   const rig = useRef<THREE.Group>(null);
   const marker = useRef<THREE.Mesh>(null);
+  // Smoothed phone side-lean/twist on top of the physics nose, like Explore's slerp.
+  const phone = useMemo(() => new THREE.Quaternion(), []);
 
   useFrame(({ camera }) => {
     const draw = flightDrawNow.current;
@@ -61,10 +68,21 @@ export function Vehicle({ stage, throttle, altitudeKm, elapsedS }: {
     if (scratch.nose.lengthSq() < 1e-8) scratch.nose.set(0, 1, 0);
     scratch.nose.normalize();
     scratch.quat.setFromUnitVectors(scratch.up, scratch.nose);
-    node.quaternion.copy(scratch.quat);
     scratch.radial.set(draw.up[0], draw.up[1], draw.up[2]);
     node.position.set(draw.position[0], draw.position[1], draw.position[2]);
     node.position.addScaledVector(scratch.radial, 0.6 / EARTH_RADIUS_M);
+    const att = flightAttitudeNow.current;
+    scratch.phone.identity();
+    if (att) {
+      // Camera direction in the physics-nose frame, so "toward the visitor" means "toward the camera".
+      scratch.cam.copy(camera.position);
+      node.parent?.worldToLocal(scratch.cam);
+      scratch.cam.sub(node.position).applyQuaternion(scratch.inv.copy(scratch.quat).invert());
+      const q = aimAtCamera(att, Math.atan2(scratch.cam.x, scratch.cam.z));
+      scratch.phone.set(q[1], q[2], q[3], q[0]);
+    }
+    phone.slerp(scratch.phone, ORIENT_SLERP);
+    node.quaternion.copy(scratch.quat).multiply(phone);
     const mark = marker.current;
     if (!mark) return;
     node.getWorldPosition(scratch.world);

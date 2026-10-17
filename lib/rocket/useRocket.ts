@@ -14,24 +14,30 @@ import {
   type RocketAttitude,
   type RocketBasis,
 } from "@/lib/rocket/mount";
-import { quatConj, quatFromTo, quatMul, quatNormalize, relativeOrientation } from "@/lib/rocket/orient";
+import { quatConj, quatFromTo, quatMul, quatNormalize, relativeOrientation, withoutPitch } from "@/lib/rocket/orient";
 import { commitPhoneAxes, commitShellEvent } from "@/lib/flight/controls";
 import { SHELL_GESTURE, ShellGestureDetector, throttleFromShell, type ShellEvent } from "@/lib/rocket/shell-gestures";
 import { useScene } from "@/lib/store";
 import type { Quat, RocketMessage, ShellStatusLevel, ShellStatusWord, Vec3 } from "@/lib/types";
 
 export const ACTIVITY_EVERY_MS = 1000;
+// A lift gesture lasts ~400 ms and keeps pushing after launch fires. 1.5 s covers it with room for a slow hand.
+export const LAUNCH_PUSH_GRACE_MS = 1500;
 
 // Phone pose and model pose at the frame the mount locked. Explore turns the model relative to these.
 let q0: Quat | null = null;
 let home: Quat = [1, 0, 0, 0];
 let lastActivityAt = Number.NEGATIVE_INFINITY;
+let launchedAt = Number.NEGATIVE_INFINITY;
 let basis: RocketBasis | null = null;
 let attitude: RocketAttitude | null = null;
 let compPitch = 0;
 let lastFrameAt: number | null = null;
 let lastStatus = "";
 const shell = new ShellGestureDetector();
+
+/** Phone attitude for the flight model, rocket frame, pitch removed (physics draws pitch). Vehicle reads it per frame. */
+export const flightAttitudeNow: { current: Quat | null } = { current: null };
 
 /** Latest rocket-frame lean. Yaw is here because the planar flight only stores pitch. */
 export function lastRocketAttitude(): RocketAttitude | null {
@@ -43,6 +49,7 @@ function clearMount(): void {
   q0 = null;
   home = [1, 0, 0, 0];
   attitude = null;
+  flightAttitudeNow.current = null;
   compPitch = 0;
   lastFrameAt = null;
   shell.reset();
@@ -55,12 +62,13 @@ function publishStatus(word: ShellStatusWord, level: ShellStatusLevel, flash = f
   sendToRocket(flash ? { k: "status", word, level, flash: true } : { k: "status", word, level });
 }
 
-function applyShellEvent(event: ShellEvent | null): void {
+function applyShellEvent(event: ShellEvent | null, now: number): void {
   if (!event) return;
   const before = useScene.getState().flight.status;
   const result = commitShellEvent(event);
   if (!result.ok) return;
   if ((event === "launch" || event === "shake") && before !== "flying" && useScene.getState().flight.status === "flying") {
+    launchedAt = now;
     publishStatus("LIFTOFF", "ok", true);
     sendToRocket({ k: "vibrate", pattern: [80, 40, 80] });
     return;
@@ -95,6 +103,7 @@ function frameIsFinite(m: RocketMessage): boolean {
 /** Forget calibration and explore orientation. Called on disconnect and by tests. */
 export function resetRocketState(): void {
   lastActivityAt = Number.NEGATIVE_INFINITY;
+  launchedAt = Number.NEGATIVE_INFINITY;
   lastStatus = "";
   clearMount();
   getDetector().reset();
@@ -156,20 +165,23 @@ export function handleRocketMessage(m: RocketMessage, now: number): void {
       }
       lean.rollRad = 0;
       attitude = lean;
-      applyShellEvent(shell.push({ linRocket, gravRocket, tMs: now }));
+      applyShellEvent(shell.push({ linRocket, gravRocket, tMs: now }), now);
       const throttle = throttleFromShell(linRocket, lean.pitchRad);
       const pushed = linRocket[1] >= SHELL_GESTURE.throttlePush || linRocket[2] >= SHELL_GESTURE.throttlePush;
       commitPhoneAxes({
         pitchRad: lean.pitchRad,
         throttle,
-        throttlePush: pushed,
+        // The lift that launched is still moving the rocket up; it is not a request for the throttle.
+        throttlePush: pushed && now - launchedAt > LAUNCH_PUSH_GRACE_MS,
         calibrated: true,
       });
     }
 
-    if (flight.status === "idle" && basis && q0) {
+    if (basis && q0) {
       // Phone turn since the lock, moved from phone axes into rocket axes (the mount), then applied to the model.
-      store.setOrientation(quatNormalize(quatMul(home, relativeOrientation(q0, m.q, quatConj(basis.q)))));
+      const turned = quatNormalize(quatMul(home, relativeOrientation(q0, m.q, quatConj(basis.q))));
+      if (flight.status === "idle") store.setOrientation(turned);
+      else flightAttitudeNow.current = withoutPitch(turned);
     }
 
     const det = getDetector();

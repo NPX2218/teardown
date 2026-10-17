@@ -11,7 +11,7 @@ import {
   cloudDeckOpacity,
   cloudPunch,
   fxBudget,
-  padBankOpacity,
+  padSteamOpacity,
   padBasis,
   padColumn,
   resolvePad,
@@ -30,11 +30,13 @@ const MAX_PUFFS = fxBudget(false).cloudPuffs;
  * The bank and the white column stay at `pad` (Earth radii). Omit `pad` to
  * use Boca Chica, 25.997 N, 97.157 W.
  */
-export function CloudLayer({ altitudeKm, pad, reducedMotion }: CloudLayerProps & MotionOverride) {
+export function CloudLayer({ altitudeKm, pad, ignited = true, reducedMotion }: CloudLayerProps & MotionOverride) {
   const reduced = useFxReduced(reducedMotion);
   const budget = fxBudget(reduced);
   const altRef = useRef(altitudeKm);
   const padRef = useRef(pad);
+  const ignitedRef = useRef(ignited);
+  ignitedRef.current = ignited;
   const reducedRef = useRef(reduced);
   altRef.current = altitudeKm;
   padRef.current = pad;
@@ -96,7 +98,6 @@ export function CloudLayer({ altitudeKm, pad, reducedMotion }: CloudLayerProps &
     fragmentShader: padCloudFragment,
     transparent: true,
     depthWrite: false,
-    depthTest: false,
     toneMapped: false,
   }), [cream, flame, map]);
 
@@ -115,7 +116,6 @@ export function CloudLayer({ altitudeKm, pad, reducedMotion }: CloudLayerProps &
     fragmentShader: padCloudFragment,
     transparent: true,
     depthWrite: false,
-    depthTest: false,
     toneMapped: false,
   }), [cream, flame, map]);
 
@@ -214,7 +214,7 @@ export function CloudLayer({ altitudeKm, pad, reducedMotion }: CloudLayerProps &
 
     const anchor = resolvePad(padRef.current);
     const basis = padBasis(anchor);
-    const bankOpacity = padBankOpacity(alt);
+    const bankOpacity = padSteamOpacity(alt, ignitedRef.current);
     const columnState = padColumn(alt);
     bankMat.uniforms.uTime.value = clock.elapsedTime;
     bankMat.uniforms.uOpacity.value = bankOpacity;

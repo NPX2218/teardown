@@ -180,7 +180,16 @@ void main() {
 }
 `;
 
+// The flight canvas uses a logarithmic depth buffer. Pad steam writes the same depth so the rocket can hide it.
+const logDepthVertex = /* glsl */ `
+bool isPerspectiveMatrix(mat4 m) {
+  return m[2][3] == -1.0;
+}
+#include <logdepthbuf_pars_vertex>
+`;
+
 export const padCloudVertex = /* glsl */ `
+${logDepthVertex}
 attribute float aSeed;
 uniform float uScale;
 uniform float uOpacity;
@@ -198,12 +207,14 @@ void main() {
   float size = uScale * (0.5 + aSeed * 0.85);
   mv.xy += position.xy * size;
   gl_Position = projectionMatrix * mv;
+  #include <logdepthbuf_vertex>
   vAlpha = uOpacity * (0.32 + 0.45 * fract(aSeed * 3.1));
   vOrange = uOrange * (1.0 - smoothstep(0.04, 0.16, aSeed));
 }
 `;
 
 export const padCloudFragment = /* glsl */ `
+#include <logdepthbuf_pars_fragment>
 uniform vec3 uCream;
 uniform vec3 uFlame;
 uniform sampler2D uMap;
@@ -215,6 +226,7 @@ void main() {
   vec3 col = mix(uCream, uFlame, clamp(vOrange * 0.55, 0.0, 1.0));
   if (sprite * vAlpha < 0.02) discard;
   gl_FragColor = vec4(col, sprite * vAlpha);
+  #include <logdepthbuf_fragment>
 }
 `;
 

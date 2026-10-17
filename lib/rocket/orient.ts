@@ -56,3 +56,10 @@ export function aimAtCamera(q: Quat, azimuthRad: number): Quat {
   const yaw: Quat = [Math.cos(azimuthRad / 2), 0, Math.sin(azimuthRad / 2), 0];
   return quatNormalize(quatMul(quatMul(yaw, q), quatConj(yaw)));
 }
+
+/** Removes the turn about rocket x (fore/aft pitch) from a rocket-frame rotation, keeping side lean and twist.
+ *  Swing-twist split: the twist about x is the [w, x] part. Flight physics already draws pitch on the nose. */
+export function withoutPitch(q: Quat): Quat {
+  const twist = quatNormalize([q[0], q[1], 0, 0]);
+  return quatNormalize(quatMul(q, quatConj(twist)));
+}
