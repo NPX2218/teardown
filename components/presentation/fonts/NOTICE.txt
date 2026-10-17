@@ -1,11 +1,10 @@
-These files are the self-hosted stand-ins named in docs/specs/00-theme.spec.md.
-They are not SpaceX or xAI fonts. D-DIN and xVf are not included.
+These are the deck's self-hosted fonts. They match the app (app/fonts/d-din
+and the geist package), so the deck and the exhibit share one look.
 
-Barlow and Barlow Semi Condensed
-Copyright 2017 The Barlow Project Authors (https://github.com/jpt/barlow)
-SIL Open Font License 1.1. See OFL-barlow.txt and OFL-barlow-semi-condensed.txt.
-Files from Fontsource package versions barlow 5.2.6 and barlow-semi-condensed 5.2.6.
+D-DIN (Regular, Bold)
+Copyright Datto, Inc. SIL Open Font License 1.1, Reserved Font Name "D-DIN".
+Same files as app/fonts/d-din (see its SOURCE.txt). See OFL-d-din.txt.
 
-Roboto Mono
-SIL Open Font License 1.1, as distributed by Fontsource @fontsource/roboto-mono 5.2.6.
-See LICENSE-roboto-mono.txt.
+Geist and Geist Mono
+Copyright 2023 Vercel, in collaboration with basement.studio.
+SIL Open Font License 1.1, from the geist 1.8.1 npm package. See OFL-geist.txt.

@@ -21,10 +21,10 @@ assert.deepEqual(
   SLIDES.filter((slide) => slide.part === "core").map((slide) => slide.id),
   [...CORE_SLIDE_IDS],
 );
-assert.equal(CORE_SLIDE_IDS.length, 14);
+assert.equal(CORE_SLIDE_IDS.length, 7);
 assert.deepEqual(
   SLIDES.filter((slide) => slide.part === "appendix").map((slide) => slide.id),
-  ["numbers", "open"],
+  ["explore", "mission"],
 );
 assert.equal(new Set(SLIDES.map((slide) => slide.id)).size, SLIDES.length);
 

@@ -1,97 +1,94 @@
 /*
- * Presentation theme fixture.
- * Copies the tokens in docs/specs/00-theme.spec.md onto .deck until
- * app/globals.css exists. Do not add hex values in the other presentation
- * files. This sheet must not style bare html/body: Next loads it globally
- * after the route is visited.
+ * Presentation theme. Same look as the app (app/globals.css and
+ * docs/specs/00-theme.spec.md): the spacex.com layer. Black, off-white
+ * #f0f0fa, D-DIN Bold uppercase headings, Geist body, Geist Mono numbers,
+ * hairline rules, full-bleed imagery under a scrim, no brand accent colour.
+ * This sheet must not style bare html/body: Next loads it globally after the
+ * route is visited.
  *
- * Fonts: Barlow and Barlow Semi Condensed (SIL OFL), Roboto Mono (SIL OFL).
- * See ./fonts/NOTICE.txt. Not D-DIN, not an xAI face.
+ * Fonts: D-DIN (Datto, SIL OFL, the same files as app/fonts/d-din) and
+ * Geist / Geist Mono (Vercel, SIL OFL, from the geist 1.8.1 package).
+ * See ./fonts/NOTICE.txt.
  */
 
 @font-face {
-  font-family: "Barlow";
+  font-family: "D-DIN";
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("./fonts/barlow-400.woff2") format("woff2");
+  src: url("./fonts/d-din-400.woff2") format("woff2");
 }
 @font-face {
-  font-family: "Barlow";
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("./fonts/barlow-500.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Barlow";
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("./fonts/barlow-600.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Barlow";
+  font-family: "D-DIN";
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url("./fonts/barlow-700.woff2") format("woff2");
+  src: url("./fonts/d-din-700.woff2") format("woff2");
 }
 @font-face {
-  font-family: "Barlow Semi Condensed";
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("./fonts/barlow-sc-600.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Barlow Semi Condensed";
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("./fonts/barlow-sc-700.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Roboto Mono";
+  font-family: "Geist";
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("./fonts/roboto-mono-400.woff2") format("woff2");
+  src: url("./fonts/geist-400.woff2") format("woff2");
 }
 @font-face {
-  font-family: "Roboto Mono";
+  font-family: "Geist";
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url("./fonts/roboto-mono-500.woff2") format("woff2");
+  src: url("./fonts/geist-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("./fonts/geist-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Geist Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./fonts/geist-mono-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Geist Mono";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("./fonts/geist-mono-500.woff2") format("woff2");
 }
 
 .deck {
   --bg: #000000;
   --surface-1: #0a0a0a;
-  --surface-2: #151515;
+  --surface-2: #121212;
   --surface-3: #1a1a1a;
   --text: #f0f0fa;
   --text-90: rgba(240, 240, 250, 0.9);
   --text-muted: rgba(240, 240, 250, 0.7);
   --text-dim: rgba(240, 240, 250, 0.6);
-  --line-strong: rgba(240, 240, 250, 0.5);
-  --line: rgba(240, 240, 250, 0.35);
-  --line-soft: rgba(240, 240, 250, 0.15);
-  --fill-1: rgba(240, 240, 250, 0.1);
-  --fill-2: rgba(240, 240, 250, 0.25);
+  --line-strong: rgba(240, 240, 250, 0.35);
+  --line: rgba(240, 240, 250, 0.2);
+  --line-soft: rgba(255, 255, 255, 0.08);
+  --fill-1: rgba(255, 255, 255, 0.04);
+  --fill-2: rgba(255, 255, 255, 0.08);
   --scrim-80: rgba(0, 0, 0, 0.8);
   --accent: #f0f0fa;
   --accent-hover: #ffffff;
   --accent-ink: #000000;
-  --status-amber: #ffb547;
+  --status-amber: rgba(240, 240, 250, 0.6);
+  /* No brand accent: rules, ticks and callouts use the SpaceX off-white. Orange is the engine plume only. */
+  --signal: #f0f0fa;
   --flame: #ff6308;
-  --bad-text: #ff8a8a;
-  --font-display: var(--nf-display, "Barlow Semi Condensed"), "Arial Narrow", Arial, sans-serif;
-  --font-body: var(--nf-body, "Barlow"), Arial, Helvetica, sans-serif;
-  --font-mono: var(--nf-mono, "Roboto Mono"), ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --bad-text: #f0f0fa;
+  --font-display: "D-DIN", "Arial Narrow", Arial, sans-serif;
+  --font-body: "Geist", "Inter Tight", ui-sans-serif, system-ui, Arial, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
   --track-head: 0.02em;
-  --track-display: -0.01em;
+  --track-display: 0.02em;
   --track-eyebrow: 0.08em;
   --track-label: 0.09em;
   --fs-display: clamp(3rem, 7vw, 6.25rem);
@@ -110,7 +107,7 @@
   --sp-7: 60px;
   --sp-8: 100px;
   --radius-sm: 4px;
-  --radius-md: 0.5rem;
+  --radius-md: 4px;
   --measure: 38rem;
   --target: 48px;
   --gutter: clamp(16px, 4vw, 60px);
@@ -186,10 +183,10 @@
 
 .deck-kicker {
   margin: 0 0 var(--sp-3);
-  font-family: var(--font-mono);
-  font-size: var(--fs-small);
-  font-weight: 400;
-  letter-spacing: var(--track-eyebrow);
+  font-family: var(--font-display);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: var(--track-label);
   text-transform: uppercase;
   color: var(--text-muted);
 }
@@ -256,6 +253,27 @@
   to { opacity: 1; transform: none; }
 }
 
+@keyframes deck-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Full-bleed captures settle in slowly, the way spacex.com brings in a vehicle photo. */
+@keyframes deck-settle {
+  from { opacity: 0; transform: scale(1.04); }
+  to { opacity: 1; transform: none; }
+}
+
+/* A new slide: heading first, then its figure. */
+.deck-slide[data-active="true"] header { animation: deck-rise var(--dur-slow) var(--ease-out) both; }
+.deck-slide[data-active="true"] .deck-figure { animation: deck-fade var(--dur-slow) var(--ease-out) 0.12s both; }
+.deck-slide[data-active="true"] .deck-shot img { animation: deck-settle 1.2s var(--ease-out) both; }
+
+/* Each arrow press: whatever the figure reveals rises in just after its line of text.
+   SVG groups only fade, because a transform would move them off their drawn position. */
+.deck-figure :not(g)[data-shown="true"] { animation: deck-rise var(--dur) var(--ease-out) 0.08s both; }
+.deck-figure g[data-shown="true"] { animation: deck-fade var(--dur) var(--ease-out) 0.08s both; }
+
 .deck-figure {
   margin: 0;
   min-width: 0;
@@ -298,10 +316,7 @@
 
 .deck-steps,
 .deck-flow,
-.deck-rules,
-.deck-out,
-.deck-gaps,
-.deck-figure--words ul {
+.deck-out {
   margin: 0;
   padding: 0;
   list-style: none;
@@ -309,9 +324,7 @@
 
 .deck-steps li,
 .deck-flow li,
-.deck-rules li,
-.deck-out li,
-.deck-figure--words li {
+.deck-out li {
   display: flex;
   align-items: center;
   gap: var(--sp-4);
@@ -344,9 +357,7 @@
 
 .deck-steps li[data-shown="false"],
 .deck-flow li[data-shown="false"],
-.deck-rules li[data-shown="false"],
 .deck-out li[data-shown="false"],
-.deck-figure--words li[data-shown="false"],
 .deck-splitfig [data-shown="false"],
 .deck-estimate[data-shown="false"],
 .deck-figure [data-shown="false"] {
@@ -381,30 +392,6 @@
   font-size: var(--fs-small);
   letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
-}
-
-.deck-gaps {
-  display: grid;
-  gap: var(--sp-2);
-  max-height: 46vh;
-  overflow: auto;
-}
-
-.deck-gaps li {
-  display: grid;
-  grid-template-columns: 16px minmax(0, 1fr);
-  gap: var(--sp-3);
-  align-items: start;
-  color: var(--text);
-  font-size: var(--fs-small);
-  line-height: 1.35;
-}
-
-.deck-box {
-  width: 16px;
-  height: 16px;
-  margin-top: 0.15em;
-  border: 2px solid var(--text);
 }
 
 .deck-links {
@@ -454,13 +441,13 @@
   min-height: var(--target);
   min-width: var(--target);
   padding: 0 var(--sp-4);
-  border: 2px solid var(--text);
+  border: 1px solid var(--line-strong);
   border-radius: var(--radius-sm);
-  background: var(--bg);
+  background: rgba(0, 0, 0, 0.5);
   color: var(--text);
-  font-family: var(--font-body);
-  font-size: var(--fs-small);
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
   letter-spacing: var(--track-label);
   line-height: 1;
   text-transform: uppercase;
@@ -468,7 +455,7 @@
   cursor: pointer;
 }
 
-.deck .btn:hover { background: var(--text); color: var(--accent-ink); }
+.deck .btn:hover { background: var(--text); border-color: var(--text); color: var(--accent-ink); }
 .deck .btn:disabled,
 .deck .btn[aria-disabled="true"] {
   opacity: 0.45;
@@ -568,15 +555,22 @@
   .deck-figure svg,
   .deck-frame svg { max-height: 24vh; }
   .deck-steps li,
-  .deck-flow li,
-  .deck-figure--words li { font-size: var(--fs-lead); }
+  .deck-flow li { font-size: var(--fs-lead); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .deck .deck-beat { animation: none !important; }
+  .deck .deck-beat,
+  .deck .deck-slide header,
+  .deck .deck-figure,
+  .deck .deck-figure [data-shown],
+  .deck .deck-shot img { animation: none !important; }
 }
 
-.deck[data-motion="reduce"] .deck-beat { animation: none !important; }
+.deck[data-motion="reduce"] .deck-beat,
+.deck[data-motion="reduce"] .deck-slide header,
+.deck[data-motion="reduce"] .deck-figure,
+.deck[data-motion="reduce"] .deck-figure [data-shown],
+.deck[data-motion="reduce"] .deck-shot img { animation: none !important; }
 
 /* ---- Title: the README hero, full bleed. Its own art carries the wordmark. ---- */
 .deck-poster { position: relative; isolation: isolate; align-content: end; }
@@ -602,12 +596,9 @@
 }
 
 /* ---- Wide figures get the bigger column ---- */
-.deck-slide[data-figure="pipeline"] .deck-body,
-.deck-slide[data-figure="gestures"] .deck-body,
-.deck-slide[data-figure="physics"] .deck-body,
+.deck-slide[data-figure="phone"] .deck-body,
 .deck-slide[data-figure="store"] .deck-body,
-.deck-slide[data-figure="challenge"] .deck-body,
-.deck-slide[data-figure="grok"] .deck-body {
+.deck-slide[data-figure="challenge"] .deck-body {
   grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
 }
 .deck-slide[data-figure="challenge"] .deck-body { grid-template-columns: minmax(0, 0.55fr) minmax(0, 1.45fr); }
@@ -616,53 +607,91 @@
 
 .deck-copy .deck-beat--strong {
   padding-left: var(--sp-4);
-  border-left: 3px solid var(--flame);
-  font-weight: 600;
+  border-left: 1px solid var(--line-strong);
+  font-weight: 500;
 }
 
-/* ---- Close: one centred stack, the motto last ---- */
-.deck-slide[data-figure="close"] { align-content: center; justify-items: center; text-align: center; }
-.deck-slide[data-figure="close"] header { display: grid; justify-items: center; }
-.deck-slide[data-figure="close"] h1 { max-width: none; font-size: var(--fs-display); line-height: 1; }
-.deck-slide[data-figure="close"] .deck-body { grid-template-columns: 1fr; justify-items: center; }
-.deck-slide[data-figure="close"] .deck-copy { max-width: none; }
-.deck-slide[data-figure="close"] .deck-beat:first-child {
-  font-family: var(--font-mono);
-  letter-spacing: var(--track-eyebrow);
-  text-transform: uppercase;
-  color: var(--flame);
-}
-.deck-slide[data-figure="close"] .deck-figure--words ul { display: flex; gap: var(--sp-6); }
-.deck-slide[data-figure="close"] .deck-figure--words li { color: var(--text-muted); }
 
-/* ---- Real screenshots ---- */
+/* ---- Real screenshots: full bleed, the way spacex.com sets a vehicle photo ----
+ * The capture fills the right of the slide and fades into black under the copy. */
+.deck-slide { position: relative; }
+.deck-slide[data-figure="shot"] header,
+.deck-slide[data-figure="shot"] .deck-copy { position: relative; z-index: 1; }
+.deck-slide[data-figure="shot"] .deck-body { grid-template-columns: minmax(0, 0.42fr) minmax(0, 0.58fr); }
+.deck-shot {
+  position: absolute;
+  inset: 0 0 0 28%;
+  z-index: 0;
+  pointer-events: none;
+}
 .deck-shot img {
   display: block;
   width: 100%;
-  max-height: 68vh;
+  height: 100%;
+  object-fit: cover;
+  object-position: 60% center;
+}
+.deck-shot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.75) 22%, rgba(0, 0, 0, 0) 55%),
+    linear-gradient(0deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 30%);
+}
+.deck-shot figcaption {
+  position: absolute;
+  right: var(--gutter);
+  bottom: var(--sp-4);
+  z-index: 1;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* A GIF plays on screen; the still stands in for print and reduced motion. */
+.deck-shot .deck-shot__still { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .deck-shot .deck-shot__motion { display: none; }
+  .deck-shot .deck-shot__still { display: block; }
+}
+
+.deck-usage { display: flex; gap: var(--sp-4); margin-top: var(--sp-4); }
+.deck-usage img {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  max-height: 34vh;
   object-fit: contain;
+  object-position: left top;
+  border: 1px solid var(--line);
   border-radius: var(--radius-md);
 }
 
 /* ---- Cards ---- */
+/* Flat, like the spacex.com stat rows: a hairline on top, no box. */
 .deck-card {
-  padding: var(--sp-4) var(--sp-5);
-  background: var(--surface-1);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
+  padding: var(--sp-3) 0 0;
+  border-top: 1px solid var(--line-strong);
 }
 .deck-card__tag {
   margin: 0 0 var(--sp-2);
-  font-family: var(--font-mono);
-  font-size: var(--fs-small);
-  letter-spacing: var(--track-eyebrow);
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: var(--track-label);
   text-transform: uppercase;
-  color: var(--flame);
+  color: var(--text);
 }
 .deck-copy .deck-card__line,
 .deck-card__line { margin: 0; font-size: var(--fs-body); line-height: 1.4; }
 
 .deck-scatter { display: grid; gap: var(--sp-4); }
+.deck-scatter .deck-card { padding: var(--sp-4) var(--sp-5); background: var(--surface-1); border: 1px solid var(--line-soft); border-radius: var(--radius-sm); }
 .deck-scatter .deck-card:nth-child(1) { transform: rotate(-2deg); margin-right: 18%; }
 .deck-scatter .deck-card:nth-child(2) { transform: rotate(1.5deg); margin-left: 22%; }
 .deck-scatter .deck-card:nth-child(3) { transform: rotate(-1deg); margin-right: 8%; margin-left: 6%; }
@@ -677,74 +706,17 @@
 
 .deck-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); }
 
-/* ---- Stats row ---- */
-.deck-stats {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--sp-6) var(--sp-5);
-  margin: 0;
-  text-align: center;
-}
-.deck-stats dt {
-  font-family: var(--font-display);
-  font-size: clamp(3.5rem, 8vw, 7rem);
-  font-weight: 700;
-  line-height: 1;
-}
-.deck-stats dd {
-  margin: var(--sp-2) 0 0;
-  font-family: var(--font-mono);
-  font-size: var(--fs-small);
-  letter-spacing: var(--track-eyebrow);
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
 /* ---- Phone rocket ---- */
-.deck-phone svg { max-height: 46vh; }
-.deck-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--sp-3);
-  margin: var(--sp-4) 0 0;
-  padding: 0;
-  list-style: none;
-}
-.deck-chips li {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sp-2);
-  padding: var(--sp-2) var(--sp-4);
-  border: 1px solid var(--line-strong);
-  border-radius: 999px;
-  font-family: var(--font-display);
-  font-weight: 600;
-  letter-spacing: var(--track-head);
-  text-transform: uppercase;
-}
-.deck-chips li span { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--flame); }
+.deck-phone svg { max-height: 30vh; }
+/* The gesture table sits under the phone drawing, so it runs smaller than a full-slide table. */
+.deck-table--compact { margin-top: var(--sp-3); }
+.deck-table--compact th,
+.deck-table--compact td { padding: var(--sp-2) var(--sp-3); }
+.deck-table--compact tbody th { font-size: 1rem; }
+.deck-table--compact td,
+.deck-table--compact code { font-size: var(--fs-caption); }
 
-/* ---- Sensor pipeline ---- */
-.deck-pipe { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--sp-2); counter-reset: pipe; }
-.deck-pipe li {
-  position: relative;
-  display: grid;
-  grid-template-columns: 11rem minmax(0, 1fr);
-  align-items: center;
-  gap: var(--sp-4);
-  padding: var(--sp-3) var(--sp-4);
-  border-left: 3px solid var(--flame);
-  background: var(--surface-1);
-}
-.deck-pipe__name {
-  font-family: var(--font-display);
-  font-size: 1.15rem;
-  font-weight: 700;
-  letter-spacing: var(--track-head);
-  text-transform: uppercase;
-}
-.deck code,
-.deck-eq {
+.deck code {
   font-family: var(--font-mono);
   font-size: var(--fs-small);
   color: var(--text-90);
@@ -777,21 +749,7 @@
 }
 .deck-table tbody td:last-child { font-weight: 600; }
 .deck-table--check tbody td:last-child { font-weight: 400; font-size: var(--fs-lead); }
-.deck-table--check th span { color: var(--flame); margin-right: var(--sp-2); }
-
-/* ---- Physics ---- */
-.deck-physics svg { max-height: 36vh; }
-.deck-eq {
-  display: grid;
-  gap: var(--sp-2);
-  margin: var(--sp-4) 0 0;
-  padding: var(--sp-4) var(--sp-5);
-  background: var(--surface-1);
-  border-left: 3px solid var(--flame);
-  font-size: 0.95rem;
-  white-space: pre-wrap;
-}
-.deck-eq span[data-shown="false"] { visibility: hidden; display: block !important; }
+.deck-table--check th span { color: var(--signal); margin-right: var(--sp-2); }
 
 /* ---- One store ---- */
 .deck-store {
@@ -803,18 +761,18 @@
 .deck-store__col { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--sp-3); }
 .deck-store__col li {
   padding: var(--sp-3);
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-strong);
   border-radius: var(--radius-sm);
   text-align: center;
   font-weight: 600;
 }
-.deck-store__arrow { font-size: 2rem; color: var(--flame); }
+.deck-store__arrow { font-size: 2rem; color: var(--text-muted); }
 .deck-store__hub {
   display: grid;
   gap: var(--sp-2);
   padding: var(--sp-5) var(--sp-4);
-  border: 2px solid var(--text);
-  border-radius: var(--radius-md);
+  border: 1px solid var(--text);
+  border-radius: var(--radius-sm);
   text-align: center;
 }
 .deck-store__hub strong {
@@ -824,16 +782,16 @@
   line-height: 1;
 }
 .deck-store__hub span { color: var(--text-muted); font-size: var(--fs-small); }
-.deck-store__hub em { font-style: normal; font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--flame); }
+.deck-store__hub em { font-style: normal; font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--text-muted); }
 
 @media screen and (max-width: 800px) {
   .deck-slide[data-figure] .deck-body { grid-template-columns: 1fr; }
-  .deck-pipe li { grid-template-columns: 1fr; }
   .deck-store { grid-template-columns: 1fr; }
   .deck-store__arrow { transform: rotate(90deg); justify-self: center; }
 }
 
 @media print {
+  .deck *, .deck *::before, .deck *::after { animation: none !important; }
   /* Full-bleed black pages: no white paper margin around the slides. */
   @page { size: 13.333in 7.5in; margin: 0; }
   html, body { margin: 0 !important; background: #000 !important; }
@@ -880,14 +838,9 @@
   .deck-steps li[data-shown="false"],
   .deck-flow li,
   .deck-flow li[data-shown="false"],
-  .deck-rules li,
-  .deck-rules li[data-shown="false"],
   .deck-out li,
   .deck-out li[data-shown="false"],
-  .deck-figure--words li,
-  .deck-figure--words li[data-shown="false"],
-  .deck-splitfig div[data-shown="false"],
-  .deck-gaps li {
+  .deck-splitfig div[data-shown="false"] {
     display: flex !important;
     opacity: 1 !important;
   }
@@ -897,12 +850,18 @@
     display: block !important;
     opacity: 1 !important;
   }
-  .deck-gaps { max-height: none; overflow: visible; }
-  .deck-figure [data-shown="false"],
-  .deck-chips li[data-shown="false"],
-  .deck-pipe li[data-shown="false"] { display: revert !important; }
-  .deck-eq span[data-shown="false"] { visibility: visible; }
-  .deck-shot img { max-height: 4.6in; }
+  .deck-figure [data-shown="false"] { display: revert !important; }
+  .deck-shot img { max-height: none; }
+  .deck-shot .deck-shot__motion { display: none !important; }
+  .deck-shot .deck-shot__still { display: block !important; }
+  .deck-usage img { max-height: 2.2in; }
+  .deck-figure.deck-phone svg { max-height: 1.6in; }
+  .deck-table--compact { margin-top: 0.05in; }
+  .deck-table--compact th,
+  .deck-table--compact td { padding: 4px 8px; }
+  .deck-table--compact tbody th { font-size: 13px; }
+  .deck-table--compact td,
+  .deck-table--compact code { font-size: 11px; }
   .deck-poster .deck-beat:first-child { display: none !important; }
   .deck-figure svg,
   .deck-frame svg { max-height: 2.3in; }
@@ -910,8 +869,10 @@
   .deck-slide h1 { font-size: 36px; }
   .deck-poster h1 { font-size: 60px; }
   .deck-copy p { font-size: 16px; }
-  /* Credits print once, on the closing slide, not on every page. */
-  .deck-slide[data-figure="close"] .deck-print-legal { display: flex !important; justify-content: center; }
+  /* Credits print once, on the last core slide, not on every page. */
+  .deck-slide[data-figure="challenge"] .deck-print-legal { display: flex !important; }
 }
 
 .deck-print-legal { display: none; margin-top: var(--sp-3); }
+/* The last core slide carries the credits on screen too. */
+.deck-slide[data-figure="challenge"] .deck-print-legal { display: block; margin-top: var(--sp-6); font-size: var(--fs-caption); color: var(--text-muted); }
