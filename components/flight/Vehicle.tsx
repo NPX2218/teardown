@@ -9,11 +9,11 @@ import { EARTH_RADIUS_M } from "@/lib/flight.helpers";
 import { EARTH_RADIUS } from "@/lib/flight/scene-types";
 import { FLIGHT_SCENE } from "@/lib/viewer/colors";
 import { flightDrawNow } from "./flightDraw";
+import { FALCON_HEIGHT_M, fitFalcon } from "./fitFalcon";
 import { EnginePlume } from "./fx/EnginePlume";
 import { StageSeparation } from "./fx/StageSeparation";
 
 const MODEL = "/models/falcon9.glb";
-const FALCON_HEIGHT_M = 70;
 useGLTF.preload(MODEL);
 
 const scratch = {
@@ -23,19 +23,6 @@ const scratch = {
   quat: new THREE.Quaternion(),
   world: new THREE.Vector3(),
 };
-
-function fitFalcon(source: THREE.Object3D): THREE.Group {
-  const clone = source.clone(true);
-  clone.updateMatrixWorld(true);
-  const box = new THREE.Box3().setFromObject(clone);
-  const height = Math.max(box.max.y - box.min.y, 1e-6);
-  const metres = FALCON_HEIGHT_M / height;
-  clone.scale.setScalar(metres);
-  clone.position.y = -box.min.y * metres;
-  const group = new THREE.Group();
-  group.add(clone);
-  return group;
-}
 
 function FalconModel({ stage }: { stage: number }) {
   const { scene } = useGLTF(MODEL);
