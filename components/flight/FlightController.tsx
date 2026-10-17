@@ -4,10 +4,10 @@
 import { useEffect, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { MISSIONS } from "@/data/missions/index";
-import { MAX_WALL_DELTA_S } from "@/lib/flight.helpers";
 import { useAppMode } from "@/lib/flight/app-mode";
 import { shouldAdvanceFlight } from "@/lib/flight/integrate";
 import { commitHeldAxes, currentControlMode } from "@/lib/flight/controls";
+import { frameWallSlices } from "@/lib/flight/frame-budget";
 import { resumeFlightExplicit } from "@/lib/flight/phone-pitch";
 import {
   clearHeldAxes,
@@ -146,13 +146,17 @@ export function FlightController() {
       skipCatchUp.current = false;
       return;
     }
-    const wall = Math.min(Math.max(delta, 0), MAX_WALL_DELTA_S);
+    const slices = frameWallSlices(delta);
+    if (slices.length === 0) return;
     const mode = useAppMode.getState().mode;
-    if (mode === "replay") playReplay(wall);
     const controls = currentControlMode(mode);
+    if (mode === "replay") {
+      for (const wall of slices) playReplay(wall);
+    }
     if (controls === "explore") return;
-    commitHeldAxes(wall, controls);
-    if (shouldAdvanceFlight(useScene.getState().flight.status, false)) {
+    commitHeldAxes(slices[0], controls);
+    for (const wall of slices) {
+      if (!shouldAdvanceFlight(useScene.getState().flight.status, false)) break;
       useScene.getState().advanceFlight(wall);
     }
   });
