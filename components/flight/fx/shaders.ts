@@ -161,7 +161,7 @@ void main() {
     aDir.z * (1.2 + along * 6.0)
   );
   vec4 mv = modelViewMatrix * vec4(p, 1.0);
-  float size = max(48.0, uLength * 0.04);
+  float size = max(56.0, uLength * 0.062);
   mv.xy += position.xy * size;
   gl_Position = projectionMatrix * mv;
   float body = smoothstep(0.0, 0.06, along) * (1.0 - smoothstep(0.88, 1.0, along));

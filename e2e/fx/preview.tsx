@@ -36,19 +36,19 @@ function RocketBody() {
   );
 }
 
-function Pad() {
+function Pad({ radius = 420 }: { radius?: number }) {
   return (
     <mesh position={[0, -1.2, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-      <circleGeometry args={[420, 48]} />
+      <circleGeometry args={[radius, 48]} />
       <meshBasicMaterial color={FLIGHT_SCENE.land} />
     </mesh>
   );
 }
 
-function PlumeShot({ altitudeKm }: { altitudeKm: number }) {
+function PlumeShot({ altitudeKm, padRadius = 420 }: { altitudeKm: number; padRadius?: number }) {
   return (
     <>
-      <Pad />
+      <Pad radius={padRadius} />
       <RocketBody />
       <EnginePlume throttle={1} altitudeKm={altitudeKm} />
     </>
@@ -201,7 +201,7 @@ function Scene({ shot }: { shot: string }) {
     return (
       <>
         <Frame position={[360, 70, 480]} look={[0, -120, 0]} near={1} far={8000} fov={34} />
-        <PlumeShot altitudeKm={12} />
+        <PlumeShot altitudeKm={12} padRadius={40} />
       </>
     );
   }
