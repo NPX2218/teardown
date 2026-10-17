@@ -147,11 +147,10 @@ describe("useRocket frame handling (11)", () => {
     useScene.getState().setRocket({ connected: true, code: "AB2C" });
     useScene.getState().setFlightAxisOwner("pitch", "phone");
     useScene.getState().launchFlight();
-    handleRocketMessage(frame([1, 0, 0, 0]), base);
-    handleRocketMessage(frame([1, 0, 0, 0]), base + 50);
-    const tilt: Quat = [Math.cos(Math.PI / 8), Math.sin(Math.PI / 8), 0, 0];
-    handleRocketMessage(frame(tilt), base + 100);
-    expect(useScene.getState().flight.input.pitchRad).not.toBe(0);
+    handleRocketMessage(frameFor(0), base);
+    handleRocketMessage(frameFor(0), base + 50);
+    handleRocketMessage(frameFor(22.5), base + 100);
+    expect(useScene.getState().flight.input.pitchRad).toBeCloseTo((22.5 * Math.PI) / 180, 3);
   });
 
   it("H16 a hard shake does not start or score a flight", () => {

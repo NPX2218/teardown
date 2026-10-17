@@ -1,6 +1,6 @@
 // lib/rocket/mount.ts — device frame to rocket frame. Owner: Neel.
-// The phone may sit portrait or landscape inside the shell. Calibration records gravity
-// (rocket down) and the screen normal, then builds a rotation. Pitch and yaw come from
+// The phone may sit portrait or landscape inside the shell. snapUprightBasis picks the screen axis
+// that points at the nose when the rocket is held upright, then builds a rotation. Pitch and yaw come from
 // that frame, not from device Y and not from raw beta/gamma (those gimbal-lock in landscape).
 import { quatConj, quatMul, quatNormalize } from "@/lib/rocket/orient";
 import type { Quat, Vec3 } from "@/lib/types";
@@ -17,17 +17,9 @@ export type MountId = (typeof MOUNT_IDS)[number];
 /** Screen normal in device coordinates. +Z comes out of the glass. */
 export const SCREEN_NORMAL: Vec3 = [0, 0, 1];
 
-export const CALIBRATE_MS = 2000;
-export const CALIBRATE_MAX_MOTION = 0.6;
-export const CALIBRATE_MAX_DRIFT_DEG = 8;
-/**
- * A stalled frame must not throw away an upright hold. The Kerbal scene can
- * hitch for more than half a second; the lift in the tilt replay is only
- * armed for 400 ms after that hold.
- */
-export const CALIBRATE_MAX_GAP_MS = 2500;
-export const CALIBRATE_MIN_G = 8;
-export const CALIBRATE_MAX_G = 12;
+// A rocket held within this of a phone screen axis counts as upright. Snug shell slot keeps the phone aligned;
+// a deliberate lean (the thing a visitor holds while flying) sits well outside it and can never become "up".
+export const UPRIGHT_SNAP_DEG = 20;
 
 /** How hard gravity pulls the complementary filter each step. Gyro fills the gaps. */
 export const COMPLEMENTARY_GRAVITY = 0.08;
@@ -118,7 +110,7 @@ function quatFromAxes(x: Vec3, y: Vec3, z: Vec3): Quat {
 }
 
 /**
- * `down` is averaged accelerationIncludingGravity while the rocket is held upright
+ * `down` is gravity (accelerationIncludingGravity) while the rocket is held upright
  * (points at the floor, in device coordinates). `screen` is the screen normal.
  * Returns null when the two are missing, parallel, or not finite — that is not a usable mount.
  */
@@ -134,6 +126,24 @@ export function basisFromDownAndScreen(down: Vec3, screen: Vec3 = SCREEN_NORMAL)
   const x = normalize(cross(up, z));
   if (!x) return null;
   return { x, y: up, z, q: quatFromAxes(x, up, z) };
+}
+
+const SCREEN_AXES: Vec3[] = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0]];
+
+/**
+ * Rocket frame for a phone that sits square in the shell (portrait or either landscape), read from one frame.
+ * The nose is the screen axis nearest straight up. Null unless the rocket is within UPRIGHT_SNAP_DEG of upright,
+ * so the frame only ever comes from the real mount geometry, never from wherever the visitor happened to hold still.
+ */
+export function snapUprightBasis(grav: Vec3, maxDeg = UPRIGHT_SNAP_DEG): RocketBasis | null {
+  if (!finite(grav)) return null;
+  const down = normalize(grav);
+  if (!down) return null;
+  const up = scale(down, -1);
+  let best = SCREEN_AXES[0];
+  for (const axis of SCREEN_AXES) if (dot(up, axis) > dot(up, best)) best = axis;
+  if (dot(up, best) < Math.cos(maxDeg * DEG)) return null;
+  return basisFromDownAndScreen(scale(best, -1), SCREEN_NORMAL);
 }
 
 /** Nose direction in the device frame for a known mount. s24fe matches landscape-left: device +x is up. */
@@ -238,55 +248,4 @@ export function cameraInsetSide(angle: number): "left" | "right" | "none" {
   if (wrapped === 90) return "left";
   if (wrapped === 270) return "right";
   return "none";
-}
-
-/** Averages gravity while the rocket stays upright and still for CALIBRATE_MS. */
-export class UprightCalibrator {
-  private samples: Vec3[] = [];
-  private start: number | null = null;
-  private last: number | null = null;
-
-  reset(): void {
-    this.samples = [];
-    this.start = null;
-    this.last = null;
-  }
-
-  /** Null until the hold completes. A bump, drift, or gap throws the window away. */
-  push(grav: Vec3, motion: number, tMs: number, screen: Vec3 = SCREEN_NORMAL): RocketBasis | null {
-    if (!Number.isFinite(tMs) || !finite(grav) || !Number.isFinite(motion)) return null;
-    const magnitude = hypot(grav);
-    const still = motion < CALIBRATE_MAX_MOTION && magnitude >= CALIBRATE_MIN_G && magnitude <= CALIBRATE_MAX_G;
-    const gap = this.last !== null && tMs - this.last > CALIBRATE_MAX_GAP_MS;
-    if (!still || gap || (this.last !== null && tMs < this.last)) {
-      this.reset();
-      this.last = tMs;
-      return null;
-    }
-    if (this.samples.length > 0) {
-      const prev = this.samples[this.samples.length - 1];
-      const ang = angleDeg(prev, grav);
-      if (ang === null || ang > CALIBRATE_MAX_DRIFT_DEG) this.reset();
-    }
-    if (this.start === null) this.start = tMs;
-    this.samples.push([grav[0], grav[1], grav[2]]);
-    this.last = tMs;
-    if (tMs - this.start < CALIBRATE_MS) return null;
-    const avg = average(this.samples);
-    return basisFromDownAndScreen(avg, screen);
-  }
-}
-
-function average(samples: Vec3[]): Vec3 {
-  const n = samples.length;
-  const sum = samples.reduce<Vec3>((acc, v) => [acc[0] + v[0], acc[1] + v[1], acc[2] + v[2]], [0, 0, 0]);
-  return [sum[0] / n, sum[1] / n, sum[2] / n];
-}
-
-function angleDeg(a: Vec3, b: Vec3): number | null {
-  const na = normalize(a);
-  const nb = normalize(b);
-  if (!na || !nb) return null;
-  const c = Math.min(1, Math.max(-1, dot(na, nb)));
-  return (Math.acos(c) * 180) / Math.PI;
 }

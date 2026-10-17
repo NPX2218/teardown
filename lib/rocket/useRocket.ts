@@ -7,30 +7,30 @@ import { noteCheckpointGesture } from "@/lib/rocket/gesture-gate";
 import { onRocketMessage, sendToRocket } from "@/lib/rocket/commands";
 import {
   attitudeFromGravity,
+  normalize,
+  snapUprightBasis,
   stepComplementary,
   toRocket,
-  UprightCalibrator,
   type RocketAttitude,
   type RocketBasis,
 } from "@/lib/rocket/mount";
+import { quatConj, quatFromTo, quatMul, quatNormalize, relativeOrientation } from "@/lib/rocket/orient";
 import { commitPhoneAxes, commitShellEvent } from "@/lib/flight/controls";
-import { pitchRadFromRelative } from "@/lib/rocket/pitch";
-import { relativeOrientation } from "@/lib/rocket/orient";
 import { SHELL_GESTURE, ShellGestureDetector, throttleFromShell, type ShellEvent } from "@/lib/rocket/shell-gestures";
 import { useScene } from "@/lib/store";
 import type { Quat, RocketMessage, ShellStatusLevel, ShellStatusWord, Vec3 } from "@/lib/types";
 
 export const ACTIVITY_EVERY_MS = 1000;
 
+// Phone pose and model pose at the frame the mount locked. Explore turns the model relative to these.
 let q0: Quat | null = null;
-let pendingZero = true;
+let home: Quat = [1, 0, 0, 0];
 let lastActivityAt = Number.NEGATIVE_INFINITY;
 let basis: RocketBasis | null = null;
 let attitude: RocketAttitude | null = null;
 let compPitch = 0;
 let lastFrameAt: number | null = null;
 let lastStatus = "";
-const calibrator = new UprightCalibrator();
 const shell = new ShellGestureDetector();
 
 /** Latest rocket-frame lean. Yaw is here because the planar flight only stores pitch. */
@@ -40,10 +40,11 @@ export function lastRocketAttitude(): RocketAttitude | null {
 
 function clearMount(): void {
   basis = null;
+  q0 = null;
+  home = [1, 0, 0, 0];
   attitude = null;
   compPitch = 0;
   lastFrameAt = null;
-  calibrator.reset();
   shell.reset();
 }
 
@@ -93,8 +94,6 @@ function frameIsFinite(m: RocketMessage): boolean {
 
 /** Forget calibration and explore orientation. Called on disconnect and by tests. */
 export function resetRocketState(): void {
-  q0 = null;
-  pendingZero = true;
   lastActivityAt = Number.NEGATIVE_INFINITY;
   lastStatus = "";
   clearMount();
@@ -102,9 +101,8 @@ export function resetRocketState(): void {
   useScene.getState().setOrientation(null);
 }
 
-/** Laptop button: the next still upright hold becomes the new neutral. */
+/** Laptop button: the next upright frame becomes the new neutral. */
 export function zeroRocket(): void {
-  pendingZero = true;
   clearMount();
   lastStatus = "";
   publishStatus("HOLD", "warn");
@@ -127,18 +125,16 @@ export function handleRocketMessage(m: RocketMessage, now: number): void {
     const store = useScene.getState();
     const { flight } = store;
 
-    if (pendingZero || q0 === null) {
-      q0 = m.q;
-      pendingZero = false;
-    }
-
-    const motion = Math.hypot(m.lin[0], m.lin[1], m.lin[2]);
-    // A finished calibration stays put while the rocket flies. Still coasting must not
-    // become the new "up". Zero / a new run clears `basis` and opens the window again.
+    // The mount locks on the first frame held near upright, and only then. Holding a lean still can never
+    // become the new "up", so the same physical pose always reads the same angle. Zero / a new run re-locks.
     if (!basis) {
-      const locked = calibrator.push(m.grav, motion, now);
+      const locked = snapUprightBasis(m.grav);
       if (locked) {
         basis = locked;
+        q0 = m.q;
+        const down = normalize(toRocket(locked, m.grav));
+        // The rocket may still lean a little inside the snap cone. Start the model at that lean, not at upright.
+        home = down ? quatFromTo(down, [0, -1, 0]) : [1, 0, 0, 0];
         compPitch = 0;
         shell.reset();
         publishStatus(flight.status === "flying" ? "LIFTOFF" : "ARMED", "ok");
@@ -169,19 +165,11 @@ export function handleRocketMessage(m: RocketMessage, now: number): void {
         throttlePush: pushed,
         calibrated: true,
       });
-    } else if (flight.status === "flying" && flight.runId && flight.owners.pitch === "phone") {
-      // Before the 2 s upright hold locks, portrait frames still steer by relative pose.
-      attitude = null;
-      commitPhoneAxes({
-        pitchRad: pitchRadFromRelative(q0, m.q),
-        throttle: null,
-        throttlePush: false,
-        calibrated: true,
-      });
     }
 
-    if (flight.status === "idle") {
-      store.setOrientation(relativeOrientation(q0, m.q));
+    if (flight.status === "idle" && basis && q0) {
+      // Phone turn since the lock, moved from phone axes into rocket axes (the mount), then applied to the model.
+      store.setOrientation(quatNormalize(quatMul(home, relativeOrientation(q0, m.q, quatConj(basis.q)))));
     }
 
     const det = getDetector();
@@ -203,7 +191,6 @@ export function handleRocketMessage(m: RocketMessage, now: number): void {
 export function startRocketWatch(): () => void {
   const unFrame = onRocketMessage("frame", (msg) => handleRocketMessage(msg, performance.now()));
   let prev = useScene.getState();
-  if (prev.rocket.connected && q0 === null) pendingZero = true;
   const unStore = useScene.subscribe((s) => {
     const was = prev;
     prev = s;
@@ -213,14 +200,11 @@ export function startRocketWatch(): () => void {
       if (!r.connected) {
         if (wr.connected) resetRocketState();
       } else if (!wr.connected || r.code !== wr.code) {
-        q0 = null;
-        pendingZero = true;
+        clearMount();
       }
     }
     if (s.flight.runId !== was.flight.runId && s.flight.runId) {
       getDetector().reset();
-      q0 = null;
-      pendingZero = true;
       clearMount();
       lastStatus = "";
     }

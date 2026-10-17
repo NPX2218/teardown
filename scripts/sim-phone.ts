@@ -8,7 +8,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { emitKeypressEvents } from "node:readline";
 import { pathToFileURL } from "node:url";
-import { quatMul, quatNormalize } from "../lib/rocket/orient";
+import { quatConj, quatMul, quatNormalize } from "../lib/rocket/orient";
 import { parseMount, presetBasis, rocketGravity, tiltQuat, toDevice, type MountId } from "../lib/rocket/mount";
 import type { RocketMessage, Vec3 } from "../lib/types";
 
@@ -38,7 +38,8 @@ export function frameFor(
   const basis = presetBasis(mount);
   const grav = toDevice(basis, rocketGravity(pitchDeg, yawDeg));
   const linDevice = toDevice(basis, lin);
-  const q = quatNormalize(quatMul(basis.q, tiltQuat(pitchDeg, yawDeg)));
+  // Like a real phone, q maps device axes into the world (here: the upright rocket's frame).
+  const q = quatNormalize(quatMul(tiltQuat(pitchDeg, yawDeg), quatConj(basis.q)));
   return { k: "frame", q, lin: linDevice, grav };
 }
 

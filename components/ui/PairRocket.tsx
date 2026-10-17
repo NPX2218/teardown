@@ -155,7 +155,7 @@ export function PairRocket() {
         <button type="button" className="btn" onClick={zeroRocket}>
           Calibrate
         </button>
-        <p className="small">Hold the rocket upright for 2 seconds, then tap Calibrate</p>
+        <p className="small">Tap Calibrate, then stand the rocket upright</p>
       </div>
     );
   } else if (view === "button") {

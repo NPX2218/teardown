@@ -301,7 +301,7 @@ export const SLIDES: readonly Slide[] = [
       },
     ],
     notes: [
-      "Files: lib/rocket/usePhoneSensors.ts (FRAME_MS = 50), lib/rocket/sensors.ts (GRAVITY_LOWPASS = 0.8), lib/rocket/mount.ts (UprightCalibrator, attitudeFromGravity).",
+      "Files: lib/rocket/usePhoneSensors.ts (FRAME_MS = 50), lib/rocket/sensors.ts (GRAVITY_LOWPASS = 0.8), lib/rocket/mount.ts (snapUprightBasis, attitudeFromGravity).",
       "Zero needs 2,000 ms of stillness: movement under 0.6 m/s², gravity between 8 and 12 m/s², samples within 8° of each other. It builds a rocket basis where +y is the nose, so landscape, portrait or upside-down mounts all work.",
       "Why gravity and not the compass: the magnetometer drifts indoors near laptops. Gravity is always there and always points down.",
       "The phone only streams sensors. The laptop decides everything, so a phone can never cheat a win.",

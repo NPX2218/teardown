@@ -3,14 +3,14 @@ import { quatMul, quatNormalize } from "@/lib/rocket/orient";
 import {
   G,
   MOUNT_IDS,
-  CALIBRATE_MAX_GAP_MS,
-  UprightCalibrator,
+  UPRIGHT_SNAP_DEG,
   attitudeFromGravity,
   basisFromDownAndScreen,
   cameraInsetSide,
   parseMount,
   presetBasis,
   rocketGravity,
+  snapUprightBasis,
   stepComplementary,
   tiltQuat,
   toDevice,
@@ -53,37 +53,19 @@ describe("rocket mount", () => {
     expect(dot(presetBasis("s24fe").y, presetBasis("landscape-left").y)).toBeCloseTo(1, 5);
   });
 
-  it("calibration recovers the nose in every mount, and noise or a short hold does not lock", () => {
+  it("upright snap finds the nose in every mount, and a held lean never becomes up", () => {
     for (const mount of MOUNT_IDS) {
       const expected = presetBasis(mount);
-      const grav = toDevice(expected, rocketGravity(0, 0));
-      const calibrator = new UprightCalibrator();
-      let locked: ReturnType<UprightCalibrator["push"]> = null;
-      for (let t = 0; t <= 2000; t += 50) locked = calibrator.push(grav, 0.1, t);
-      expect(locked).not.toBeNull();
-      expect(dot(locked!.y, expected.y)).toBeCloseTo(1, 4);
+      for (const deg of [0, 15]) {
+        const locked = snapUprightBasis(toDevice(expected, rocketGravity(deg, 0)));
+        expect(locked).not.toBeNull();
+        expect(dot(locked!.y, expected.y)).toBeCloseTo(1, 4);
+      }
+      expect(snapUprightBasis(toDevice(expected, rocketGravity(UPRIGHT_SNAP_DEG + 5, 0)))).toBeNull();
+      expect(snapUprightBasis(toDevice(expected, rocketGravity(0, 30)))).toBeNull();
     }
-
-    const noisy = new UprightCalibrator();
-    const upright = rocketGravity(0, 0);
-    for (let t = 0; t <= 3000; t += 50) expect(noisy.push(upright, 2, t)).toBeNull();
-
-    const brief = new UprightCalibrator();
-    for (let t = 0; t < 2000; t += 50) expect(brief.push(upright, 0, t)).toBeNull();
-
-    const gapped = new UprightCalibrator();
-    expect(gapped.push(upright, 0, 0)).toBeNull();
-    expect(gapped.push(upright, 0, 1200)).toBeNull();
-    expect(gapped.push(upright, 0, 1200 + CALIBRATE_MAX_GAP_MS + 50)).toBeNull();
-    let lockedLate: ReturnType<UprightCalibrator["push"]> = null;
-    for (let t = 0; t <= 2000; t += 50) lockedLate = gapped.push(upright, 0, 4000 + t);
-    expect(lockedLate).not.toBeNull();
-
-    const drifted = new UprightCalibrator();
-    for (let t = 0; t <= 2500; t += 50) {
-      const grav = t < 1000 ? upright : rocketGravity(20, 0);
-      expect(drifted.push(grav, 0, t)).toBeNull();
-    }
+    expect(snapUprightBasis([0, 0, -G])).toBeNull(); // lying flat on the table
+    expect(snapUprightBasis([NaN, 0, 0])).toBeNull();
   });
 
   it("a parallel screen normal is not a mount", () => {
