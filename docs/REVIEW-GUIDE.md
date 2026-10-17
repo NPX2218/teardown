@@ -74,7 +74,7 @@ The home page was not updated by those PRs. It still mounts the seam fixtures. S
 
 ## Known gaps
 
-- Sentinel-6 has published event times only. Every reference sample has null altitude and velocity. No public kinematic series was checked in. Mission mode tracks milestones and shows **Reference trajectory unavailable**. It does not draw a corridor, and it will not warn or fail for drift. Practice is the same shape, on purpose.
+- Sentinel-6 has published event times only. Every reference sample has null altitude and velocity. No public kinematic series was checked in. Mission mode tracks milestones and shows **Reference trajectory unavailable**. It does not draw a corridor, and it will not warn or fail for drift. Practice is separate: a PRACTICE corridor recorded from the classroom simulator (simulated practice reference, not historical). Mission mode on Practice can warn and fail for drift.
 - A real phone on HTTPS was not run. Localhost is a secure context, so `/rocket` gets past the https gate there. Motion permission, wake lock, and the cardboard shell are untested on hardware.
 - `public/audio/manifest.json` is `{}`. Narration audio is not cached. `scripts/cache-narration.ts` is the generator. It needs `XAI_API_KEY`.
 - No Imagine JPEGs are in the repo (`public/imagine/` is absent). `scripts/save-imagine.mjs` is the cache script. Pictures need a key.
