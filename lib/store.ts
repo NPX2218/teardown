@@ -9,6 +9,7 @@ import type {
   EmissionsReadout,
   ExplainLevel,
   FlightAxisCommand,
+  FlightScenario,
   FlightSession,
   FlightWarp,
   PartId,
@@ -19,10 +20,12 @@ import type {
 import { DEFAULT_SCENARIO_ID, isControlAxis, isControlSource, isExplainLevel, isFlightWarp } from "@/lib/types";
 import { MISSIONS } from "@/data/missions/index";
 import { FLIGHT_SCENARIOS } from "@/data/flight/index";
+import { CLASSROOM_SCENARIOS } from "@/lib/flight/classroom";
 // Stand-in until Anders PR #2 adds data/parts/falcon9.json. Swap this import then.
 import partsData from "@/lib/fixtures/parts-falcon9.placeholder.json";
 import { assignAxisOwner, mixFlightInput, NEUTRAL_FLIGHT_INPUT } from "@/lib/flight/input-mixer";
-import { clampFlightWallDelta, holdFlightStep } from "@/lib/flight/hold-step";
+import { clampFlightWallDelta } from "@/lib/flight/hold-step";
+import { integrateSession } from "@/lib/flight/integrate";
 import { validateFlightScenario } from "@/lib/flight/scenario";
 import { createPadSession, idleFlight } from "@/lib/flight/session";
 
@@ -92,8 +95,10 @@ function hasMission(id: unknown): id is string {
   return typeof id === "string" && Object.prototype.hasOwnProperty.call(MISSIONS, id);
 }
 
-function hasScenario(id: unknown): id is string {
-  return typeof id === "string" && Object.prototype.hasOwnProperty.call(FLIGHT_SCENARIOS, id);
+function scenarioById(id: string): FlightScenario | undefined {
+  if (Object.prototype.hasOwnProperty.call(FLIGHT_SCENARIOS, id)) return FLIGHT_SCENARIOS[id];
+  if (Object.prototype.hasOwnProperty.call(CLASSROOM_SCENARIOS, id)) return CLASSROOM_SCENARIOS[id];
+  return undefined;
 }
 
 function clearHeldInput(flight: FlightSession, status: FlightSession["status"] = flight.status): FlightSession {
@@ -244,8 +249,8 @@ export const useScene = create<SceneState>()((set, get) => {
     },
 
     startFlight: (scenarioId = DEFAULT_SCENARIO_ID) => {
-      if (!hasScenario(scenarioId)) return { ok: false, error: `unknown scenario: ${String(scenarioId)}` };
-      const scenario = FLIGHT_SCENARIOS[scenarioId];
+      const scenario = typeof scenarioId === "string" ? scenarioById(scenarioId) : undefined;
+      if (!scenario) return { ok: false, error: `unknown scenario: ${String(scenarioId)}` };
       const errors = validateFlightScenario(scenario);
       if (errors.length > 0) return { ok: false, error: `invalid scenario: ${errors[0]}` };
       const runId = nextRunId();
@@ -300,10 +305,12 @@ export const useScene = create<SceneState>()((set, get) => {
 
     advanceFlight: (wallDelta) => {
       const flight = get().flight;
-      if (flight.status !== "flying") return;
+      if (flight.status !== "flying" || !flight.scenarioId) return;
       const dt = clampFlightWallDelta(wallDelta);
       if (dt === null) return;
-      const stepped = holdFlightStep(flight, dt);
+      const scenario = scenarioById(flight.scenarioId);
+      if (!scenario) return;
+      const stepped = integrateSession(flight, scenario, dt);
       if (stepped.runId !== flight.runId) return;
       set({ flight: stepped });
     },
@@ -326,8 +333,8 @@ export const useScene = create<SceneState>()((set, get) => {
     retryFlight: () => {
       const flight = get().flight;
       if (flight.status === "idle" || flight.scenarioId === null) return { ok: false, error: "no flight to retry" };
-      if (!hasScenario(flight.scenarioId)) return { ok: false, error: `unknown scenario: ${flight.scenarioId}` };
-      const scenario = FLIGHT_SCENARIOS[flight.scenarioId];
+      const scenario = scenarioById(flight.scenarioId);
+      if (!scenario) return { ok: false, error: `unknown scenario: ${flight.scenarioId}` };
       const errors = validateFlightScenario(scenario);
       if (errors.length > 0) return { ok: false, error: `invalid scenario: ${errors[0]}` };
       const runId = nextRunId();

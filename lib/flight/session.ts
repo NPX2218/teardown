@@ -55,6 +55,8 @@ export function createPadSession(scenario: FlightScenario, runId: string): Fligh
     payloadKg: scenario.payloadKg.value,
     positionM: null,
     velocityMps: null,
+    thrustOffS: 0,
+    airborne: false,
   };
   const readout: FlightReadout = {
     altitudeM: null,

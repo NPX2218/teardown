@@ -3,7 +3,7 @@ import { useScene } from "@/lib/store";
 import { FLIGHT_SCENARIOS } from "@/data/flight/index";
 import type { ClassifiedNumber, FlightScenario } from "@/lib/types";
 
-// Pins the placeholder stepper. 07 physics replaces holdFlightStep and this file.
+// The 01 hold stepper is retired. advanceFlight now integrates, still capped.
 const initial = useScene.getState();
 
 function classified(value: number, unit: string): ClassifiedNumber {
@@ -45,20 +45,20 @@ beforeEach(() => {
   useScene.setState(initial, true);
 });
 
-describe("flight placeholder stepper", () => {
-  it("FP1 advanceFlight clamps a huge delta and does not integrate or award orbit", () => {
+describe("flight frame cap", () => {
+  it("FP1 advanceFlight clamps a huge delta, stays on the pad, and does not award orbit", () => {
     const started = useScene.getState().startFlight(SCENARIO.id);
     expect(started.ok).toBe(true);
     useScene.getState().launchFlight();
     useScene.getState().advanceFlight(10);
     const flight = useScene.getState().flight;
     expect(flight.status).toBe("flying");
-    expect(flight.frameAccumulatorS).toBe(0.1);
-    expect(flight.simulatedTimeS).toBe(0);
+    expect(flight.simulatedTimeS).toBeGreaterThan(0);
+    expect(flight.simulatedTimeS).toBeLessThanOrEqual(0.1 + 1e-9);
     expect(flight.outcome).toBeNull();
     expect(flight.fuel?.rp1ConsumedKg).toBe(0);
-    expect(flight.state?.positionM).toBeNull();
-    expect(flight.state?.velocityMps).toBeNull();
+    expect(flight.state?.airborne).toBe(false);
+    expect(flight.state?.positionM?.y).toBeGreaterThan(0);
     useScene.getState().pauseFlight();
     useScene.getState().advanceFlight(0.05);
     expect(useScene.getState().flight.frameAccumulatorS).toBe(0);

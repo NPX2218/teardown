@@ -314,8 +314,8 @@ export interface StageFuelSnapshot {
 }
 
 /**
- * Quantities a later stepper may commit. Position and velocity stay null until
- * the physics helper exists. No action other than advanceFlight may write them.
+ * Physical quantities. Position and velocity stay null on the pad.
+ * Only advanceFlight may write them, the coast timer, or `airborne`.
  */
 export interface FlightState {
   pitchRad: number;
@@ -326,6 +326,10 @@ export interface FlightState {
   payloadKg: number;
   positionM: { x: number; y: number } | null;
   velocityMps: { x: number; y: number } | null;
+  /** Consecutive simulated seconds inside the orbit goal with thrust off. */
+  thrustOffS: number;
+  /** True after liftoff. Falling back to Earth is a crash. */
+  airborne: boolean;
 }
 
 export interface FlightReadout {
