@@ -1,9 +1,10 @@
 "use client";
 
-import { useId, type Ref } from "react";
+import { useEffect, useId, useRef, type Ref } from "react";
 import { motion } from "motion/react";
 import { useReducedMotion } from "@/components/ui/useReducedMotion";
 import { motionPresets } from "@/lib/ui/motion";
+import { finishSheetIfReduced } from "@/lib/ui/sheet-close";
 import type { AppSettings } from "@/lib/settings/prefs";
 import { SETTINGS_COPY } from "./copy";
 import styles from "./settings.module.css";
@@ -57,6 +58,12 @@ export function SettingsSheet({
   const musicId = useId();
   const percent = settings.masterPercent;
   const music = settings.musicPercent;
+  const onClosedRef = useRef(onClosed);
+  onClosedRef.current = onClosed;
+
+  useEffect(() => {
+    finishSheetIfReduced(reduce, closing, () => onClosedRef.current?.());
+  }, [reduce, closing]);
 
   return (
     <motion.div
