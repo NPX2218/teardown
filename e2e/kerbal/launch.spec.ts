@@ -160,14 +160,29 @@ async function heightKm(page: Page): Promise<number> {
   return match ? Number(match[1]) : 0;
 }
 
-test("phone steers free flight, mission, and replay", async ({ browser }) => {
+// Inspect the rendered canvas rather than its CSS clear color: atmosphere meshes can paint over black.
+async function expectBlackSky(page: Page): Promise<void> {
+  const png = await page.locator("[data-flight-mode='mission'] canvas").screenshot();
+  const mean = await page.evaluate(async (base64) => {
+    const image = new Image(); image.src = `data:image/png;base64,${base64}`; await image.decode();
+    const canvas = document.createElement("canvas"); canvas.width = image.width; canvas.height = image.height;
+    const context = canvas.getContext("2d")!; context.drawImage(image, 0, 0);
+    const pixels = context.getImageData(Math.floor(image.width * 0.7), Math.floor(image.height * 0.05), 40, 20).data;
+    let brightness = 0;
+    for (let i = 0; i < pixels.length; i += 4) brightness += Math.max(pixels[i], pixels[i + 1], pixels[i + 2]);
+    return brightness / (pixels.length / 4);
+  }, png.toString("base64"));
+  expect(mean, "Open sky stays black, allowing sparse stars").toBeLessThan(3);
+}
+
+test("phone steers custom flight and an optional mission guide", async ({ browser }) => {
   const view = await pair(browser);
   try {
     await readyMission(view.laptop);
     await view.laptop.screenshot({ path: resolve(ART, "pad.png") });
     let sim = startSim();
     try {
-      await view.laptop.getByRole("button", { name: "Use phone tilt" }).click();
+      await view.laptop.getByRole("button", { name: "Calibrate phone", exact: true }).click();
       await expect(view.phone.getByText("ARMED", { exact: true })).toBeVisible({ timeout: 20_000 });
       await view.laptop.locator("#launch-flight").click();
       await setRange(view.laptop, "#throttle-control", 70);
@@ -179,29 +194,28 @@ test("phone steers free flight, mission, and replay", async ({ browser }) => {
       await expect(view.laptop.locator("[data-map-marker]")).toHaveCount(0);
       await view.laptop.screenshot({ path: resolve(ART, "liftoff.png") });
 
-      // REGRESSION GUARD for PR #34: a connected phone must honor screen handoff.
+      // Phone is the only steering control, including after pause and retry.
       await view.laptop.locator("[data-flight-mode='mission']").focus();
       await view.laptop.keyboard.press("Space");
       await expect(view.laptop.locator("#flight-status")).toHaveAttribute("data-status", "paused");
       await view.laptop.waitForTimeout(3000);
       await view.laptop.screenshot({ path: resolve(ART, "phone-paused-settled.png") });
-      await view.laptop.getByRole("button", { name: "Use screen tilt", exact: true }).click();
+      await expect(view.laptop.getByRole("button", { name: "Use screen tilt", exact: true })).toHaveCount(0);
+      await expect(view.laptop.getByRole("button", { name: "Use phone tilt", exact: true })).toHaveCount(0);
+      await expect(view.laptop.locator("#pitch-control")).toHaveCount(0);
       await view.laptop.getByRole("button", { name: "Resume", exact: true }).click();
-      await setRange(view.laptop, "#pitch-control", 12);
-      await expect(view.laptop.locator("#pitch-control")).toHaveValue("12");
+      await setRange(view.laptop, "#throttle-control", 70);
       await retryMission(view.laptop);
-      await view.laptop.getByRole("button", { name: "Use phone tilt", exact: true }).click();
-      await view.laptop.getByRole("button", { name: "Use screen tilt", exact: true }).click();
       await view.laptop.locator("#launch-flight").click();
-      await setRange(view.laptop, "#pitch-control", 10);
-      await expect(view.laptop.locator("#pitch-control")).toHaveValue("10");
+      await expect(view.laptop.locator("#pitch-control")).toHaveCount(0);
 
       await retryMission(view.laptop);
       await view.laptop.getByRole("button", { name: "Mission", exact: true }).click();
       await view.laptop.getByRole("button", { name: "Practice sample" }).click();
-      await view.laptop.getByRole("button", { name: "Use phone tilt", exact: true }).click();
       await sim.stop();
       sim = startSim();
+      await view.laptop.getByRole("button", { name: "Calibrate phone", exact: true }).click();
+      await expect(view.phone.getByText("ARMED", { exact: true })).toBeVisible();
       await view.laptop.locator("#launch-flight").click();
       await setRange(view.laptop, "#throttle-control", 60);
       await expect.poll(async () => {
@@ -210,35 +224,28 @@ test("phone steers free flight, mission, and replay", async ({ browser }) => {
         return match ? Math.abs(Number(match[1])) : 0;
       }).toBeGreaterThan(8);
 
-      await view.laptop.getByRole("button", { name: "Flight replay" }).click();
-      await view.laptop.getByRole("button", { name: "Practice sample" }).click();
-      await view.laptop.locator("[data-flight-mode='replay']").click();
-      await view.laptop.keyboard.down("w");
-      await expect(view.laptop.locator("[data-flight-status='flying']")).toBeVisible({ timeout: 15_000 });
-      await view.laptop.keyboard.up("w");
-      await expect.poll(async () => {
-        const raw = await view.laptop.locator("[data-flight-mode='replay']").getAttribute("data-flight-pitch");
-        return Math.abs(Number(raw ?? 0));
-      }).toBeGreaterThan(0.15);
-      await expect(view.laptop.locator("[data-map-marker]")).toHaveCount(0);
-      await view.laptop.screenshot({ path: resolve(ART, "replay-steering.png") });
-
-      // REGRESSION GUARD for PR #34: replay playback also controls the steered rocket.
-      const replayPanel = view.laptop.getByRole("region", { name: "Flight replay", exact: true });
-      const pause = replayPanel.getByRole("button", { name: "Pause", exact: true });
-      if (!(await pause.isVisible())) await replayPanel.getByRole("button", { name: "Play", exact: true }).click();
-      await pause.click();
-      await expect(view.laptop.locator("[data-flight-mode='replay']")).toHaveAttribute("data-flight-status", "paused");
-      const replayStage = view.laptop.locator("[data-flight-mode='replay']");
-      const stoppedAt = await replayStage.getAttribute("data-flight-time");
-      // Observe several frames with the simulator still sending tilt samples.
+      // The same controls pause/resume both choices; the guide never owns the vehicle.
+      await view.laptop.getByRole("button", { name: "Pause flight", exact: true }).click();
+      const stage = view.laptop.locator("[data-flight-mode='mission']");
+      const stoppedAt = await stage.getAttribute("data-flight-time");
       await view.laptop.waitForTimeout(350);
-      await expect(replayStage).toHaveAttribute("data-flight-time", stoppedAt!);
-      await replayPanel.getByRole("button", { name: "Play", exact: true }).click();
-      await expect(view.laptop.locator("[data-flight-mode='replay']")).toHaveAttribute("data-flight-status", "flying");
-      await expect.poll(async () => Number(await replayStage.getAttribute("data-flight-time"))).toBeGreaterThan(Number(stoppedAt));
-      await replayPanel.getByRole("button", { name: "Stop", exact: true }).click();
-      await expect(view.laptop.locator("[data-flight-mode='replay']")).toHaveAttribute("data-flight-status", "idle");
+      await expect(stage).toHaveAttribute("data-flight-time", stoppedAt!);
+      await view.laptop.getByRole("button", { name: "Resume", exact: true }).click();
+      await expect.poll(async () => Number(await stage.getAttribute("data-flight-time"))).toBeGreaterThan(Number(stoppedAt));
+      await expect(view.laptop.locator("[data-banner], [data-deviation]")).toHaveCount(0);
+      await retryMission(view.laptop);
+      await view.laptop.getByRole("button", { name: "Custom flight", exact: true }).click();
+      await view.laptop.getByRole("button", { name: "Short hop", exact: true }).click();
+      await view.laptop.locator("#warp-8").click();
+      await view.laptop.locator("#launch-flight").click();
+      await setRange(view.laptop, "#throttle-control", 100);
+      await expect.poll(() => heightKm(view.laptop), { timeout: 30_000 }).toBeGreaterThan(0.01);
+      await setRange(view.laptop, "#throttle-control", 0);
+      await expect(view.laptop.locator("[data-outcome='crashed']")).toBeVisible({ timeout: 40_000 });
+      await expect(view.laptop.getByRole("dialog")).toBeVisible();
+      await view.laptop.getByRole("dialog").getByRole("button", { name: "Close", exact: true }).click();
+      await view.laptop.getByRole("button", { name: "Try again", exact: true }).click();
+      await expect(view.laptop.locator("#flight-status")).toHaveAttribute("data-status", "ready");
     } finally {
       await sim.stop();
     }
@@ -247,41 +254,19 @@ test("phone steers free flight, mission, and replay", async ({ browser }) => {
   }
 });
 
-test("screen controls climb, pause, retry, and crash without a phone", async ({ page }) => {
+test("flight waits for a phone and exposes no screen steering", async ({ page }) => {
   await page.addInitScript(() => Object.defineProperty(navigator, "webdriver", { get: () => false }));
   await page.goto("/?demo=1");
   await readyMission(page);
-  await page.screenshot({ path: resolve(ART, "screen-pad.png") });
-  await page.getByRole("button", { name: "Free flight", exact: true }).click();
-  await page.locator("#launch-flight").click();
-  await setRange(page, "#throttle-control", 100);
-  await expect.poll(() => heightKm(page), { timeout: 30_000 }).toBeGreaterThan(0.1);
+  await page.screenshot({ path: resolve(ART, "phone-required.png") });
+  await expect(page.locator("#launch-flight")).toBeDisabled();
+  await expect(page.getByText("Waiting for your phone. Connect it to launch.")).toBeVisible();
+  await expect(page.locator("#pitch-control")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Use (screen|phone) tilt/ })).toHaveCount(0);
   await expect(page.locator("[data-map-marker]")).toHaveCount(0);
-  await page.screenshot({ path: resolve(ART, "screen-climb.png") });
-  await setRange(page, "#pitch-control", 18);
-  await expect(page.locator("#pitch-control")).toHaveValue("18");
   const stage = page.locator("[data-flight-mode='mission']");
   await stage.focus();
   await page.keyboard.press("Space");
-  await expect(page.locator("#flight-status")).toHaveAttribute("data-status", "paused");
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
-  await expect(page.locator("#flight-status")).toHaveAttribute("data-status", "flying");
-  await retryMission(page);
-  await expect(page.locator("#throttle-control")).toHaveValue("0");
-  await expect(page.locator("#pitch-control")).toHaveValue("0");
-  await page.getByRole("button", { name: "Short hop", exact: true }).click();
-  await page.locator("#warp-8").click();
-  await page.locator("#launch-flight").click();
-  await setRange(page, "#throttle-control", 100);
-  // Leave the pad before tilting: a horizontal rocket with no altitude cannot fall.
-  await expect.poll(() => heightKm(page), { timeout: 30_000 }).toBeGreaterThan(0.01);
-  await setRange(page, "#pitch-control", 85);
-  await expect(page.locator("[data-outcome='crashed']")).toBeVisible({ timeout: 40_000 });
-  // The optional mission-patch dialog covers the retry button after an outcome.
-  await expect(page.getByRole("dialog")).toBeVisible();
-  await page.getByRole("dialog").getByRole("button", { name: "Close", exact: true }).click();
-  await page.screenshot({ path: resolve(ART, "crash.png") });
-  await page.getByRole("button", { name: "Try again", exact: true }).click();
   await expect(page.locator("#flight-status")).toHaveAttribute("data-status", "ready");
   await stage.focus();
   await page.keyboard.press("m");
@@ -307,13 +292,25 @@ test("normal mode transitions keep map geometry out of the flight view", async (
     await page.screenshot({ path: resolve(ART, `transition-${cycle}-mission-ready.png`) });
     await page.waitForTimeout(2200);
     await page.screenshot({ path: resolve(ART, `transition-${cycle}-mission-settled.png`) });
-    await page.getByRole("button", { name: "Flight replay", exact: true }).click();
+    await expectBlackSky(page);
+    await expect(page.getByRole("button", { name: "Flight replay", exact: true })).toHaveCount(0);
+    await page.getByRole("button", { name: "Mission", exact: true }).click();
     await page.getByRole("button", { name: "Practice sample", exact: true }).click();
-    const panel = page.getByRole("region", { name: "Flight replay", exact: true });
-    await panel.getByRole("button", { name: "Play", exact: true }).click();
+    await expect(page.getByText("Simulated practice route, not a historical flight.", { exact: false })).toBeVisible();
     await page.waitForTimeout(800);
     await expect(page.locator("[data-map-marker]")).toHaveCount(0);
-    await page.screenshot({ path: resolve(ART, `transition-${cycle}-replay.png`) });
+    await page.screenshot({ path: resolve(ART, `transition-${cycle}-practice-guide.png`) });
+    await page.getByRole("button", { name: /Sentinel-6/ }).click();
+    await expect(page.getByText("Reference trajectory unavailable", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Custom flight", exact: true }).click();
+    await expect(page.getByRole("button", { name: "Custom flight", exact: true })).toHaveAttribute("aria-pressed", "true");
+    if (cycle === 1) {
+      await page.getByRole("button", { name: "About", exact: true }).click();
+      await expect(page.getByRole("heading", { name: "How flight paths reach the globe", exact: true })).toBeVisible();
+      await expect(page.getByText(/no reusable measured trajectory/)).toBeVisible();
+      await page.getByRole("button", { name: "Back to the rocket", exact: true }).click();
+      await expect(page.getByRole("dialog")).toHaveCount(0);
+    }
     await page.getByRole("button", { name: "Explore", exact: true }).click();
     await expect(page.locator("[data-flight-mode]")).toHaveCount(0);
   }

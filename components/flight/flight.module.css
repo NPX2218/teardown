@@ -65,8 +65,6 @@
 
 .actions { display: flex; flex-wrap: wrap; gap: 8px; }
 
-.hold { touch-action: none; }
-
 .note {
   margin: 0;
   color: var(--text-3);
@@ -115,15 +113,6 @@
 }
 
 .more summary:hover { color: var(--text); }
-
-.vignette {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(180deg, rgba(255, 181, 71, 0.22), transparent 22%);
-  box-shadow: none;
-  z-index: var(--z-overlay);
-}
 
 .embedded {
   display: grid;

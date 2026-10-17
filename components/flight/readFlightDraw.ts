@@ -113,6 +113,7 @@ export function readFlightDraw(): FlightDraw {
     positionM: state?.positionM ?? null,
     pitchRad: state?.pitchRad ?? flight.input.pitchRad,
     yawRad: state?.yawRad ?? flight.input.yawRad ?? 0,
+    attitudeQuat: state?.attitudeQuat,
     throttle: state?.throttle ?? flight.input.throttle,
     airborne: state?.airborne ?? false,
     altitudeM: flight.readout?.altitudeM ?? null,

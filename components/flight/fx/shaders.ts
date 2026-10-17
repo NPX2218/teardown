@@ -105,12 +105,15 @@ void main() {
   vUv = uv;
   float life = uReduced > 0.5 ? aSeed * 0.8 : fract(uTime * (0.11 + aSeed * 0.1) + aSeed);
   float spread = 4.0 + life * uSpread;
-  float rise = mix(14.0, 78.0, life);
-  vec3 p = aDir * spread + vec3(0.0, rise, 0.0);
+  float size = (42.0 + life * 130.0) * (0.8 + aSeed * 0.45);
+  // 2026-10-17 skin-loss report: this smoke travels with the vehicle, so it
+  // must trail the bells. A square billboard can reach size / sqrt(2) from
+  // its centre; include that bound so camera rotation cannot lift it into the body.
+  float trail = mix(14.0, 78.0, life) + size * sqrt(0.5);
+  vec3 p = aDir * spread + vec3(0.0, -trail, 0.0);
   float dist = length(p.xz);
   vOrange = uOrange * (1.0 - smoothstep(8.0, 52.0, dist)) * (1.0 - life * 0.25);
   vec4 mv = modelViewMatrix * vec4(p, 1.0);
-  float size = (42.0 + life * 130.0) * (0.8 + aSeed * 0.45);
   mv.xy += position.xy * size * length(modelMatrix[0].xyz);
   gl_Position = projectionMatrix * mv;
   vAlpha = uSmoke * (0.55 + 0.45 * sin(clamp(life, 0.0, 1.0) * 3.14159265));
@@ -213,48 +216,6 @@ void main() {
 }
 `;
 
-export const padCloudVertex = /* glsl */ `
-${logVertex}
-attribute float aSeed;
-uniform float uScale;
-uniform float uOpacity;
-uniform float uOrange;
-uniform float uTime;
-uniform float uDrift;
-varying vec2 vUv;
-varying float vAlpha;
-varying float vOrange;
-void main() {
-  vUv = uv;
-  vec3 center = (instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
-  vec4 mv = modelViewMatrix * vec4(center, 1.0);
-  mv.y += uDrift * sin(uTime * 0.6 + aSeed * 11.0) * uScale * 0.12;
-  float size = uScale * (0.5 + aSeed * 0.85);
-  mv.xy += position.xy * size;
-  gl_Position = projectionMatrix * mv;
-  vAlpha = uOpacity * (0.32 + 0.45 * fract(aSeed * 3.1));
-  vOrange = uOrange * (1.0 - smoothstep(0.04, 0.16, aSeed));
-  #include <logdepthbuf_vertex>
-}
-`;
-
-export const padCloudFragment = /* glsl */ `
-${logFragment}
-uniform vec3 uCream;
-uniform vec3 uFlame;
-uniform sampler2D uMap;
-varying vec2 vUv;
-varying float vAlpha;
-varying float vOrange;
-void main() {
-  float sprite = texture2D(uMap, vUv).a;
-  vec3 col = mix(uCream, uFlame, clamp(vOrange * 0.55, 0.0, 1.0));
-  if (sprite * vAlpha < 0.02) discard;
-  gl_FragColor = vec4(col, sprite * vAlpha);
-  #include <logdepthbuf_fragment>
-}
-`;
-
 export const fireballVertex = /* glsl */ `
 ${logVertex}
 varying vec3 vNormalV;
@@ -342,54 +303,6 @@ void main() {
   vec2 d = gl_PointCoord - vec2(0.5);
   float a = smoothstep(0.5, 0.05, length(d)) * vAlpha;
   gl_FragColor = vec4(uHot, a);
-  #include <logdepthbuf_fragment>
-}
-`;
-
-export const cloudVertex = /* glsl */ `
-${logVertex}
-varying vec3 vPos;
-varying vec3 vNormalW;
-void main() {
-  vPos = position;
-  vNormalW = normalize(mat3(modelMatrix) * normal);
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-  #include <logdepthbuf_vertex>
-}
-`;
-
-export const cloudFragment = /* glsl */ `
-${logFragment}
-uniform float uTime;
-uniform float uOpacity;
-uniform float uSeed;
-uniform float uDrift;
-uniform vec3 uColor;
-varying vec3 vPos;
-varying vec3 vNormalW;
-float hash(vec3 p) {
-  p = fract(p * 0.3183099 + vec3(0.11, 0.17, 0.13));
-  p *= 17.0;
-  return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
-}
-float noise(vec3 p) {
-  vec3 i = floor(p);
-  vec3 f = fract(p);
-  f = f * f * (3.0 - 2.0 * f);
-  return mix(
-    mix(mix(hash(i), hash(i + vec3(1.0, 0.0, 0.0)), f.x),
-        mix(hash(i + vec3(0.0, 1.0, 0.0)), hash(i + vec3(1.0, 1.0, 0.0)), f.x), f.y),
-    mix(mix(hash(i + vec3(0.0, 0.0, 1.0)), hash(i + vec3(1.0, 0.0, 1.0)), f.x),
-        mix(hash(i + vec3(0.0, 1.0, 1.0)), hash(i + vec3(1.0, 1.0, 1.0)), f.x), f.y),
-    f.z);
-}
-void main() {
-  vec3 n = normalize(vPos) * 8500.0;
-  float puff = noise(n + vec3(uSeed, uTime * uDrift * 40.0, uSeed));
-  puff += 0.35 * noise(n * 2.2 + vec3(3.0, uSeed, 1.0));
-  float alpha = smoothstep(0.62, 0.95, puff) * uOpacity;
-  if (alpha < 0.02) discard;
-  gl_FragColor = vec4(uColor, alpha);
   #include <logdepthbuf_fragment>
 }
 `;

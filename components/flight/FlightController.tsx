@@ -45,13 +45,10 @@ export function FlightController() {
         setKeyAxes(0, 0);
         return;
       }
-      const left = down.has("KeyA") || down.has("ArrowLeft");
-      const right = down.has("KeyD") || down.has("ArrowRight");
       const up = down.has("KeyW") || down.has("ArrowUp");
       const downKey = down.has("KeyS") || down.has("ArrowDown");
-      const pitch = left && right ? 0 : left ? -1 : right ? 1 : 0;
       const throttle = up && downKey ? 0 : up ? 1 : downKey ? -1 : 0;
-      setKeyAxes(axis(pitch), axis(throttle));
+      setKeyAxes(0, axis(throttle));
     };
     const release = () => {
       down.clear();
@@ -85,7 +82,7 @@ export function FlightController() {
         event.preventDefault();
         return;
       }
-      const steers = event.code === "KeyA" || event.code === "KeyD" || event.code === "KeyW" || event.code === "KeyS" || event.code.startsWith("Arrow");
+      const steers = event.code === "KeyW" || event.code === "KeyS" || event.code === "ArrowUp" || event.code === "ArrowDown";
       if (!typing && !event.shiftKey && steers) {
         down.add(event.code);
         syncKeys(false);
@@ -116,7 +113,7 @@ export function FlightController() {
         const replay = useScene.getState().replay;
         if (!replay.missionId) return;
         if (replay.playing) useScene.getState().pauseReplay();
-        else useScene.getState().resumeReplay();
+        else if (useScene.getState().flight.status !== "paused" || resumeFlightExplicit().ok) useScene.getState().resumeReplay();
       }
       if (event.code === "Space") event.preventDefault();
     };

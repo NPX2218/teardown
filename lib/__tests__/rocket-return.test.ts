@@ -82,7 +82,7 @@ describe("rocket returns to the same angle (S24 FE landscape shell)", () => {
     hold(0, 200); // back to upright
     expect(useScene.getState().flight.input.pitchRad).toBeCloseTo(0, 2);
     hold(30, 1500);
-    expect(useScene.getState().flight.input.pitchRad).toBeCloseTo(13.9833532 * DEG, 8);
+    expect(useScene.getState().flight.input.pitchRad).toBeCloseTo(-13.9833532 * DEG, 8);
   });
 
   it("R2 explore: upright after a lean shows the model upright again", () => {

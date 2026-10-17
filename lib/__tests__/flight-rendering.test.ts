@@ -34,8 +34,12 @@ describe.each([STARBASE, VSFB_SLC4E])("flight rendering at $name", (site) => {
   it("L2: the first centimetre cannot cause a metre-scale camera jump (a1dfc3b)", () => {
     const pad = padShot(frame);
     const airborne = shot(0.01);
-    expect(distanceM(pad.position, airborne.position)).toBeLessThan(0.01);
-    expect(distanceM(pad.target, airborne.target)).toBeLessThan(0.01);
+    // The physical centimetre itself is expected; only extra framing motion is a jump.
+    // Subtract that displacement before applying the existing micrometre tolerance.
+    for (const key of ["position", "target"] as const) {
+      const expected = pad[key].map((value, i) => value + frame.up[i] * 0.01e-6);
+      expect(distanceM(airborne[key], expected)).toBeLessThan(1e-6);
+    }
     expect(Math.abs(pad.fov - airborne.fov)).toBeLessThan(0.001);
   });
 
@@ -72,10 +76,12 @@ describe.each([STARBASE, VSFB_SLC4E])("flight rendering at $name", (site) => {
     expect(Math.abs(before.fov - after.fov)).toBeLessThan(0.001);
   });
 
-  it("L7: chase still looks ahead along the steered nose (a1dfc3b)", () => {
+  it("L7: chase aims at the rendered center around the CoM pivot (2026-10-17 approach report)", () => {
     const camera = shot(2_000, 0.4);
     const rocket = earthRadiiToScene(physicsMetersToEarthRadii(0, EARTH_RADIUS_M + 2_000, frame));
-    const ahead = new THREE.Vector3(...camera.target).sub(new THREE.Vector3(...rocket)).normalize();
-    expect(ahead.dot(new THREE.Vector3(...noseFromPitch(frame, 0.4)))).toBeCloseTo(1, 8);
+    const expectedCenter = new THREE.Vector3(...rocket)
+      .addScaledVector(new THREE.Vector3(...frame.up), 28.6e-6)
+      .addScaledVector(new THREE.Vector3(...noseFromPitch(frame, 0.4)), 7e-6);
+    expect(distanceM(camera.target, expectedCenter.toArray())).toBeLessThan(1e-6);
   });
 });

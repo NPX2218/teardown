@@ -2,6 +2,8 @@
 // Altitude pulls the chase camera back so the pad is a few hundred metres
 // away and orbit shows the whole globe.
 import { EARTH_RADIUS_M } from "@/lib/flight.helpers";
+import { vehiclePoseOffsets } from "@/lib/flight/vehicle-pose.helpers";
+export { ROCKET_MID_M } from "@/lib/flight/vehicle-pose.helpers";
 import {
   add,
   earthRadiiToScene,
@@ -39,9 +41,6 @@ export interface CameraShot {
   up: [number, number, number];
   fov: number;
 }
-
-/** Look at the middle of the 70 m stack (`FALCON_HEIGHT_M` / 2), not its base. */
-export const ROCKET_MID_M = 35;
 
 export function smoothstep01(t: number): number {
   const x = Math.min(1, Math.max(0, Number.isFinite(t) ? t : 0));
@@ -122,6 +121,7 @@ export function chaseShot(args: {
   position: EarthRadiiVec3;
   nose: Vec3;
   altitudeM: number;
+  stage?: number;
   yaw?: number;
   pitch?: number;
 }): CameraShot {
@@ -130,7 +130,8 @@ export function chaseShot(args: {
   const { up, right, downrange } = args.frame;
   const distanceM = chaseRangeM(args.altitudeM);
   const minHeight = Math.max(8, distanceM * 0.012);
-  const target = add(args.position, scale(normalize(args.nose), ROCKET_MID_M / EARTH_RADIUS_M));
+  const { centerM } = vehiclePoseOffsets(args.position, args.nose, args.altitudeM, args.stage);
+  const target = add(args.position, scale(centerM, 1 / EARTH_RADIUS_M));
   const eye = aboveGround(target, orbitDirection(scale(downrange, -1), right, scale(up, -1), yaw, pitch), distanceM, minHeight);
   return { position: eye, target: earthRadiiToScene(target), up: [up[0], up[1], up[2]], fov: distanceM > 500_000 ? 42 : 50 };
 }

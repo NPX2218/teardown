@@ -7,18 +7,15 @@ import { useReducedMotion } from "@/components/ui/useReducedMotion";
 import { FLIGHT_SCENE } from "@/lib/viewer/colors";
 import { drawEarthMap } from "./earthMap";
 import {
-  ATMOSPHERE_GAIN,
   EARTH_SUN_DIRECTION,
   NIGHT_GAIN,
   SPEC_POWER,
-  atmosphereFragmentShader,
   cloudFragmentShader,
   cloudYawDelta,
   earthFragmentShader,
   earthVertexShader,
 } from "./earthShaders";
 import {
-  ATMOSPHERE_RADIUS_SCALE,
   CLOUD_RADIUS_SCALE,
   EARTH_HEIGHT_SEGMENTS,
   EARTH_IMAGERY_CAPTION,
@@ -134,7 +131,6 @@ function useNasaMaps(tier: EarthTier, anisotropy: number): NasaSet | null {
 }
 
 function SchematicEarth() {
-  const reduce = useReducedMotion();
   const map = useMemo(() => {
     if (typeof document === "undefined") return null;
     const canvas = document.createElement("canvas");
@@ -156,16 +152,6 @@ function SchematicEarth() {
           color={map ? FLIGHT_SCENE.untinted : FLIGHT_SCENE.ocean}
           roughness={1}
           metalness={0}
-        />
-      </mesh>
-      <mesh>
-        <sphereGeometry args={[EARTH_RENDER_RADIUS * ATMOSPHERE_RADIUS_SCALE, SCHEMATIC_WIDTH_SEGMENTS, SCHEMATIC_HEIGHT_SEGMENTS]} />
-        <meshBasicMaterial
-          color={FLIGHT_SCENE.atmosphere}
-          transparent
-          opacity={reduce ? 0.22 : 0.28}
-          side={THREE.BackSide}
-          depthWrite={false}
         />
       </mesh>
     </group>
@@ -215,24 +201,7 @@ function TexturedEarth({ maps }: { maps: EarthMaps }) {
     vertexShader: earthVertexShader,
     fragmentShader: earthFragmentShader,
   }), [maps]);
-  const atmosphereMaterial = useMemo(() => new THREE.ShaderMaterial({
-    uniforms: {
-      sunDir: { value: new THREE.Vector3(...EARTH_SUN_DIRECTION) },
-      atmosphereColor: { value: new THREE.Color(FLIGHT_SCENE.atmosphere) },
-      atmosphereGain: { value: ATMOSPHERE_GAIN },
-    },
-    vertexShader: earthVertexShader,
-    fragmentShader: atmosphereFragmentShader,
-    side: THREE.BackSide,
-    blending: THREE.AdditiveBlending,
-    transparent: true,
-    depthWrite: false,
-    premultipliedAlpha: false,
-  }), []);
-  useEffect(() => () => {
-    earthMaterial.dispose();
-    atmosphereMaterial.dispose();
-  }, [earthMaterial, atmosphereMaterial]);
+  useEffect(() => () => earthMaterial.dispose(), [earthMaterial]);
 
   return (
     <group>
@@ -241,10 +210,6 @@ function TexturedEarth({ maps }: { maps: EarthMaps }) {
         <primitive object={earthMaterial} attach="material" />
       </mesh>
       <CloudShell map={maps.clouds} />
-      <mesh renderOrder={2}>
-        <sphereGeometry args={[EARTH_RENDER_RADIUS * ATMOSPHERE_RADIUS_SCALE, EARTH_WIDTH_SEGMENTS, EARTH_HEIGHT_SEGMENTS]} />
-        <primitive object={atmosphereMaterial} attach="material" />
-      </mesh>
     </group>
   );
 }

@@ -370,6 +370,8 @@ export interface FlightInput {
   pitchRad: number;
   /** Crossrange side lean. Missing in older commands means zero. */
   yawRad?: number;
+  /** Full phone orientation in the local radial frame; [w, x, y, z]. */
+  attitudeQuat?: Quat;
   /** 0 = engines off, 1 = full thrust. */
   throttle: number;
 }
@@ -378,6 +380,7 @@ export interface FlightAxisCommand {
   pitchRad?: number;
   /** Side lean shares the pitch owner and arming contract. */
   yawRad?: number;
+  attitudeQuat?: Quat;
   throttle?: number;
   /** Phone control must send true on the sample that arms an axis. */
   calibrated?: boolean;
@@ -412,6 +415,11 @@ export interface FlightState {
   /** Crossrange side lean and turn rate; absent values mean zero. */
   yawRad?: number;
   yawRateRadS?: number;
+  /** Actual physical orientation and angular velocity in fixed physics XYZ. */
+  attitudeQuat?: Quat;
+  angularVelocityRadS?: Vec3;
+  /** Radial control frame transported with the flight, avoiding a heading flip at a pole. */
+  controlFrameQuat?: Quat;
   /** Nose turn rate; missing means 0. */
   pitchRateRadS?: number;
   throttle: number;

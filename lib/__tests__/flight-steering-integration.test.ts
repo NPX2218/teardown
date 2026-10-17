@@ -12,6 +12,8 @@ import { useAppMode } from "@/lib/flight/app-mode";
 import { frameFor } from "../../scripts/sim-phone";
 import { buildFlightDraw } from "@/lib/flight/flight-pose";
 import { STARBASE, globeFrameFor, physicsMetersToEarthRadii } from "@/lib/flight/scene-types";
+import { radialBasis } from "@/lib/flight/attitude.helpers";
+import { quatConj, quatMul } from "@/lib/rocket/orient";
 
 const initial = useScene.getState();
 const reference: MissionReference = {
@@ -78,8 +80,8 @@ describe("PR #34 physical steering integration", () => {
   });
 
   it.each([
-    ["forward", 45, 0, "x", 1], ["backward", -45, 0, "x", -1],
-    ["positive crossrange", 0, 45, "z", 1], ["negative crossrange", 0, -45, "z", -1],
+    ["backward", 45, 0, "x", -1], ["forward", -45, 0, "x", 1],
+    ["negative crossrange", 0, 45, "z", -1], ["positive crossrange", 0, -45, "z", 1],
   ] as const)("I5: real phone handler curves the course %s (PR #34)", (_name, pitch, yaw, axis, sign) => {
     stopWatch = startRocketWatch();
     useScene.getState().setRocket({ connected: true, code: "ABCD" });
@@ -114,7 +116,7 @@ describe("PR #34 physical steering integration", () => {
       handleRocketMessage(frameFor(0, [0, 0, 0], "s24fe", 60), 1050 + i * 50);
       useScene.getState().advanceFlight(0.05);
     }
-    expect(useScene.getState().flight.input.yawRad).toBeCloseTo(12 * Math.PI / 180, 8);
+    expect(useScene.getState().flight.input.yawRad).toBeCloseTo(-12 * Math.PI / 180, 8);
     expect(Math.abs(useScene.getState().flight.state?.yawRad ?? 0)).toBeLessThanOrEqual(12.1 * Math.PI / 180);
   });
 
@@ -131,18 +133,20 @@ describe("PR #34 physical steering integration", () => {
       useScene.getState().advanceFlight(0.05);
     }
     const state = useScene.getState().flight.state!;
-    expect((state.velocityMps?.x ?? 0) * Math.sign(pitch)).toBeGreaterThan(5);
-    expect((state.velocityMps?.z ?? 0) * Math.sign(yaw)).toBeGreaterThan(5);
+    expect((state.velocityMps?.x ?? 0) * -Math.sign(pitch)).toBeGreaterThan(5);
+    expect((state.velocityMps?.z ?? 0) * -Math.sign(yaw)).toBeGreaterThan(5);
     // Isolate one paid impulse above the atmosphere while holding the actual physical attitude.
-    const body = { ...bodyFromFlightState(CLASSROOM_LAUNCH, state), y: EARTH_RADIUS_M + 200_000, pitchRateRadS: 0, yawRateRadS: 0 };
-    const command = { pitchRad: body.pitchRad, yawRad: body.yawRad, throttle: 1 };
+    const body = { ...bodyFromFlightState(CLASSROOM_LAUNCH, state), y: EARTH_RADIUS_M + 200_000, pitchRateRadS: 0, yawRateRadS: 0, angularVelocityRadS: [0, 0, 0] as [number, number, number] };
+    expect(body.attitudeQuat).toBeDefined();
+    const target = quatMul(quatConj(body.controlFrameQuat ?? radialBasis(body).orientation), body.attitudeQuat!);
+    const command = { pitchRad: body.pitchRad, yawRad: body.yawRad, attitudeQuat: target, throttle: 1 };
     const powered = stepFlight(body, command, 1 / 60);
     const coast = stepFlight(body, { ...command, throttle: 0 }, 1 / 60);
     const impulse = physicsMetersToEarthRadii(powered.vx - coast.vx, powered.vy - coast.vy, globeFrameFor(STARBASE), (powered.vz ?? 0) - (coast.vz ?? 0));
     const magnitude = Math.hypot(...impulse);
     const draw = buildFlightDraw({
       site: STARBASE, positionM: { x: body.x, y: body.y, z: body.z },
-      pitchRad: body.pitchRad, yawRad: body.yawRad, throttle: 1, airborne: true,
+      pitchRad: body.pitchRad, yawRad: body.yawRad, attitudeQuat: body.attitudeQuat, throttle: 1, airborne: true,
       altitudeM: 200_000, activeStageId: "booster", simulatedTimeS: body.simulatedTimeS,
       separatedAtS: null, path: null, pathClosed: false, pathHitsEarth: false,
       elements: { periapsisAltitudeM: null, apoapsisAltitudeM: null, eccentricity: null, bound: false },

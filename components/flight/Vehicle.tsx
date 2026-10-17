@@ -7,6 +7,7 @@ import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { EARTH_RADIUS_M } from "@/lib/flight.helpers";
 import { EARTH_RADIUS } from "@/lib/flight/scene-types";
+import { vehiclePoseOffsets } from "@/lib/flight/vehicle-pose.helpers";
 import { FLIGHT_SCENE } from "@/lib/viewer/colors";
 import { flightDrawNow } from "./flightDraw";
 import { FALCON_HEIGHT_M, fitFalcon } from "./fitFalcon";
@@ -19,16 +20,9 @@ useGLTF.preload(MODEL);
 const scratch = {
   up: new THREE.Vector3(0, 1, 0),
   nose: new THREE.Vector3(),
-  radial: new THREE.Vector3(),
   quat: new THREE.Quaternion(),
   world: new THREE.Vector3(),
-  pivot: new THREE.Vector3(),
 };
-
-/** Metres above the bells where the stack turns: fuelled Falcon 9 CoM, then the upper stage's once the booster drops. */
-const PIVOT_M = [28, 56];
-/** On the pad the rocket sits on its bells; the pivot moves up to the CoM over the first 40 m of climb. */
-const PIVOT_BLEND_M = 40;
 
 function FalconModel() {
   const { scene } = useGLTF(MODEL);
@@ -60,16 +54,15 @@ export function Vehicle({ stage, throttle, altitudeKm, elapsedS }: {
     scratch.nose.set(draw.nose[0], draw.nose[1], draw.nose[2]);
     if (scratch.nose.lengthSq() < 1e-8) scratch.nose.set(0, 1, 0);
     scratch.nose.normalize();
-    scratch.quat.setFromUnitVectors(scratch.up, scratch.nose);
-    scratch.radial.set(draw.position[0], draw.position[1], draw.position[2]).normalize();
-    node.position.set(draw.position[0], draw.position[1], draw.position[2]);
-    node.position.addScaledVector(scratch.radial, 0.6 / EARTH_RADIUS_M);
+    if (draw.orientation) {
+      const [w, x, y, z] = draw.orientation;
+      scratch.quat.set(x, y, z, w);
+    } else scratch.quat.setFromUnitVectors(scratch.up, scratch.nose);
+    const { originM } = vehiclePoseOffsets(draw.position, draw.nose, draw.altitudeM, stage);
+    node.position.set(draw.position[0] + originM[0] / EARTH_RADIUS_M,
+      draw.position[1] + originM[1] / EARTH_RADIUS_M,
+      draw.position[2] + originM[2] / EARTH_RADIUS_M);
     node.quaternion.copy(scratch.quat);
-    // Turn about the CoM, not the bells: keep the CoM where it would sit upright and swing the base under it.
-    const pivotM = PIVOT_M[Math.min(stage, 1)] * Math.min(1, Math.max(0, draw.altitudeM / PIVOT_BLEND_M));
-    scratch.pivot.set(0, pivotM, 0).applyQuaternion(node.quaternion);
-    node.position.addScaledVector(scratch.radial, pivotM / EARTH_RADIUS_M);
-    node.position.addScaledVector(scratch.pivot, -1 / EARTH_RADIUS_M);
     const mark = marker.current;
     if (!mark) return;
     node.getWorldPosition(scratch.world);

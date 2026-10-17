@@ -85,11 +85,11 @@ describe("flight rocket follows physical phone steering", () => {
     hold(0, 4000, 20);
     const flight = useScene.getState().flight;
     expect(flight.input.pitchRad).toBeCloseTo(0, 2);
-    expect(flight.state!.yawRad).toBeGreaterThan(3 * DEG);
-    expect(flight.state!.positionM!.z).toBeGreaterThan(1);
-    expect(flight.state!.velocityMps!.z).toBeGreaterThan(1);
+    expect(flight.state!.yawRad).toBeLessThan(-3 * DEG);
+    expect(flight.state!.positionM!.z).toBeLessThan(-1);
+    expect(flight.state!.velocityMps!.z).toBeLessThan(-1);
     const draw = readFlightDraw();
-    expect(dot(draw.nose, globeFrameFor(draw.site).right)).toBeGreaterThan(0.05);
+    expect(dot(draw.nose, globeFrameFor(draw.site).right)).toBeLessThan(-0.05);
   });
 
   it("A2: fore/aft lean moves downrange without a second visual tilt (2026-10-17 report)", () => {
@@ -97,11 +97,11 @@ describe("flight rocket follows physical phone steering", () => {
     hold(0, 300);
     hold(30, 4000);
     const flight = useScene.getState().flight;
-    expect(flight.input.pitchRad).toBeGreaterThan(10 * DEG);
-    expect(flight.input.pitchRad).toBeLessThan(30 * DEG);
-    expect(flight.state!.pitchRad).toBeGreaterThan(10 * DEG);
+    expect(flight.input.pitchRad).toBeLessThan(-10 * DEG);
+    expect(flight.input.pitchRad).toBeGreaterThan(-30 * DEG);
+    expect(flight.state!.pitchRad).toBeLessThan(-10 * DEG);
     expect(flight.state!.yawRad ?? 0).toBeCloseTo(0, 8);
-    expect(flight.state!.velocityMps!.x).toBeGreaterThan(1);
+    expect(flight.state!.velocityMps!.x).toBeLessThan(-1);
     const draw = readFlightDraw();
     expect(dot(draw.nose, globeFrameFor(draw.site).right)).toBeCloseTo(0, 8);
   });

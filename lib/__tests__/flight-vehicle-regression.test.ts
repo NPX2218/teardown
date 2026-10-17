@@ -50,6 +50,22 @@ function render(mode: AppMode, status: FlightStatus, owner: "local" | "phone", c
 
 // REGRESSION GUARD for PR #34, 2026-10-17: a live phone must not move an unowned or frozen drawing.
 describe("vehicle draws only physical attitude", () => {
+  it("V11: actual mesh retains full physical twist across camera positions (PR #34 full orientation)", () => {
+    render("mission", "flying", "phone");
+    flightDrawNow.current = buildFlightDraw({
+      site: STARBASE, positionM: null, pitchRad: 0, attitudeQuat: [Math.SQRT1_2, 0, Math.SQRT1_2, 0],
+      throttle: 0, airborne: true, altitudeM: 1000, activeStageId: "booster",
+      simulatedTimeS: 10, separatedAtS: null, path: null, pathClosed: false, pathHitsEarth: false,
+      elements: { periapsisAltitudeM: null, apoapsisAltitudeM: null, eccentricity: null, bound: false },
+    });
+    const [w, x, y, z] = flightDrawNow.current.orientation!;
+    const expected = new THREE.Quaternion(x, y, z, w);
+    for (const position of [[14, 8, 14], [-14, 6, 10], [4, 18, -12]]) {
+      const camera = new THREE.PerspectiveCamera(); camera.position.set(...position as [number, number, number]);
+      frame.callback!({ camera }, 0.1);
+      expect(frame.rig!.quaternion.angleTo(expected)).toBeLessThan(1e-7);
+    }
+  });
   it("V10: actual nose is unchanged by camera azimuth (2026-10-17 report)", () => {
     render("mission", "flying", "phone");
     const expected = new THREE.Vector3(...flightDrawNow.current!.nose);

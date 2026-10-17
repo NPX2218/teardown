@@ -4,7 +4,7 @@
  *   EnginePlume       rocket metres, origin at the bells, +Y nose
  *   StageSeparation   same frame. stage 0 stacked, stage >= 1 separated
  *   Explosion         Earth radii, inside the globe group
- *   CloudLayer        Earth radii, decks from about 2 km to 12 km
+ *   CloudLayer        Earth radii, local puffs and fog from about 2 km to 12 km
  *
  * Sizes follow the Falcon 9 GLB (about 71 m tall). The explorer viewer
  * squeezes that model to 12 scene units; these components stay in metres
@@ -35,9 +35,7 @@ export {
   latLonToUnit,
   merlinNozzles,
   mvacIgnition,
-  padBankOpacity,
   padBasis,
-  padColumn,
   plumeProfile,
   resolvePad,
   viewerMetresPerUnit,

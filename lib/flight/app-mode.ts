@@ -3,6 +3,8 @@
 import { create } from "zustand";
 import { useScene } from "@/lib/store";
 import { clearHeldAxes } from "@/lib/flight/local-controls";
+import { MISSIONS } from "@/data/missions/index";
+import { missionById } from "@/lib/flight/mission-select";
 
 export type AppMode = "explore" | "replay" | "mission";
 export type FlightView = "overview" | "follow";
@@ -13,6 +15,7 @@ interface AppModeState {
   heardUntil: number;
   cameraNonce: number;
   openMission: (scenarioId?: string) => void;
+  selectMission: (missionId: string | null) => void;
   openReplay: () => void;
   openExplore: () => void;
   setView: (view: FlightView) => void;
@@ -39,6 +42,14 @@ export const useAppMode = create<AppModeState>((set, get) => ({
       scene.startFlight(scenarioId);
     }
     set({ mode: "mission", view: "follow" });
+  },
+  selectMission: (missionId) => {
+    if (missionId !== null && !missionById(MISSIONS, missionId)) return;
+    const scenarioId = useScene.getState().flight.scenarioId ?? "classroom";
+    get().openMission(scenarioId);
+    const scene = useScene.getState();
+    scene.setMissionTrack(missionId);
+    if (missionId === null) scene.setPlayMode("free");
   },
   openReplay: () => {
     clearHeldAxes();

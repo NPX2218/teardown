@@ -1,10 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { commitPhoneAxes, launchControlledFlight } from "@/lib/flight/controls";
 import { mixFlightInput, assignAxisOwner } from "@/lib/flight/input-mixer";
-import { handoffPitchToLocal, resumeFlightExplicit } from "@/lib/flight/phone-pitch";
-import { shapePhoneSteering, stepPhoneSteering } from "@/lib/flight/phone-steering.helpers";
+import { resumeFlightExplicit } from "@/lib/flight/phone-pitch";
+import { shapePhoneAttitude, stepPhoneAttitude } from "@/lib/flight/phone-steering.helpers";
 import { handleRocketMessage, lastRocketAttitude, resetRocketState, startRocketWatch, zeroRocket } from "@/lib/rocket/useRocket";
 import { useScene } from "@/lib/store";
+import type { Quat, Vec3 } from "@/lib/types";
 import { frameFor } from "../../scripts/sim-phone";
 
 const radians = (degrees: number) => degrees * Math.PI / 180;
@@ -26,35 +27,44 @@ function fly(): void {
 // REGRESSION GUARD for the fixed-direction report, 2026-10-17.
 // Re-asserting because a future refactor might be tempted to restore pose-only side lean.
 describe("gentle phone steering (fixed-direction report 2026-10-17)", () => {
-  it("S1: upright jitter stays neutral in both axes (report 2026-10-17)", () => {
-    expect(shapePhoneSteering({ pitchRad: radians(1), yawRad: radians(1) })).toEqual({ pitchRad: 0, yawRad: 0 });
+  it("S1: upright jitter stays neutral across pointing and twist (report 2026-10-17)", () => {
+    const half = radians(1.7) / 2;
+    const component = Math.sin(half) / Math.sqrt(3);
+    expect(shapePhoneAttitude([Math.cos(half), component, -component, component])).toEqual([1, 0, 0, 0]);
   });
 
-  it("S2: a moderate lean has a softer response and every direction is symmetric (report 2026-10-17)", () => {
-    const forward = shapePhoneSteering({ pitchRad: radians(31), yawRad: 0 });
-    expect(forward.pitchRad).toBeCloseTo(radians(15), 12);
-    expect(forward.yawRad).toBe(0);
-    const left = shapePhoneSteering({ pitchRad: 0, yawRad: radians(-31) });
-    expect(left.pitchRad).toBe(0);
-    expect(left.yawRad).toBeCloseTo(radians(-15), 12);
-    const diagonal = shapePhoneSteering({ pitchRad: radians(60), yawRad: radians(-60) });
-    expect(Math.hypot(diagonal.pitchRad, diagonal.yawRad)).toBeCloseTo(radians(60), 12);
-    expect(diagonal.pitchRad).toBeCloseTo(-diagonal.yawRad, 12);
+  it("S2: a moderate turn has a softer response in every signed axis while full pointing remains reachable (report 2026-10-17)", () => {
+    const axes: Vec3[] = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+    for (const axis of axes) for (const sign of [-1, 1]) {
+      const half = radians(31) / 2;
+      const raw: Quat = [Math.cos(half), ...axis.map((value) => sign * value * Math.sin(half))] as Quat;
+      const shaped = shapePhoneAttitude(raw);
+      expect(shaped[0]).toBeCloseTo(Math.cos(radians(15) / 2), 12);
+      for (let i = 0; i < 3; i += 1) expect(shaped[i + 1]).toBeCloseTo(sign * axis[i] * Math.sin(radians(15) / 2), 12);
+    }
+    // Sixty degrees ends the fine-control band; it must never cap orientation.
+    expect(shapePhoneAttitude([0, 1, 0, 0])).toEqual([0, 1, 0, 0]);
   });
 
-  it("S3: diagonal changes share one 12-degree per wall-second budget (report 2026-10-17)", () => {
-    let steering = { pitchRad: 0, yawRad: 0 };
-    for (let i = 0; i < 20; i += 1) steering = stepPhoneSteering(steering, { pitchRad: radians(60), yawRad: radians(60) }, 0.05);
-    expect(Math.hypot(steering.pitchRad, steering.yawRad)).toBeCloseTo(radians(12), 12);
-    const reversed = stepPhoneSteering(steering, { pitchRad: radians(-60), yawRad: radians(-60) }, 0.05);
-    expect(Math.hypot(reversed.pitchRad - steering.pitchRad, reversed.yawRad - steering.yawRad)).toBeCloseTo(radians(0.6), 12);
+  it("S3: pointing and twist share one 12-degree per wall-second angular budget (report 2026-10-17)", () => {
+    const component = Math.sin(radians(120) / 2) / Math.sqrt(3);
+    const target: Quat = [Math.cos(radians(120) / 2), component, -component, component];
+    let steering: Quat = [1, 0, 0, 0];
+    for (let i = 0; i < 20; i += 1) steering = stepPhoneAttitude(steering, target, 0.05);
+    expect(2 * Math.acos(steering[0])).toBeCloseTo(radians(12), 10);
+    const reversed = stepPhoneAttitude(steering, [target[0], -target[1], -target[2], -target[3]], 0.05);
+    const dot = steering.reduce((sum, value, i) => sum + value * reversed[i], 0);
+    expect(2 * Math.acos(Math.min(1, Math.abs(dot)))).toBeCloseTo(radians(0.6), 10);
   });
 
-  it("S4: a delayed sample cannot spend seconds of missed steering at once (report 2026-10-17)", () => {
-    const neutral = { pitchRad: 0, yawRad: 0 };
-    expect(stepPhoneSteering(neutral, { pitchRad: 1, yawRad: 0 }, 0)).toEqual(neutral);
-    expect(stepPhoneSteering(neutral, { pitchRad: NaN, yawRad: 0 }, 0.05)).toEqual(neutral);
-    expect(stepPhoneSteering(neutral, { pitchRad: 1, yawRad: 0 }, 3).pitchRad).toBeCloseTo(radians(1.2), 12);
+  it("S4: invalid timing and delayed samples cannot spend missed steering at once (report 2026-10-17)", () => {
+    const neutral: Quat = [1, 0, 0, 0];
+    const target: Quat = [0, 1, 0, 0];
+    for (const delta of [0, -1, NaN, Infinity]) expect(stepPhoneAttitude(neutral, target, delta)).toBe(neutral);
+    expect(stepPhoneAttitude(neutral, [NaN, 0, 0, 0], 0.05)).toEqual(neutral);
+    expect(stepPhoneAttitude(neutral, [0, 0, 0, 0], 0.05)).toEqual(neutral);
+    const delayed = stepPhoneAttitude(neutral, target, 3);
+    expect(2 * Math.acos(delayed[0])).toBeCloseTo(radians(1.2), 10);
   });
 
   it("S5: yaw reaches the same owned steering command and rejects a malformed pair atomically (report 2026-10-17)", () => {
@@ -75,8 +85,8 @@ describe("gentle phone steering (fixed-direction report 2026-10-17)", () => {
     fly();
     handleRocketMessage(frameFor(0), 1000);
     for (let i = 1; i <= 20; i += 1) handleRocketMessage(frameFor(40, [0, 0, 0], "portrait", 30), 1000 + i * 50);
-    expect(useScene.getState().flight.input.pitchRad).toBeGreaterThan(0);
-    expect(useScene.getState().flight.input.yawRad).toBeGreaterThan(0);
+    expect(useScene.getState().flight.input.pitchRad).toBeLessThan(0);
+    expect(useScene.getState().flight.input.yawRad).toBeLessThan(0);
     zeroRocket();
     expect(useScene.getState().flight.input).toMatchObject({ pitchRad: 0, yawRad: 0 });
     handleRocketMessage(frameFor(-40, [0, 0, 0], "portrait", -30), 2050);
@@ -84,11 +94,9 @@ describe("gentle phone steering (fixed-direction report 2026-10-17)", () => {
     expect(useScene.getState().flight.input).toMatchObject({ pitchRad: 0, yawRad: 0 });
   });
 
-  it("S7: disconnected phone steering stays local after resume and reports rejection (report 2026-10-17)", () => {
+  it("S7: an unowned steering sample reports rejection while a deliberate power push works (report 2026-10-17)", () => {
     fly();
-    useScene.getState().setRocket({ connected: false, code: "TEST" });
-    useScene.getState().setRocket({ connected: true, code: "TEST" });
-    resumeFlightExplicit();
+    useScene.getState().setFlightAxisOwner("pitch", "local");
     const skipped = commitPhoneAxes({ pitchRad: 0.2, yawRad: -0.2, throttle: null, throttlePush: false, calibrated: true }, "mission");
     expect(skipped.ok).toBe(false);
     expect(skipped.error).toBe("phone steering not owned");
@@ -106,9 +114,9 @@ describe("gentle phone steering (fixed-direction report 2026-10-17)", () => {
     handleRocketMessage(frameFor(0, [0, 0, 0], "portrait", 60), 1000);
     expect(useScene.getState().flight.input).toMatchObject({ pitchRad: 0, yawRad: 0 });
     for (let i = 1; i <= 20; i += 1) handleRocketMessage(frameFor(0, [0, 0, 0], "portrait", 60), 1000 + i * 50);
-    expect(useScene.getState().flight.input.yawRad).toBeCloseTo(radians(12), 8);
+    expect(useScene.getState().flight.input.yawRad).toBeCloseTo(radians(-12), 8);
     expect(useScene.getState().flight.input.pitchRad).toBeCloseTo(0, 8);
-    handoffPitchToLocal();
+    useScene.getState().pauseFlight();
     expect(useScene.getState().flight.input).toMatchObject({ pitchRad: 0, yawRad: 0 });
   });
 
@@ -124,8 +132,9 @@ describe("gentle phone steering (fixed-direction report 2026-10-17)", () => {
     expect(useScene.getState().flight.input).toMatchObject({ pitchRad: 0, yawRad: 0 });
     handleRocketMessage(frameFor(-30, [0, 0, 0], "portrait", -30), 2150);
     const input = useScene.getState().flight.input;
-    expect(input.pitchRad).toBeLessThan(0);
-    expect(input.yawRad).toBeLessThan(0);
-    expect(Math.hypot(input.pitchRad, input.yawRad ?? 0)).toBeCloseTo(radians(0.6), 8);
+    expect(input.pitchRad).toBeGreaterThan(0);
+    expect(input.yawRad).toBeGreaterThan(0);
+    expect(input.attitudeQuat).toBeDefined();
+    expect(2 * Math.acos(input.attitudeQuat![0])).toBeCloseTo(radians(0.6), 8);
   });
 });

@@ -18,7 +18,7 @@ import {
 } from "@/lib/flight.helpers";
 import { emissionsForInteractive, publishInteractiveFuel } from "@/lib/flight/fuel-readout";
 import { emptyGuide, stepGuide, type GuideContext, type GuideSample } from "@/lib/flight/guidance";
-import { noseDirection } from "@/lib/flight/attitude.helpers";
+import { physicalNose } from "@/lib/flight/attitude.helpers";
 
 /** Hidden tabs and any status other than flying do not take a physical step. */
 export function shouldAdvanceFlight(status: FlightStatus, documentHidden: boolean): boolean {
@@ -45,7 +45,6 @@ export function integrateSession(
     playMode,
     reference: options.reference ?? null,
     events: options.events ?? [],
-    endTimeS: endTime(options.events ?? [], options.reference ?? null),
   };
   let accumulator = flight.frameAccumulatorS + cappedWallDeltaS * flight.warp;
   let body = bodyFromFlightState(scenario, flight.state);
@@ -64,13 +63,6 @@ export function integrateSession(
   return commit(flight, body, accumulator, guide);
 }
 
-function endTime(events: { t: number }[], reference: MissionReference | null): number | null {
-  const times = events.map((event) => event.t);
-  if (reference) times.push(...reference.samples.map((sample) => sample.t));
-  if (times.length === 0) return null;
-  return Math.max(...times);
-}
-
 function sampleOf(body: FlightBody, dt: number): GuideSample {
   const orbit = orbitFromState(body);
   const z = body.z ?? 0;
@@ -82,7 +74,7 @@ function sampleOf(body: FlightBody, dt: number): GuideSample {
   if (radius > 1) {
     radial = (body.vx * body.x + body.vy * body.y + vz * z) / radius;
   }
-  const nose = noseDirection(body, body.pitchRad, body.yawRad ?? 0);
+  const nose = physicalNose(body);
   const alignment = speed > 1e-9 ? (nose.x * body.vx + nose.y * body.vy + nose.z * vz) / speed : 1;
   const aoa = Math.acos(Math.min(1, Math.max(-1, alignment)));
   const rho = alt > 0 && alt < ATMOSPHERE.limitM ? ATMOSPHERE.rho0KgPerM3 * Math.exp(-alt / ATMOSPHERE.scaleHeightM) : 0;
@@ -103,8 +95,10 @@ function sampleOf(body: FlightBody, dt: number): GuideSample {
     radialSpeedMps: radial,
     pitchRad: body.pitchRad,
     yawRad: body.yawRad ?? 0,
-    tiltRad: Math.acos(Math.min(1, Math.max(-1, Math.cos(body.pitchRad) * Math.cos(body.yawRad ?? 0)))),
-    turnRateRadS: Math.hypot(body.pitchRateRadS ?? 0, Math.cos(body.pitchRad) * (body.yawRateRadS ?? 0)),
+    tiltRad: Math.acos(Math.min(1, Math.max(-1, (nose.x * body.x + nose.y * body.y + nose.z * z) / radius))),
+    turnRateRadS: body.angularVelocityRadS
+      ? Math.hypot(...body.angularVelocityRadS)
+      : Math.hypot(body.pitchRateRadS ?? 0, Math.cos(body.pitchRad) * (body.yawRateRadS ?? 0)),
     throttle: body.throttle,
     airborne: body.airborne,
     propellantKg: propellantKg(body),

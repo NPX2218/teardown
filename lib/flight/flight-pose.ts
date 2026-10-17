@@ -1,6 +1,9 @@
 // Turn one physics sample into the props the flight scene modules draw.
 import { EARTH_RADIUS_M } from "@/lib/flight.helpers";
-import { noseDirection } from "@/lib/flight/attitude.helpers";
+import { physicalAttitude, physicalNose } from "@/lib/flight/attitude.helpers";
+import { quatFromBasis } from "@/lib/flight/quaternion.helpers";
+import { quatMul, quatNormalize } from "@/lib/rocket/orient";
+import type { Quat } from "@/lib/types";
 import { globeFrameFor, physicsMetersToEarthRadii, type EarthRadiiVec3, type LaunchSiteSpec, type OrbitElementsView, type OrbitPathState } from "@/lib/flight/scene-types";
 
 export interface FlightDrawInput {
@@ -8,6 +11,7 @@ export interface FlightDrawInput {
   positionM: { x: number; y: number; z?: number } | null;
   pitchRad: number;
   yawRad?: number;
+  attitudeQuat?: Quat;
   throttle: number;
   airborne: boolean;
   altitudeM: number | null;
@@ -27,6 +31,8 @@ export interface FlightDraw {
   up: EarthRadiiVec3;
   position: EarthRadiiVec3;
   nose: EarthRadiiVec3;
+  /** Full physical rotation in the globe frame, including twist. */
+  orientation?: Quat;
   altitudeM: number;
   altitudeKm: number;
   throttle: number;
@@ -72,9 +78,12 @@ export function buildFlightDraw(input: FlightDrawInput): FlightDraw {
   const frame = globeFrameFor(input.site);
   const positionM = input.positionM ?? { x: 0, y: EARTH_RADIUS_M };
   const position = physicsMetersToEarthRadii(positionM.x, positionM.y, frame, positionM.z ?? 0);
-  const physicalNose = noseDirection(positionM, input.pitchRad, input.yawRad ?? 0);
-  const direction = physicsMetersToEarthRadii(physicalNose.x, physicalNose.y, frame, physicalNose.z);
+  const body = { ...positionM, pitchRad: input.pitchRad, yawRad: input.yawRad, attitudeQuat: input.attitudeQuat };
+  const physical = physicalNose(body);
+  const direction = physicsMetersToEarthRadii(physical.x, physical.y, frame, physical.z);
   const nose: EarthRadiiVec3 = [direction[0] * EARTH_RADIUS_M, direction[1] * EARTH_RADIUS_M, direction[2] * EARTH_RADIUS_M];
+  const globeRotation = quatFromBasis([...frame.downrange], [...frame.up], [...frame.right]);
+  const attitudeQuat = quatNormalize(quatMul(globeRotation, physicalAttitude(body)));
   const altitudeM = altitudeMetres(positionM, input.altitudeM);
   const stage = stageIndex(input.activeStageId);
   const elapsedS = stage >= 1 && input.separatedAtS !== null && Number.isFinite(input.separatedAtS)
@@ -87,6 +96,7 @@ export function buildFlightDraw(input: FlightDrawInput): FlightDraw {
     up: frame.up,
     position,
     nose,
+    orientation: attitudeQuat,
     altitudeM,
     altitudeKm: altitudeM / 1000,
     throttle: Number.isFinite(input.throttle) ? input.throttle : 0,

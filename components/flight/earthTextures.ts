@@ -4,10 +4,7 @@ import { METRES_TO_SCENE } from "@/lib/flight/scene-scale";
 
 export const EARTH_RENDER_RADIUS = EARTH_RADIUS_M * METRES_TO_SCENE;
 
-/** Matches the previous atmosphere shell so the limb stays the same size. */
-export const ATMOSPHERE_RADIUS_SCALE = 1.025;
-
-/** Clouds sit just above the surface and inside the atmosphere shell. */
+/** Clouds sit just above the surface. */
 export const CLOUD_RADIUS_SCALE = 1.012;
 
 export const EARTH_WIDTH_SEGMENTS = 128;

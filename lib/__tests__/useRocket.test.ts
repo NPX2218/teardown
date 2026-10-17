@@ -151,9 +151,9 @@ describe("useRocket frame handling (11)", () => {
     handleRocketMessage(frameFor(0), base + 50);
     handleRocketMessage(frameFor(22.5), base + 100);
     // The first 50 ms spends only 0.6° of the gentle wall-time steering budget.
-    expect(useScene.getState().flight.input.pitchRad).toBeCloseTo((0.6 * Math.PI) / 180, 8);
+    expect(useScene.getState().flight.input.pitchRad).toBeCloseTo((-0.6 * Math.PI) / 180, 8);
     for (let t = 150; t <= 1100; t += 50) handleRocketMessage(frameFor(22.5), base + t);
-    expect(useScene.getState().flight.input.pitchRad).toBeCloseTo((7.495541 * Math.PI) / 180, 6);
+    expect(useScene.getState().flight.input.pitchRad).toBeCloseTo((-7.495541 * Math.PI) / 180, 6);
   });
 
   it("H16 a hard shake does not start or score a flight", () => {
@@ -183,7 +183,7 @@ describe("useRocket frame handling (11)", () => {
     };
     const portrait = pitchAfter("portrait");
     const s24 = pitchAfter("s24fe");
-    expect(portrait).toBeCloseTo((5.7788347 * Math.PI) / 180, 8);
+    expect(portrait).toBeCloseTo((-5.7788347 * Math.PI) / 180, 8);
     expect(s24).toBeCloseTo(portrait, 2);
 
     useScene.setState(initial, true);
@@ -204,8 +204,9 @@ describe("useRocket frame handling (11)", () => {
     for (let t = 0; t <= 2100; t += 50) {
       handleRocketMessage(frameFor(180, [0, 0, 0], "s24fe"), base + 12000 + t);
     }
-    expect(useScene.getState().flight.status).toBe("failed");
-    expect(useScene.getState().flight.outcome?.reason).toMatch(/upside down/);
+    expect(useScene.getState().flight.status).toBe("flying");
+    expect(useScene.getState().flight.outcome).toBeNull();
+    expect(useScene.getState().flight.input.attitudeQuat).toBeDefined();
   });
 
   it("H18 a stalled upright hold still catches the tilt-replay lift and the later lean", () => {
@@ -219,9 +220,9 @@ describe("useRocket frame handling (11)", () => {
     for (let t = 4_500; t <= 4_900; t += 50) handleRocketMessage(frameFor(0, [0, 4, 0], "s24fe"), t);
     expect(useScene.getState().flight.status).toBe("flying");
     handleRocketMessage(frameFor(40, [0, 0, 0], "s24fe"), 5_800);
-    expect(Math.abs(useScene.getState().flight.input.pitchRad)).toBeCloseTo((1.2 * Math.PI) / 180, 8);
+    expect(useScene.getState().flight.input.pitchRad).toBeCloseTo((-1.2 * Math.PI) / 180, 8);
     for (let t = 5_850; t <= 6_850; t += 50) handleRocketMessage(frameFor(40, [0, 0, 0], "s24fe"), t);
-    expect(Math.abs(useScene.getState().flight.input.pitchRad)).toBeGreaterThan((12 * Math.PI) / 180);
+    expect(useScene.getState().flight.input.pitchRad).toBeLessThan((-12 * Math.PI) / 180);
     useAppMode.setState({ mode: "explore" });
   });
 

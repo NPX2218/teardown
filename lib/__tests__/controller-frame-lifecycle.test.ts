@@ -29,6 +29,7 @@ beforeEach(() => {
   useScene.setState(initialScene, true);
   useAppMode.setState(initialMode, true);
   clearHeldAxes();
+  useScene.getState().setRocket({ connected: true, code: "TEST" });
   surface = new EventTarget();
   vi.stubGlobal("window", surface);
   vi.stubGlobal("document", Object.assign(new EventTarget(), { hidden: false, querySelector: () => null }));
@@ -87,7 +88,7 @@ describe("controller frame and input lifecycle (PR #34)", () => {
     key("KeyD");
     key("KeyW");
     frame(0.5);
-    expect(useScene.getState().flight.input.pitchRad).toBeCloseTo(0.225);
+    expect(useScene.getState().flight.input.pitchRad).toBe(0);
     expect(useScene.getState().flight.input.throttle).toBeCloseTo(0.2);
     expect(useScene.getState().flight.simulatedTimeS).toBeCloseTo(0.5);
   });
@@ -104,7 +105,7 @@ describe("controller frame and input lifecycle (PR #34)", () => {
     expect(useScene.getState().replay.t).toBeGreaterThan(time);
   });
 
-  it("C4: phone loss pauses both Replay clocks and Play resumes screen control (PR #34)", () => {
+  it("C4: phone loss pauses both Replay clocks until reconnection restores phone control (report 2026-10-17)", () => {
     replay();
     useScene.getState().setRocket({ connected: true, code: "TEST" });
     expect(commitShellEvent("launch", "replay").ok).toBe(true);
@@ -116,11 +117,16 @@ describe("controller frame and input lifecycle (PR #34)", () => {
     frame(0.1);
     expect(useScene.getState().replay.t).toBe(paused.t);
     expect(useScene.getState().flight.simulatedTimeS).toBe(flight.simulatedTimeS);
-    useScene.getState().resumeReplay();
+    key("Space");
+    frame(0.1);
+    expect(useScene.getState().flight.status).toBe("paused");
+    expect(useScene.getState().replay.playing).toBe(false);
+    useScene.getState().setRocket({ connected: true, code: "TEST" });
+    key("Space");
     frame(0.1);
     expect(useScene.getState().replay.playing).toBe(true);
     expect(useScene.getState().flight.status).toBe("flying");
-    expect(useScene.getState().flight.owners.pitch).toBe("local");
+    expect(useScene.getState().flight.owners.pitch).toBe("phone");
     expect(useScene.getState().replay.t).toBeGreaterThan(paused.t);
     expect(useScene.getState().flight.simulatedTimeS).toBeGreaterThan(flight.simulatedTimeS);
   });

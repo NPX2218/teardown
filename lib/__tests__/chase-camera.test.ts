@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 import { EARTH_RADIUS_M } from "@/lib/flight.helpers";
-import { ROCKET_MID_M, chaseRangeM, chaseShot, padShot, type CameraShot } from "@/lib/flight/launch-camera";
+import { chaseRangeM, chaseShot, padShot, type CameraShot } from "@/lib/flight/launch-camera";
+import { vehiclePoseOffsets } from "@/lib/flight/vehicle-pose.helpers";
 import {
   STARBASE,
   add,
@@ -39,8 +40,9 @@ function rollDeg(camera: THREE.PerspectiveCamera) {
   return THREE.MathUtils.radToDeg(Math.atan2(new THREE.Vector3().crossVectors(radial, camUp).dot(fwd), radial.dot(camUp)));
 }
 
-function midStackNdc(camera: THREE.PerspectiveCamera, rocket: readonly [number, number, number], nose: readonly [number, number, number]) {
-  const mid = earthRadiiToScene(add(rocket, scale(nose, ROCKET_MID_M / EARTH_RADIUS_M)));
+function midStackNdc(camera: THREE.PerspectiveCamera, rocket: readonly [number, number, number], nose: readonly [number, number, number], altitudeM = 0) {
+  const { centerM } = vehiclePoseOffsets(rocket, nose, altitudeM);
+  const mid = earthRadiiToScene(add(rocket, scale(centerM, 1 / EARTH_RADIUS_M)));
   return new THREE.Vector3(...mid).project(camera);
 }
 
@@ -95,7 +97,7 @@ describe("chase camera framing", () => {
       const nose = noseFromPitch(frame, pitch);
       const camera = cameraFor(chaseShot({ frame, position: rocket, nose, altitudeM }));
       expect(Math.abs(rollDeg(camera))).toBeLessThan(0.01);
-      const ndc = midStackNdc(camera, rocket, nose);
+      const ndc = midStackNdc(camera, rocket, nose, altitudeM);
       expect(Math.abs(ndc.x)).toBeLessThan(0.01);
       expect(Math.abs(ndc.y)).toBeLessThan(0.01);
     }

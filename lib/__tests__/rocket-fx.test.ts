@@ -16,8 +16,6 @@ import {
   fxBudget,
   merlinNozzles,
   mvacIgnition,
-  padBankOpacity,
-  padColumn,
   plumeProfile,
   resolvePad,
   viewerMetresPerUnit,
@@ -143,11 +141,9 @@ describe("rocket fx", () => {
     expect(quiet.debris).toBeLessThan(full.debris);
     expect(quiet.smoke).toBeLessThan(full.smoke);
     expect(quiet.cloudPuffs).toBeLessThan(full.cloudPuffs);
-    expect(quiet.cloudDecks).toBeLessThan(full.cloudDecks);
     expect(full.debris).toBeLessThanOrEqual(32);
     expect(full.smoke).toBeLessThanOrEqual(80);
     expect(quiet.contrail).toBeLessThan(full.contrail);
-    expect(quiet.padBank).toBeLessThan(full.padBank);
   });
 
   it("FX12 liftoff clouds default to the Boca Chica pad", () => {
@@ -159,11 +155,6 @@ describe("rocket fx", () => {
     expect(resolvePad(undefined)).toEqual(pad);
     expect(resolvePad([2, 0, 0])).toEqual([1, 0, 0]);
     expect(resolvePad([Number.NaN, 0, 0])).toEqual(pad);
-    expect(padBankOpacity(0)).toBeGreaterThan(0.9);
-    expect(padBankOpacity(30)).toBe(0);
-    expect(padColumn(0).amount).toBe(0);
-    expect(padColumn(2).lengthM).toBe(2000);
-    expect(padColumn(2).amount).toBeGreaterThan(0.8);
     const climb = plumeProfile(1, 2.5);
     expect(climb.contrailM).toBeCloseTo(2500, 5);
     expect(climb.smoke).toBe(0);

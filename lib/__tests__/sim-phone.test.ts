@@ -141,11 +141,11 @@ describe("sim phone", () => {
       await new Promise((resolve) => setTimeout(resolve, 50));
       phone.send(frameFor(tilted!.pitchDeg));
     }
-    await waitFor(() => useScene.getState().flight.input.pitchRad > 0.15);
+    await waitFor(() => useScene.getState().flight.input.pitchRad < -0.15);
 
     const pitched = useScene.getState().setFlightInput({ throttle: 1 }, "local", runId);
     expect(pitched.ok).toBe(true);
-    expect(useScene.getState().flight.input.pitchRad).toBeGreaterThan(0.15);
+    expect(useScene.getState().flight.input.pitchRad).toBeLessThan(-0.15);
     expect(useScene.getState().flight.input.throttle).toBe(1);
     expect(useScene.getState().flight.owners.pitch).toBe("phone");
 
@@ -155,8 +155,8 @@ describe("sim phone", () => {
     expect(steered.status).toBe("flying");
     // 11's placeholder stepper holds the state. 07's integrator actually moves the rocket.
     if (steered.simulatedTimeS > before + 0.5) {
-      expect(Math.abs(steered.state?.velocityMps?.x ?? 0)).toBeGreaterThan(1);
-      expect(steered.state?.pitchRad ?? 0).toBeGreaterThan(0.12);
+      expect(steered.state?.velocityMps?.x ?? 0).toBeLessThan(-1);
+      expect(steered.state?.pitchRad ?? 0).toBeLessThan(-0.12);
     }
 
     phone.close();

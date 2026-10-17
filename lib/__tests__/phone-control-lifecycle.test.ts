@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { useAppMode } from "@/lib/flight/app-mode";
 import { commitPhoneAxes, commitShellEvent, launchControlledFlight } from "@/lib/flight/controls";
-import { handoffPitchToLocal } from "@/lib/flight/phone-pitch";
+import { releasePhoneThrottle } from "@/lib/flight/phone-pitch";
 import { handleRocketMessage, resetRocketState, startRocketWatch, zeroRocket } from "@/lib/rocket/useRocket";
 import { useScene } from "@/lib/store";
 import { frameFor } from "../../scripts/sim-phone";
@@ -40,7 +40,7 @@ function acquiresHeldLean(): void {
   // The run starts neutral but keeps its mount; the next second may turn only 12°.
   expect(useScene.getState().flight.input.pitchRad).toBe(0);
   for (let i = 0; i < 20; i += 1) sample(35);
-  expect(useScene.getState().flight.input.pitchRad).toBeCloseTo(12 * Math.PI / 180, 10);
+  expect(useScene.getState().flight.input.pitchRad).toBeCloseTo(-12 * Math.PI / 180, 10);
 }
 
 // REGRESSION GUARD for PR #34, reported 2026-10-17: tests include the real mounted watcher.
@@ -71,21 +71,20 @@ describe("phone calibration across mode and run changes (PR #34)", () => {
     acquiresHeldLean();
   });
 
-  it("P4: choosing screen tilt on the pad survives Launch (PR #34)", () => {
+  it("P4: calibration on the pad keeps phone steering through Launch (report 2026-10-17)", () => {
     mission();
     sample(0);
     zeroRocket();
     expect(useScene.getState().flight.owners.pitch).toBe("phone");
-    expect(handoffPitchToLocal().ok).toBe(true);
     launch();
     sample(35);
-    expect(useScene.getState().flight.owners.pitch).toBe("local");
+    expect(useScene.getState().flight.owners.pitch).toBe("phone");
     expect(useScene.getState().flight.input.pitchRad).toBe(0);
   });
 
-  it("P5: a new run defaults to the connected phone after a prior screen choice (PR #34)", () => {
+  it("P5: a new run always uses the connected phone (report 2026-10-17)", () => {
     mission();
-    handoffPitchToLocal();
+    useScene.getState().setFlightAxisOwner("pitch", "local");
     useScene.getState().retryFlight();
     launch();
     expect(useScene.getState().flight.owners.pitch).toBe("phone");
@@ -115,12 +114,12 @@ describe("phone engine push ownership (PR #34)", () => {
     expect(useScene.getState().flight.input.throttle).toBe(0.8);
   });
 
-  it("P8: screen handoff releases a held phone throttle without changing power (PR #34)", () => {
+  it("P8: releasing phone power retains phone steering (report 2026-10-17)", () => {
     mission();
     launch();
     commitPhoneAxes({ pitchRad: 0.3, throttle: 0.5, throttlePush: true, calibrated: true });
-    expect(handoffPitchToLocal().ok).toBe(true);
-    expect(useScene.getState().flight.owners).toEqual({ pitch: "local", throttle: "local" });
-    expect(useScene.getState().flight.input).toEqual({ pitchRad: 0, yawRad: 0, throttle: 0.5 });
+    expect(releasePhoneThrottle().ok).toBe(true);
+    expect(useScene.getState().flight.owners).toEqual({ pitch: "phone", throttle: "local" });
+    expect(useScene.getState().flight.input).toEqual({ pitchRad: 0.3, yawRad: 0, throttle: 0.5 });
   });
 });

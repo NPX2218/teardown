@@ -13,7 +13,6 @@ import { EARTH_SUN_DIRECTION } from "./earthShaders";
 import { sunFromHorizon } from "./env/frame";
 import { flightDrawNow } from "./flightDraw";
 import { FLIGHT_SCENE, SCENE_COLORS } from "@/lib/viewer/colors";
-import { ChaseCamera } from "./ChaseCamera";
 import { Earth } from "./Earth";
 import { FlightController } from "./FlightController";
 import { GuidanceMarks } from "./GuidanceMarks";
@@ -94,7 +93,6 @@ export function FlightScene() {
         <KerbalWorld />
         <GuidanceMarks />
         <ReleaseFlightGpu />
-        <ChaseCamera />
         <FlightController />
       </Canvas>
     </div>

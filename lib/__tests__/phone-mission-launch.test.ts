@@ -40,9 +40,9 @@ describe("phone tilt steers a launched mission", () => {
     expect(launchControlledFlight().ok).toBe(true);
     expect(useScene.getState().flight.status).toBe("flying");
     hold(4, 200); // a hand never holds exactly upright
-    expect(pitchDeg()).toBeLessThan(1);
+    expect(Math.abs(pitchDeg())).toBeLessThan(1);
     hold(20, 1000);
-    expect(pitchDeg()).toBeCloseTo(5.7788347, 5);
+    expect(pitchDeg()).toBeCloseTo(-5.7788347, 5);
   });
 
   it("M2 a launch held a few degrees off upright still arms the phone", () => {
@@ -51,18 +51,18 @@ describe("phone tilt steers a launched mission", () => {
     useScene.getState().setFlightAxisOwner("pitch", "phone");
     expect(useScene.getState().launchFlight().ok).toBe(true);
     hold(4, 200);
-    hold(25, 1000);
-    expect(pitchDeg()).toBeCloseTo(9.4351962, 5);
+    hold(25, 1000); // 21° relative to the calibrated 4° neutral
+    expect(pitchDeg()).toBeCloseTo(-6.4387634, 5);
   });
 
   it("M3 a hand-held lean that never passes near upright still steers (live log: -21° to -45°, never armed)", () => {
     padWithPhone();
     hold(-20, 200);
     expect(launchControlledFlight().ok).toBe(true);
-    hold(-35, 2000);
-    expect(pitchDeg()).toBeCloseTo(-19.4233056, 5);
+    hold(-35, 2000); // -15° relative to the calibrated -20° neutral
+    expect(pitchDeg()).toBeCloseTo(3.0142687, 5);
     hold(-15, 2000);
-    expect(pitchDeg()).toBeCloseTo(-3.0142687, 5);
+    expect(pitchDeg()).toBeCloseTo(-0.1605232, 5);
   });
 
   it("M7 the phone lean changes the course, not just the drawn rocket", () => {
@@ -81,14 +81,16 @@ describe("phone tilt steers a launched mission", () => {
       }
       return useScene.getState().flight.state!.positionM!.x;
     };
-    expect(downrange(-30)).toBeLessThan(-1000);
-    expect(downrange(30)).toBeGreaterThan(1000);
+    // Initial -20° calibration is neutral: these are equal ±30° relative moves.
+    // Every phone axis is inverted for mission steering.
+    expect(downrange(-50)).toBeGreaterThan(1000);
+    expect(downrange(10)).toBeLessThan(-1000);
   });
 
-  it("M4 without a phone, the laptop Launch button keeps pitch on the screen", () => {
+  it("M4 without a phone, Launch waits on the pad (report 2026-10-17)", () => {
     expect(useScene.getState().startFlight("classroom").ok).toBe(true);
-    expect(launchControlledFlight().ok).toBe(true);
-    expect(useScene.getState().flight.owners.pitch).toBe("local");
+    expect(launchControlledFlight().ok).toBe(false);
+    expect(useScene.getState().flight.status).toBe("ready");
   });
 });
 
@@ -100,8 +102,8 @@ describe("lift gesture launch", () => {
     hold(0, 400, [0, 4, 0]); // the lift
     expect(useScene.getState().flight.status).toBe("flying");
     hold(2, 2000);
-    hold(30, 1500);
-    expect(pitchDeg()).toBeCloseTo(13.9833532, 5);
+    hold(30, 1500); // 28° relative to the calibrated 2° neutral
+    expect(pitchDeg()).toBeCloseTo(-12.0570749, 5);
   });
 });
 

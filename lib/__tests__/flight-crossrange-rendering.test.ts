@@ -15,6 +15,17 @@ const input: FlightDrawInput = {
 
 // REGRESSION GUARD for the 2026-10-17 phone-steering report: side lean moved only the drawing.
 describe("physical crossrange drawing", () => {
+  it("R7: full physical twist survives drawing while its nose stays upright (PR #34 full orientation)", () => {
+    const twist: [number, number, number, number] = [Math.SQRT1_2, 0, Math.SQRT1_2, 0];
+    const draw = buildFlightDraw({ ...input, positionM: { x: 0, y: EARTH_RADIUS_M }, attitudeQuat: twist } as FlightDrawInput);
+    expect(draw.orientation).toBeDefined();
+    const [w, x, y, z] = draw.orientation!;
+    // The model's side axis must twist too, rather than reconstructing rotation from its nose alone.
+    const side = [1 - 2 * (y * y + z * z), 2 * (x * y + w * z), 2 * (x * z - w * y)];
+    const frame = globeFrameFor(STARBASE);
+    side.forEach((value, i) => expect(value).toBeCloseTo(-frame.right[i], 10));
+    draw.nose.forEach((value, i) => expect(value).toBeCloseTo(frame.up[i], 10));
+  });
   it("R1: preserves crossrange position and uses both actual lean angles (2026-10-17 report)", () => {
     const radius = EARTH_RADIUS_M + 200_000;
     const pitch = 0.2;

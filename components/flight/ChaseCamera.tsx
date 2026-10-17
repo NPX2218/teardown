@@ -53,7 +53,7 @@ function applyShot(camera: THREE.PerspectiveCamera, shot: CameraShot, snap: bool
   camera.updateProjectionMatrix();
 }
 
-export function ChaseCamera() {
+export function ChaseCamera({ stage }: { stage?: number } = {}) {
   const reduce = useReducedMotion();
   const nonce = useAppMode((s) => s.cameraNonce);
   const view = useAppMode((s) => s.view);
@@ -140,14 +140,18 @@ export function ChaseCamera() {
         position: draw.position,
         nose: draw.nose,
         altitudeM: draw.altitudeM,
+        stage: stage ?? draw.stage,
         yaw: chaseOrbit.yaw,
         pitch: chaseOrbit.pitch,
       })
       : pad;
+    const introWasRunning = intro.current < INTRO_SECONDS;
     if (reduce) intro.current = INTRO_SECONDS;
     else intro.current = Math.min(INTRO_SECONDS, intro.current + delta);
     const shot = intro.current >= INTRO_SECONDS ? chase : blendShots(mapShot(), chase, introBlend(intro.current));
-    applyShot(camera, shot, reduce, delta);
+    // The intro already has its own smooth interpolation. A second easing pass
+    // extends the 2.6-second zoom and can overshoot the final close-up.
+    applyShot(camera, shot, reduce || introWasRunning, delta);
     // Visual callbacks at priority 0 need both the current pose and view matrix.
     camera.updateMatrixWorld();
   }, -1);

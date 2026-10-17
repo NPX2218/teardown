@@ -38,8 +38,6 @@ export const ESCAPE_REASON = "Escape trajectory.";
 export const STABLE_ORBIT_REASON = "You are in a stable orbit.";
 export const LEAVING_EARTH_REASON = "You are leaving Earth. This goal is an orbit around Earth.";
 export const FUEL_MISS_REASON = "Out of fuel. Your path around Earth misses the goal.";
-export const MISSION_COMPLETE_REASON = "Mission complete.";
-export const OFF_NOMINAL_REASON = "Mission failed: off nominal";
 
 export interface AnomalySample {
   t: number;

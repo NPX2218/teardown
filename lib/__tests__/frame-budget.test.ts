@@ -44,7 +44,7 @@ describe("frame budget", () => {
     expect(useScene.getState().guidanceNote).toBe("Reference trajectory unavailable");
   });
 
-  it("a warped slow frame shows the practice drift banner while the phone holds upright", () => {
+  it("F1: warped slow frames never create practice-guide penalties while the phone holds upright (2026-10-17 request)", () => {
     useScene.getState().setPlayMode("mission");
     useScene.getState().setMissionTrack("practice");
     useScene.getState().setRocket({ connected: true, code: "ABCD" });
@@ -53,21 +53,21 @@ describe("frame budget", () => {
     expect(useScene.getState().launchFlight().ok).toBe(true);
     expect(useScene.getState().setFlightInput({ pitchRad: 0, throttle: 0, calibrated: true }, "local", runId).ok).toBe(true);
     useScene.getState().setFlightWarp(4);
-    const seen: string[] = [];
-    for (let i = 0; i < 40 && !seen.includes("Drifting off track"); i += 1) {
+    for (let i = 0; i < 40; i += 1) {
       for (const wall of frameWallSlices(0.4)) {
         if (useScene.getState().flight.status !== "flying") break;
         useScene.getState().advanceFlight(wall);
       }
-      const banner = useScene.getState().flight.guide?.banner;
-      if (banner && seen[seen.length - 1] !== banner) seen.push(banner);
+      const flight = useScene.getState().flight;
+      expect(flight.guide).toMatchObject({ warningLevel: "nominal", banner: null, countdownS: null, accuracy: null, deviation: null });
+      expect(flight.outcome).toBeNull();
+      expect(flight.status).toBe("flying");
     }
-    expect(seen).toContain("Drifting off track");
-    expect(useScene.getState().flight.simulatedTimeS).toBeGreaterThan(30);
+    expect(useScene.getState().flight.simulatedTimeS).toBeCloseTo(64, 6);
     expect(useScene.getState().flight.readout?.throttle ?? 0).toBe(0);
   });
 
-  it("a screenshot hitch does not skip the practice warning on the way to failure", () => {
+  it("F2: a screenshot hitch caps elapsed time without creating a warning or score (2026-10-17 request)", () => {
     useScene.getState().setPlayMode("mission");
     useScene.getState().setMissionTrack("practice");
     useScene.getState().setRocket({ connected: true, code: "ABCD" });
@@ -77,27 +77,25 @@ describe("frame budget", () => {
     expect(useScene.getState().setFlightInput({ pitchRad: 0, throttle: 0, calibrated: true }, "local", runId).ok).toBe(true);
     useScene.getState().setFlightWarp(4);
 
-    const banners: string[] = [];
-    const note = (banner: string | null | undefined) => {
-      if (banner && banners[banners.length - 1] !== banner) banners.push(banner);
-    };
-    for (let i = 0; i < 40 && !banners.includes("Drifting off track"); i += 1) {
-      for (const wall of frameWallSlices(0.4)) useScene.getState().advanceFlight(wall);
-      note(useScene.getState().flight.guide?.banner);
-    }
-    expect(banners).toContain("Drifting off track");
+    slowFrames(0.4, 40);
+    const before = useScene.getState().flight;
+    expect(before.simulatedTimeS).toBeCloseTo(64, 6);
 
     for (const wall of frameWallSlices(3)) useScene.getState().advanceFlight(wall);
-    expect(useScene.getState().flight.guide?.banner).toBe("Drifting off track");
+    const after = useScene.getState().flight;
+    expect(after.simulatedTimeS - before.simulatedTimeS).toBeCloseTo(FRAME_WALL_BUDGET_S * 4, 6);
+    expect(after.state?.positionM).toEqual(before.state?.positionM);
+    expect(after.fuel).toMatchObject({ rp1ConsumedKg: 0 });
+    expect(after.guide).toMatchObject({ warningLevel: "nominal", banner: null, countdownS: null, accuracy: null, deviation: null });
+    expect(after.outcome).toBeNull();
 
-    for (let i = 0; i < 30 && !banners.includes("Mission failed: off nominal"); i += 1) {
+    for (let i = 0; i < 30; i += 1) {
       for (const wall of frameWallSlices(0.4)) useScene.getState().advanceFlight(wall);
-      note(useScene.getState().flight.guide?.banner);
+      const flight = useScene.getState().flight;
+      expect(flight.guide).toMatchObject({ warningLevel: "nominal", banner: null, countdownS: null, accuracy: null, deviation: null });
+      expect(flight.outcome).toBeNull();
+      expect(flight.status).toBe("flying");
     }
-    expect(banners).toContain("Return to trajectory");
-    const warningAt = banners.indexOf("Return to trajectory");
-    const failedAt = banners.indexOf("Mission failed: off nominal");
-    expect(warningAt).toBeGreaterThanOrEqual(0);
-    expect(failedAt).toBeGreaterThan(warningAt);
+    expect(useScene.getState().flight.simulatedTimeS).toBeCloseTo(114, 6);
   });
 });

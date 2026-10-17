@@ -7,7 +7,6 @@ import {
   commitPhoneAxes,
   commitShellEvent,
   currentControlMode,
-  measuresDrift,
 } from "@/lib/flight/controls";
 import { setKeyAxes } from "@/lib/flight/local-controls";
 import { useScene } from "@/lib/store";
@@ -63,11 +62,13 @@ describe("shared flight controls", () => {
       // The nose is still turning toward the lean with gimbal torque.
       expect(flight.state?.pitchRad).toBeGreaterThan(0.15);
       expect(Math.abs(flight.state?.velocityMps?.x ?? 0)).toBeGreaterThan(0.5);
-      if (measuresDrift(mode, play)) {
-        expect(flight.guide?.playMode).toBe("mission");
-        if (flight.guide?.corridor) expect(flight.guide.deviation).not.toBeNull();
-        else expect(flight.guide?.note).toBe("Reference trajectory unavailable");
-      }
+      // The 2026-10-17 unified-flight request makes every reference optional.
+      expect(flight.guide).toMatchObject({
+        playMode: mode === "replay" ? "mission" : play,
+        corridor: false, deviation: null, note: null,
+        warningLevel: "nominal", countdownS: null, accuracy: null,
+      });
+      expect(flight.outcome).toBeNull();
     };
 
     fly("mission", "mission");
@@ -87,7 +88,7 @@ describe("shared flight controls", () => {
     useScene.getState().launchFlight();
     setKeyAxes(1, 1);
     expect(commitHeldAxes(0.5, "mission").ok).toBe(true);
-    expect(useScene.getState().flight.input.pitchRad).toBeGreaterThan(0.1);
+    expect(useScene.getState().flight.input.pitchRad).toBe(0);
     expect(useScene.getState().flight.input.throttle).toBeGreaterThan(0.1);
 
     useScene.setState(initialScene, true);
@@ -95,13 +96,18 @@ describe("shared flight controls", () => {
     useAppMode.setState({ mode: "replay" });
     useScene.getState().startReplay("practice");
     setKeyAxes(0, 1);
+    expect(commitHeldAxes(0.4, "replay").ok).toBe(false);
+    expect(useScene.getState().flight.status).toBe("idle");
+    useScene.getState().setRocket({ connected: true, code: "TEST" });
     expect(commitHeldAxes(0.4, "replay").ok).toBe(true);
     expect(useScene.getState().flight.status).toBe("flying");
     expect(useScene.getState().replay.missionId).toBe("practice");
     advance(0.4);
     const guide = useScene.getState().flight.guide;
-    expect(guide?.playMode).toBe("mission");
-    if (guide?.corridor) expect(guide.deviation).not.toBeNull();
-    else expect(guide?.note).toBe("Reference trajectory unavailable");
+    expect(guide).toMatchObject({
+      playMode: "mission", corridor: false, deviation: null, note: null,
+      warningLevel: "nominal", countdownS: null, accuracy: null,
+    });
+    expect(useScene.getState().flight.outcome).toBeNull();
   });
 });

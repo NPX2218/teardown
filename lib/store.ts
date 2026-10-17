@@ -255,11 +255,10 @@ export const useScene = create<SceneState>()((set, get) => {
       const { replay, flight, missionTrackId, rocket } = get();
       if (!hasMission(replay.missionId)) return;
       if (flight.status !== "idle" && missionTrackId !== replay.missionId) return;
-      const phoneOwns = flight.owners.pitch === "phone" || flight.owners.throttle === "phone";
-      if (flight.status === "paused" && phoneOwns && !rocket.connected) return;
+      if ((flight.status === "paused" || flight.status === "flying") && !rocket.connected) return;
       set({
         replay: { ...replay, playing: true },
-        ...(flight.status === "paused" ? { flight: { ...flight, status: "flying" as const } } : {}),
+        ...(flight.status === "paused" ? { flight: clearHeldInput(assignAxisOwner(flight, "pitch", "phone"), "flying") } : {}),
       });
     },
 

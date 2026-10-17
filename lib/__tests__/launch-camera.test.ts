@@ -107,7 +107,7 @@ describe("camera shots", () => {
     expect(dot(offset, siteFrame.right)).toBeGreaterThan(0);
     expect(dot(offset, siteFrame.up)).toBeGreaterThan(0);
     expect(dot(aim, siteFrame.right)).toBeCloseTo(0, 9);
-    expect(dot(aim, siteFrame.up) / 1e-6).toBeCloseTo(35, 3);
+    expect(dot(aim, siteFrame.up) / 1e-6).toBeCloseTo(35.6, 3);
     const chase = chaseShot({
       frame: siteFrame,
       position: physicsMetersToEarthRadii(0, EARTH_RADIUS_M, siteFrame),

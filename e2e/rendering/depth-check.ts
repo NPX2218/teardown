@@ -40,7 +40,6 @@ for (const logarithmicDepthBuffer of [true, false]) {
   ['sky',environment.skyVertexShader,environment.atmosphereFragmentShader()],
   ['earth',earth.earthVertexShader,earth.earthFragmentShader],
   ['earth-cloud',earth.earthVertexShader,earth.cloudFragmentShader],
-  ['earth-atmosphere',earth.earthVertexShader,earth.atmosphereFragmentShader],
  ];
  for (const [name,vertexShader,fragmentShader] of pairs) {
   const scene = new THREE.Scene();
@@ -71,6 +70,27 @@ for (const logarithmicDepthBuffer of [true, false]) {
   const pixel = new Uint8Array(4); renderer.readRenderTargetPixels(target,16,16,1,1,pixel);
   results.push({name:`occlusion front=${effectInFront} log=${logarithmicDepthBuffer}`,pass:effectInFront ? pixel[0]>200 && pixel[1]<10 : pixel[1]>200 && pixel[0]<10,detail:Array.from(pixel)});
   blockerMat.dispose(); effectMat.dispose();
+ }
+ // REGRESSION GUARD for the 2026-10-17 skin-loss report: engine-attached
+ // billboards must trail the bells, rather than rise through the visible body.
+ {
+  const scene=new THREE.Scene();
+  const scale=1e-6;
+  const skinGeo=new THREE.PlaneGeometry(10*scale,70*scale);
+  const skinMat=new THREE.MeshBasicMaterial({color:0x00ff00});
+  const skin=new THREE.Mesh(skinGeo,skinMat);skin.position.y=35*scale;
+  const smokeGeo=new THREE.PlaneGeometry(1,1);
+  smokeGeo.setAttribute('aSeed',new THREE.InstancedBufferAttribute(new Float32Array([0.5]),1));
+  smokeGeo.setAttribute('aDir',new THREE.InstancedBufferAttribute(new Float32Array([0,0,1]),3));
+  const smokeUniforms={...uniforms,uTime:{value:0},uSmoke:{value:1},uSpread:{value:218},uOrange:{value:1},uReduced:{value:1}};
+  const smokeMat=new THREE.ShaderMaterial({vertexShader:shaders.smokeVertex,fragmentShader:shaders.smokeFragment,uniforms:smokeUniforms,transparent:true,depthWrite:false});
+  const smoke=new THREE.InstancedMesh(smokeGeo,smokeMat,1);smoke.scale.setScalar(scale);smoke.frustumCulled=false;
+  const skinCamera=new THREE.PerspectiveCamera(50,1,5e-8,80);
+  skinCamera.position.set(0,35*scale,220*scale);skinCamera.lookAt(0,35*scale,0);
+  scene.add(skin,smoke);renderer.render(scene,skinCamera);
+  const pixel=new Uint8Array(4);renderer.readRenderTargetPixels(target,16,16,1,1,pixel);
+  results.push({name:`engine smoke preserves body skin log=${logarithmicDepthBuffer}`,pass:pixel[1]>240&&pixel[0]<10,detail:Array.from(pixel)});
+  skinGeo.dispose();skinMat.dispose();smokeGeo.dispose();smokeMat.dispose();
  }
  // PR #34: a metre-sized effect must occupy the same pixels at a unit scale
  // and at the flight scene's 1e-6 scale with an equivalently scaled camera.

@@ -55,6 +55,7 @@ describe("flight drawing follows the physics frame", () => {
 
 describe("replay player run drawing", () => {
   it("P3: abort keeps the player rocket at its final position (PR #34)", () => {
+    useScene.getState().setRocket({ connected: true, code: "ABCD" });
     expect(useScene.getState().startReplay("practice").ok).toBe(true);
     useScene.getState().setReplayTime(100);
     useAppMode.setState({ mode: "replay" });
@@ -69,6 +70,7 @@ describe("replay player run drawing", () => {
   });
 
   it("P4: retry draws the ready player rocket on the pad (PR #34)", () => {
+    useScene.getState().setRocket({ connected: true, code: "ABCD" });
     expect(useScene.getState().startReplay("practice").ok).toBe(true);
     useScene.getState().setReplayTime(100);
     useAppMode.setState({ mode: "replay" });

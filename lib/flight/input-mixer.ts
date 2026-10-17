@@ -1,6 +1,7 @@
 // lib/flight/input-mixer.ts — one mixer for pitch and throttle (07 §3, §6).
 // Owner: Neel. This file does not integrate physics and does not write position or fuel.
-import type { ControlAxis, ControlSource, FlightArmed, FlightAxisCommand, FlightInput, FlightSession } from "@/lib/types";
+import type { ControlAxis, ControlSource, FlightArmed, FlightAxisCommand, FlightInput, FlightSession, Quat } from "@/lib/types";
+import { quatNormalize } from "@/lib/rocket/orient";
 
 /** Pitch commands are clamped to a half-turn either side of local vertical. */
 export const PITCH_LIMIT_RAD = Math.PI / 2;
@@ -18,6 +19,19 @@ export function clampPitchRad(value: unknown): number | null {
 export function clampThrottle(value: unknown): number | null {
   if (typeof value !== "number" || !Number.isFinite(value)) return null;
   return Math.min(1, Math.max(0, value));
+}
+
+function normalizedAttitude(value: unknown): Quat | null {
+  if (!Array.isArray(value) || value.length !== 4 || !value.every((part) => typeof part === "number" && Number.isFinite(part))) return null;
+  const norm = Math.hypot(...value);
+  if (!Number.isFinite(norm) || norm === 0) return null;
+  return quatNormalize(value as Quat);
+}
+
+function withoutAttitude(input: FlightInput): FlightInput {
+  const rest = { ...input };
+  delete rest.attitudeQuat;
+  return rest;
 }
 
 export interface MixResult {
@@ -43,7 +57,7 @@ function isNeutral(axis: ControlAxis, value: number, source: ControlSource): boo
  */
 export function mixFlightInput(flight: FlightSession, command: FlightAxisCommand, source: ControlSource): MixResult {
   const submitted: ControlAxis[] = [];
-  if (command.pitchRad !== undefined || command.yawRad !== undefined) submitted.push("pitch");
+  if (command.pitchRad !== undefined || command.yawRad !== undefined || command.attitudeQuat !== undefined) submitted.push("pitch");
   if (command.throttle !== undefined) submitted.push("throttle");
   if (submitted.length === 0) {
     return { ok: false, error: "empty flight input", input: flight.input, armed: flight.armed, ignoredAxes: [] };
@@ -62,7 +76,8 @@ export function mixFlightInput(flight: FlightSession, command: FlightAxisCommand
     }
     const clamped = axis === "pitch" ? clampPitchRad(command.pitchRad === undefined ? flight.input.pitchRad : command.pitchRad) : clampThrottle(command.throttle);
     const yaw = axis === "pitch" ? clampPitchRad(command.yawRad === undefined ? 0 : command.yawRad) : 0;
-    if (clamped === null || yaw === null) {
+    const attitude = axis === "pitch" && command.attitudeQuat !== undefined ? normalizedAttitude(command.attitudeQuat) : undefined;
+    if (clamped === null || yaw === null || attitude === null) {
       invalid.push(axis);
       continue;
     }
@@ -71,13 +86,16 @@ export function mixFlightInput(flight: FlightSession, command: FlightAxisCommand
       const phoneReady = source !== "phone" || command.calibrated === true;
       if (phoneReady && isNeutral(axis, clamped, source) && (axis !== "pitch" || isNeutral(axis, yaw, source))) {
         armed = { ...armed, [axis]: true };
-        input = { ...input, [key]: clamped, ...(axis === "pitch" ? { yawRad: yaw } : {}) };
       } else {
         waiting.push(axis);
+        continue;
       }
-      continue;
     }
-    input = { ...input, [key]: clamped, ...(axis === "pitch" ? { yawRad: yaw } : {}) };
+    input = {
+      ...(axis === "pitch" ? withoutAttitude(input) : input),
+      [key]: clamped,
+      ...(axis === "pitch" ? { yawRad: yaw, ...(attitude ? { attitudeQuat: attitude } : {}) } : {}),
+    };
   }
 
   const ignoredAxes = [...unowned, ...invalid, ...waiting];
@@ -100,6 +118,6 @@ export function assignAxisOwner(flight: FlightSession, axis: ControlAxis, source
     ...flight,
     owners: { ...flight.owners, [axis]: source },
     armed: { ...flight.armed, [axis]: false },
-    input: { ...flight.input, [key]: 0, ...(axis === "pitch" ? { yawRad: 0 } : {}) },
+    input: { ...(axis === "pitch" ? withoutAttitude(flight.input) : flight.input), [key]: 0, ...(axis === "pitch" ? { yawRad: 0 } : {}) },
   };
 }

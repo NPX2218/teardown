@@ -64,3 +64,28 @@ This remains a spherical-Earth educational simulator rather than a certified six
 ## Verification outcome
 
 The final combined suite passed 954 tests with one existing skipped test. All 58 real WebGL rendering checks and all three browser scenarios passed. TypeScript and production build passed; lint reports only the existing presentation image warnings. Independent review found no blocking defects. The original planar classroom profile matched all 22,921 substeps through the same orbit success. The new public preview was restarted from an isolated source copy with public tunnel settings; repository environment files were excluded throughout.
+
+## Full-orientation follow-up
+
+The handset test requested phone-only steering, the complete Explore orientation including twist, and an open sky. The prior two-angle response still discarded twist and restricted pointing to a cone. The approved behavior is full pointing and twist with physical thrust and momentum, while retaining the upright liftoff clamp.
+
+| Scenario | Previous repair | Follow-up |
+| --- | --- | --- |
+| Phone pose | Gravity-derived pitch and side lean | Explore’s calibrated quaternion delta, with flight-neutral calibration |
+| Twist or inverted pointing | Discarded or clipped | Complete physical orientation retained |
+| Input response | Two-angle cone | One wall-time quaternion turn budget; fine control below 60 degrees, all larger orientations reachable |
+| Steering controls | Phone/screen handoff and screen slider | Phone only; screen retains engine power, calibration, pause and retry |
+| Disconnect/replay Play | Could fall back to local steering | Wait for phone, reclaim neutral phone control explicitly |
+| Cloud crossing | Four patterned spherical sheets | Soft cloud puffs and brief fog; no surrounding sheets |
+
+The runtime path is `Explore calibrated delta -> fixed phone/flight axis remap and complete rotation inversion -> gentle quaternion response -> owned input -> torque-limited physical quaternion -> drawing and thrust -> velocity and position`. Rendering reads the full quaternion, preserving twist rather than rebuilding rotation from the nose alone. A transported radial reference frame avoids a control-heading discontinuity at the crossrange poles. Old scalar inputs remain available to deterministic scenarios and profile recording, preserving their existing arithmetic.
+
+The sky root cause was reproduced by drawing the actual cloud shaders with and without the four double-sided spherical meshes. Their high-frequency noise resembled a water surface overhead. Removing those sheets eliminated the apparent ceiling; the physical model independently climbed to 193.8 km at 120 simulated seconds under upright full thrust. The remaining cloud puffs and fog fade outside the crossing band. Automatic upside-down abort is retired because inverted orientation is now an intentional control input.
+
+Verification includes independent raw quaternion/matrix mapping, complete orientation and engine impulse agreement, twist through the actual Vehicle callback, full inversion, sign-equivalent quaternions, pole crossing, shared torque and wall-time limits, phone-only launch/resume/keyboard behavior, and real before/after sky images. Browser scenarios replace the retired screen-steering path with phone-only controls and a no-phone launch guard.
+
+## Handset direction and camera follow-up
+
+The next handset report requested reversal of every mission steering axis. Flight now inverts the complete remapped quaternion, including twist and combined rotations. Explore’s display mapping stays unchanged. A held calibration pose now produces identity flight input: previously the accepted initial lean was restored into flight, allowing a 10-degree calibration lean to produce 92.13 metres of lateral travel in 20 seconds. Raw quaternion/gravity regressions cover both shell mounts, both lean signs and nonzero world heading, requiring exactly zero horizontal position and velocity throughout a neutral launch.
+
+The camera investigation also separated apparent motion from actual drift. Upright powered flight has exactly zero horizontal velocity; returning upright after a turn retains physical momentum. The intro camera was eased twice, leaving it about 300 km from the stationary rocket at the declared 2.6-second endpoint and briefly overshooting its final distance. The intro now applies its existing smooth interpolation directly and reaches the chase shot at that endpoint. The camera target also differed from the rotated mesh midpoint: a 30-degree lean produced a 14.66 m mismatch. A shared vehicle-pose helper now supplies both the mesh origin and camera center, including the existing stage pivots, surface clearance and upper-stage geometry bounds. Actual camera/Vehicle callback regressions verify the endpoint, centered framing through tilt and staging, and continued tracking during horizontal motion without changing momentum.

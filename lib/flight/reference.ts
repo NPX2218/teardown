@@ -92,21 +92,3 @@ export function referencePath(reference: MissionReference | null | undefined): {
   }
   return points;
 }
-
-/** Altitude ribbon around a kinematic path. Null when the path itself cannot be drawn. */
-export function corridorEdges(
-  reference: MissionReference | null | undefined,
-  altToleranceM: number,
-): { inner: { x: number; y: number }[]; outer: { x: number; y: number }[] } | null {
-  const path = referencePath(reference);
-  if (!path || !(altToleranceM > 0)) return null;
-  const shift = (point: { x: number; y: number }, delta: number) => {
-    const radius = Math.hypot(point.x, point.y) || 1;
-    const next = radius + delta;
-    return { x: (point.x / radius) * next, y: (point.y / radius) * next };
-  };
-  return {
-    inner: path.map((point) => shift(point, -altToleranceM)),
-    outer: path.map((point) => shift(point, altToleranceM)),
-  };
-}

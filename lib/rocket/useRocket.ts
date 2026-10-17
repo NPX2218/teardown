@@ -16,7 +16,8 @@ import {
 } from "@/lib/rocket/mount";
 import { quatConj, quatFromTo, quatMul, quatNormalize, relativeOrientation } from "@/lib/rocket/orient";
 import { commitPhoneAxes, commitShellEvent } from "@/lib/flight/controls";
-import { stepPhoneSteering, type PhoneSteering } from "@/lib/flight/phone-steering.helpers";
+import { phoneToFlightAttitude, stepPhoneAttitude } from "@/lib/flight/phone-steering.helpers";
+import { quatRotate } from "@/lib/flight/quaternion.helpers";
 import { SHELL_GESTURE, ShellGestureDetector, throttleFromShell, type ShellEvent } from "@/lib/rocket/shell-gestures";
 import { useScene } from "@/lib/store";
 import type { Quat, RocketMessage, ShellStatusLevel, ShellStatusWord, Vec3 } from "@/lib/types";
@@ -36,12 +37,12 @@ let compPitch = 0;
 let lastFrameAt: number | null = null;
 let lastStatus = "";
 const shell = new ShellGestureDetector();
-let steering: PhoneSteering = { pitchRad: 0, yawRad: 0 };
+let steering: Quat = [1, 0, 0, 0];
 let steeringAt: number | null = null;
 let steeringRunId: string | null = null;
 
 function clearSteering(): void {
-  steering = { pitchRad: 0, yawRad: 0 };
+  steering = [1, 0, 0, 0];
   steeringAt = null;
   steeringRunId = null;
 }
@@ -71,6 +72,9 @@ function publishStatus(word: ShellStatusWord, level: ShellStatusLevel, flash = f
 
 function applyShellEvent(event: ShellEvent | null, now: number): void {
   if (!event) return;
+  // Full pointing includes inverted flight. Holding that attitude is steering,
+  // rather than the old upside-down abort gesture (October 17 follow-up).
+  if (event === "abort") return;
   const before = useScene.getState().flight.status;
   const result = commitShellEvent(event);
   if (!result.ok) return;
@@ -83,10 +87,6 @@ function applyShellEvent(event: ShellEvent | null, now: number): void {
   if (event === "flick") {
     sendToRocket({ k: "vibrate", pattern: [40, 30, 40] });
     return;
-  }
-  if (event === "abort") {
-    publishStatus("ABORT", "bad", true);
-    sendToRocket({ k: "vibrate", pattern: [200, 80, 200, 80, 600] });
   }
 }
 
@@ -144,8 +144,8 @@ export function handleRocketMessage(m: RocketMessage, now: number): void {
     const store = useScene.getState();
     const { flight } = store;
 
-    // The mount locks on the first frame held near upright, and only then. Holding a lean still can never
-    // become the new "up", so the same physical pose always reads the same angle. Zero re-locks.
+    // Lock the shell mount near upright. The accepted pose becomes flight neutral;
+    // Explore retains its gravity-aligned physical lean. Zero re-locks both.
     if (!basis) {
       const locked = snapUprightBasis(m.grav);
       if (locked) {
@@ -161,6 +161,11 @@ export function handleRocketMessage(m: RocketMessage, now: number): void {
     }
 
     if (basis) {
+      // Both modes share the same calibrated phone delta. Only Explore restores
+      // the initial physical lean; flight must launch neutral when that pose is held.
+      const calibrated = relativeOrientation(q0!, m.q, quatConj(basis.q));
+      const turned = quatNormalize(quatMul(home, calibrated));
+      if (flight.status === "idle") store.setOrientation(turned);
       const gravRocket = toRocket(basis, m.grav);
       const linRocket = toRocket(basis, m.lin);
       const lean = attitudeFromGravity(basis, m.grav);
@@ -182,25 +187,21 @@ export function handleRocketMessage(m: RocketMessage, now: number): void {
       if (live.status === "flying" && live.owners.pitch === "phone") {
         if (steeringRunId !== live.runId) clearSteering();
         steeringRunId = live.runId;
-        steering = stepPhoneSteering(steering, lean, steeringAt === null ? 0 : (now - steeringAt) / 1000);
+        steering = stepPhoneAttitude(steering, phoneToFlightAttitude(calibrated), steeringAt === null ? 0 : (now - steeringAt) / 1000);
         steeringAt = now;
       } else {
         clearSteering();
       }
+      const nose = quatRotate(steering, [0, 1, 0]);
       commitPhoneAxes({
-        pitchRad: steering.pitchRad,
-        yawRad: steering.yawRad,
+        pitchRad: Math.atan2(nose[0], Math.hypot(nose[1], nose[2])),
+        yawRad: Math.atan2(nose[2], nose[1]),
+        attitudeQuat: steering,
         throttle,
         // The lift that launched is still moving the rocket up; it is not a request for the throttle.
         throttlePush: pushed && now - launchedAt > LAUNCH_PUSH_GRACE_MS,
         calibrated: true,
       });
-    }
-
-    if (basis && q0 && flight.status === "idle") {
-      // Phone turn since the lock, moved from phone axes into rocket axes (the mount), then applied to the model.
-      const turned = quatNormalize(quatMul(home, relativeOrientation(q0, m.q, quatConj(basis.q))));
-      store.setOrientation(turned);
     }
 
     const det = getDetector();
