@@ -240,4 +240,14 @@ describe("background music route and gesture", () => {
     startMusicFromGesture({ volume: 0.5, play });
     expect(play).toHaveBeenCalledTimes(1);
   });
+
+  // REGRESSION GUARD (2026-10-17): the live deck logged "Uncaught (in promise)
+  // NotAllowedError: play() failed" when the browser refused autoplay.
+  it("M1: swallows a refused play() instead of leaving an unhandled rejection", async () => {
+    const refused = Promise.reject(new DOMException("blocked", "NotAllowedError"));
+    const caught = vi.spyOn(refused, "catch");
+    expect(startMusicFromGesture({ volume: 0.5, play: () => refused })).toBe(true);
+    expect(caught).toHaveBeenCalledTimes(1);
+    await refused.catch(() => {});
+  });
 });
