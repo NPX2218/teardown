@@ -1,0 +1,47 @@
+{
+  "id": "earth",
+  "kind": "environment",
+  "name": "Earth",
+  "simulationLabel": "Earth constants. Not a flight.",
+  "kidSummary": "These are Earth's size and pull, from NASA's fact sheet. A round Earth in the game is a simplification. The real Earth is a little wider at the equator.",
+  "trajectory": null,
+  "flyable": false,
+  "unavailableReason": "This file is Earth constants, not a launch.",
+  "values": {
+    "equatorialRadiusKm": {
+      "value": 6378.137,
+      "unit": "km",
+      "classification": "published",
+      "source": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html",
+      "note": "NASA fact sheet equatorial radius. A spherical model that uses only this radius is a simplification. Multiply by 1000 for metres."
+    },
+    "polarRadiusKm": {
+      "value": 6356.752,
+      "unit": "km",
+      "classification": "published",
+      "source": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html",
+      "note": "NASA fact sheet polar radius. Kept so the equatorial figure is not mistaken for a mean radius."
+    },
+    "gmKm3PerS2": {
+      "value": 398600,
+      "unit": "km^3/s^2",
+      "classification": "published",
+      "source": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html",
+      "note": "NASA prints GM as 0.39860 times 10^6 km^3/s^2. That product is 398600 km^3/s^2. Multiply by 10^9 for m^3/s^2. Not a new measurement."
+    },
+    "standardGravityMps2": {
+      "value": 9.80665,
+      "unit": "m/s^2",
+      "classification": "published",
+      "source": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html",
+      "note": "The fact sheet says this standard acceleration is defined (CODATA 2018) as exact. It is not the mean surface gravity field."
+    },
+    "meanSurfaceGravityMps2": {
+      "value": 9.820,
+      "unit": "m/s^2",
+      "classification": "published",
+      "source": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html",
+      "note": "NASA fact sheet mean surface gravity, printed as 9.820. Not the standard gravity, and not a constant used in place of GM."
+    }
+  }
+}

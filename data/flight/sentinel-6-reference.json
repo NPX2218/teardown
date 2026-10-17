@@ -1,0 +1,137 @@
+{
+  "id": "sentinel-6-reference",
+  "kind": "historical_reference",
+  "name": "Sentinel-6 reference",
+  "simulationLabel": "Simulation based on a real mission. Not a replay of its path.",
+  "kidSummary": "This is a new flight based on Sentinel-6's published rocket facts. It is not a recording of the real path. Fuel mass is unknown, so this flight cannot start.",
+  "trajectory": null,
+  "flyable": false,
+  "unavailableReason": "Propellant mass and fuel flow are not in the selected sources.",
+  "values": {
+    "vehicleHeightM": {
+      "value": 70,
+      "unit": "m",
+      "classification": "published",
+      "source": "https://www.spacex.com/vehicles/falcon-9/",
+      "note": "Falcon 9 vehicle-page height. Not a measured length for this launch."
+    },
+    "vehicleDiameterM": {
+      "value": 3.7,
+      "unit": "m",
+      "classification": "published",
+      "source": "https://www.spacex.com/vehicles/falcon-9/",
+      "note": "Falcon 9 vehicle-page diameter."
+    },
+    "vehicleMassKg": {
+      "value": 549054,
+      "unit": "kg",
+      "classification": "published",
+      "source": "https://www.spacex.com/vehicles/falcon-9/",
+      "note": "Falcon 9 vehicle-page mass. Not a weighed Sentinel-6 liftoff mass, and not split into fuel and dry mass."
+    },
+    "payloadLeoCapabilityKg": {
+      "value": 22800,
+      "unit": "kg",
+      "classification": "published",
+      "source": "https://www.spacex.com/vehicles/falcon-9/",
+      "note": "Published payload to LEO. This is a vehicle capability, not the Sentinel-6 satellite mass."
+    },
+    "missionPayloadTonne": {
+      "value": 1.2,
+      "unit": "tonne",
+      "classification": "published_approximate",
+      "source": "https://www.esa.int/Newsroom/Press_Releases/New_Copernicus_satellite_to_monitor_sea-level_rise_launched",
+      "note": "ESA wrote 1.2 tonne. Treating that as 1200 kg does not add a weighed kilogram."
+    },
+    "merlinSeaLevelThrustKn": {
+      "value": 845,
+      "unit": "kN",
+      "classification": "published",
+      "source": "https://www.spacex.com/vehicles/falcon-9/",
+      "note": "Published sea-level thrust of one Merlin. Not a measured throttle trace."
+    },
+    "merlinCount": {
+      "value": 9,
+      "unit": "engines",
+      "classification": "published",
+      "source": "https://www.spacex.com/vehicles/falcon-9/",
+      "note": "Falcon 9 first stage has nine Merlin engines."
+    },
+    "merlinVacuumThrustKn": {
+      "value": 981,
+      "unit": "kN",
+      "classification": "published",
+      "source": "https://www.spacex.com/vehicles/falcon-9/",
+      "note": "Published Merlin Vacuum thrust. Not a measured second-stage throttle trace."
+    },
+    "vacuumEngineCount": {
+      "value": 1,
+      "unit": "engines",
+      "classification": "published",
+      "source": "https://www.spacex.com/vehicles/falcon-9/",
+      "note": "The second stage has one Merlin Vacuum engine."
+    },
+    "stage1SeaLevelThrustKn": {
+      "value": 7607,
+      "unit": "kN",
+      "classification": "published",
+      "source": "https://web.archive.org/web/20200524024922/https://www.spacex.com/vehicles/falcon-9/",
+      "note": "The 24 May 2020 SpaceX vehicle page states this sea-level total. It is that stated figure, not a product of the per-engine thrust. The current vehicle page does not restate it."
+    },
+    "stage1Rp1Kg": {
+      "value": null,
+      "unit": "kg",
+      "classification": "unknown",
+      "source": "",
+      "note": "RP-1 mass for the first stage is not in the selected sources. Oxygen is a separate unknown field."
+    },
+    "stage1LoxKg": {
+      "value": null,
+      "unit": "kg",
+      "classification": "unknown",
+      "source": "",
+      "note": "Liquid-oxygen mass for the first stage is not in the selected sources."
+    },
+    "stage2Rp1Kg": {
+      "value": null,
+      "unit": "kg",
+      "classification": "unknown",
+      "source": "",
+      "note": "RP-1 mass for the second stage is not in the selected sources."
+    },
+    "stage2LoxKg": {
+      "value": null,
+      "unit": "kg",
+      "classification": "unknown",
+      "source": "",
+      "note": "Liquid-oxygen mass for the second stage is not in the selected sources."
+    },
+    "propellantFlowKgPerS": {
+      "value": null,
+      "unit": "kg/s",
+      "classification": "unknown",
+      "source": "",
+      "note": "Fuel flow is not in the selected sources. No flow number is stored."
+    },
+    "dragCoefficient": {
+      "value": null,
+      "unit": "1",
+      "classification": "unknown",
+      "source": "",
+      "note": "No drag coefficient is included. Do not invent one."
+    }
+  },
+  "tuning": {
+    "classification": "gameplay_tuning",
+    "authority": "docs/specs/07-replay.spec.md#4-simulation-contract",
+    "maxSubstepNumerator": 1,
+    "maxSubstepDenominator": 60,
+    "maxWallDeltaSeconds": 0.1,
+    "maxPhysicalStepsPerFrame": 48,
+    "warp": [1, 4, 8],
+    "minPeriapsisAltitudeKm": 200,
+    "maxApoapsisAltitudeKm": 2000,
+    "thrustOffSeconds": 10,
+    "note": "Classroom and responsiveness choices from the 2026-10-17 flight spec. Not a Falcon 9 specification and not the Sentinel-6 orbit."
+  }
+}

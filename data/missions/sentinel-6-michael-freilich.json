@@ -1,0 +1,198 @@
+{
+  "id": "sentinel-6-michael-freilich",
+  "name": "Sentinel-6 Michael Freilich",
+  "date": "2020-11-21",
+  "recordKind": "public_historical",
+  "visibleLabel": "Real mission · published approximate milestones.",
+  "motionLabel": "Real mission · approximate milestones · illustrated motion.",
+  "launchSite": {
+    "text": "SLC-4E at Vandenberg",
+    "source": "https://www.esa.int/Applications/Observing_the_Earth/Copernicus/Sentinel-6/Launch"
+  },
+  "liftoffClock": {
+    "text": "17:17 GMT",
+    "precision": "minute",
+    "exactSecondClaimed": false,
+    "source": "https://www.esa.int/Newsroom/Press_Releases/New_Copernicus_satellite_to_monitor_sea-level_rise_launched"
+  },
+  "publishedAltitude": {
+    "text": "over 1300 km",
+    "valueKm": 1300,
+    "comparator": "over",
+    "classification": "published_approximate",
+    "source": "https://www.esa.int/Newsroom/Press_Releases/New_Copernicus_satellite_to_monitor_sea-level_rise_launched",
+    "note": "ESA says over 1300 km. This is not a trail of altitude samples and not the classroom orbit goal."
+  },
+  "booster": {
+    "serial": "B1063",
+    "flight": 1,
+    "provider": "launch_library_2",
+    "source": "https://ll.thespacedevs.com/2.2.0/launch/56623c2d-7174-489c-b0ed-bf6f039b2412/",
+    "note": "Serial and flight count come from Launch Library 2 only. They are not part of the ESA milestone table."
+  },
+  "landing": {
+    "kind": "landing_zone",
+    "site": "Landing Zone 4",
+    "sources": [
+      "https://ll.thespacedevs.com/2.2.0/launch/56623c2d-7174-489c-b0ed-bf6f039b2412/",
+      "https://www.spacex.com/launches/sentinel6"
+    ],
+    "exactTouchdownSecond": null,
+    "note": "Launch Library 2 records an RTLS attempt at LZ-4. SpaceX's mission page says the first stage landed on Landing Zone 4. Neither source gives an exact touchdown second."
+  },
+  "webcast": {
+    "url": "https://www.youtube.com/watch?v=aVFPzTDCihQ",
+    "timestampsChecked": false
+  },
+  "events": [
+    {
+      "t": 0,
+      "id": "liftoff",
+      "label": "Liftoff",
+      "say": "Liftoff! Booster B1063 is on its first flight.",
+      "precision": "elapsed_origin",
+      "grouping": "single",
+      "evidence": "confirmed_launch",
+      "sources": [
+        "https://www.esa.int/Newsroom/Press_Releases/New_Copernicus_satellite_to_monitor_sea-level_rise_launched"
+      ],
+      "note": "ESA reports liftoff at minute precision. t = 0 is the elapsed-time origin. It is not an exact UTC second."
+    },
+    {
+      "t": 136,
+      "id": "staging",
+      "label": "Booster cutoff, separation, and the top engine",
+      "say": "At about 136 seconds, the booster lets go and the top engine lights. These happen together.",
+      "precision": "approximate_grouped",
+      "grouping": "grouped",
+      "evidence": "approximate_postflight",
+      "sources": [
+        "https://www.esa.int/Applications/Observing_the_Earth/Copernicus/Sentinel-6/Launch"
+      ],
+      "note": "ESA calls this time approximate and says cutoff, separation, and upper-stage ignition happened in quick succession. This is one grouped row, not separate exact timestamps."
+    },
+    {
+      "t": 180,
+      "id": "fairing_sep",
+      "label": "Nose cone falls away",
+      "say": "At about 180 seconds, the nose cone splits and falls away.",
+      "precision": "approximate",
+      "grouping": "single",
+      "evidence": "approximate_postflight",
+      "sources": [
+        "https://www.esa.int/Applications/Observing_the_Earth/Copernicus/Sentinel-6/Launch"
+      ],
+      "note": "ESA lists fairing separation as approximate. This row does not claim an exact second."
+    },
+    {
+      "t": 480,
+      "id": "orbit_and_return",
+      "label": "Top engine stops, and the booster comes back",
+      "say": "Around 480 seconds, the top engine stops and the booster is landing. These are not the same second.",
+      "precision": "approximate_grouped",
+      "grouping": "grouped",
+      "evidence": "approximate_postflight",
+      "sources": [
+        "https://www.esa.int/Applications/Observing_the_Earth/Copernicus/Sentinel-6/Launch",
+        "https://www.fisheries.noaa.gov/s3/2024-01/Vandenberg-2019LOA-MonRep2020-OPR1.pdf"
+      ],
+      "note": "ESA places upper-stage cutoff at the same approximate mark as this row, and NOAA says the booster landing was about that same mark after launch. This row does not claim those moments happened at the same second."
+    }
+  ],
+  "trajectory": null,
+  "reference": {
+    "id": "sentinel-6-michael-freilich-milestones",
+    "label": "Published milestone times only. Not a measured path. Altitude, downrange, speed, and pitch stay null: Telemetry-Data has no Sentinel-6 file, the archived Launch Dashboard catalog does not list this flight, and the FlightClub sim was gone. Nothing was interpolated.",
+    "interpolated": false,
+    "samples": [
+      {
+        "t": 0,
+        "altKm": null,
+        "downrangeKm": null,
+        "velMs": null,
+        "pitchDeg": null,
+        "event": "liftoff",
+        "source": "esa-press",
+        "quality": "published",
+        "note": "Elapsed-time origin. ESA gives liftoff at minute precision, so this row is not an exact UTC second and not a state vector."
+      },
+      {
+        "t": 61,
+        "altKm": null,
+        "downrangeKm": null,
+        "velMs": null,
+        "pitchDeg": null,
+        "event": "max-Q",
+        "source": "nsf-2020-11-21",
+        "quality": "published",
+        "note": "NASASpaceFlight wrote T+1 minute 1 second. 1×60+1 = 61. ESA's milestone table does not list max-Q. Not a telemetry sample."
+      },
+      {
+        "t": 136,
+        "altKm": null,
+        "downrangeKm": null,
+        "velMs": null,
+        "pitchDeg": null,
+        "event": "MECO",
+        "source": "esa-launch",
+        "quality": "published",
+        "note": "ESA: 2 minutes and 16 seconds, approximate, grouped with separation and second-engine start. 2×60+16 = 136. NASASpaceFlight reports main-engine cutoff at T+2 minutes 17 seconds. Those reports are not averaged."
+      },
+      {
+        "t": 136,
+        "altKm": null,
+        "downrangeKm": null,
+        "velMs": null,
+        "pitchDeg": null,
+        "event": "stage sep",
+        "source": "esa-launch",
+        "quality": "published",
+        "note": "Same approximate ESA mark as MECO. ESA did not publish a separate second. The equal time is the grouping, not a claim that they happened together on one second."
+      },
+      {
+        "t": 180,
+        "altKm": null,
+        "downrangeKm": null,
+        "velMs": null,
+        "pitchDeg": null,
+        "event": "fairing",
+        "source": "esa-launch",
+        "quality": "published",
+        "note": "ESA: 3 minutes, approximate. 3×60 = 180."
+      },
+      {
+        "t": 480,
+        "altKm": null,
+        "downrangeKm": null,
+        "velMs": null,
+        "pitchDeg": null,
+        "event": "SECO",
+        "source": "esa-launch",
+        "quality": "published",
+        "note": "ESA: 8 minutes, stage-II engine cut-off, approximate. 8×60 = 480. NASASpaceFlight reports SECO-1 at T+8 minutes 18 seconds. Not averaged, and not the operational orbit."
+      },
+      {
+        "t": 3195,
+        "altKm": null,
+        "downrangeKm": null,
+        "velMs": null,
+        "pitchDeg": null,
+        "event": "insertion",
+        "source": "esa-launch",
+        "quality": "derived",
+        "note": "ESA says the stage restarts at 53 minutes for a 15 second burn, then cuts off. 53×60+15 = 3195. That sum is derived from two approximate phrases. It is not a printed timestamp and not a state vector. NASASpaceFlight reports a 10 second burn from T+53 minutes 18 seconds. The described mission altitude is not attached here."
+      }
+    ]
+  },
+  "continuousTelemetry": false,
+  "providers": {
+    "launchLibrary2": {
+      "source": "https://ll.thespacedevs.com/2.2.0/launch/56623c2d-7174-489c-b0ed-bf6f039b2412/",
+      "name": "Falcon 9 Block 5 | Sentinel-6 Michael Freilich",
+      "net": "2020-11-21T17:17:08Z",
+      "netPrecision": "Second",
+      "describedAltitudeKm": 1336,
+      "note": "Launch Library 2 metadata, including its mission-description altitude. The saved response has an empty timeline. That altitude is not a flight sample, and the seconds in net are not the historical event clock."
+    }
+  }
+}

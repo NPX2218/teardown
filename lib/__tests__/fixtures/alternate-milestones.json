@@ -1,0 +1,50 @@
+{
+  "id": "test-alternate-milestones",
+  "note": "Not a real flight. Different times prove duration and lookup follow the file.",
+  "events": [
+    {
+      "t": 0,
+      "id": "liftoff",
+      "label": "Liftoff",
+      "say": "Liftoff.",
+      "precision": "elapsed_origin",
+      "grouping": "single",
+      "evidence": "confirmed_launch",
+      "sources": ["https://example.com/not-a-flight"],
+      "note": "Test row."
+    },
+    {
+      "t": 100,
+      "id": "staging",
+      "label": "Grouped staging",
+      "say": "At 100 seconds these happen together.",
+      "precision": "approximate_grouped",
+      "grouping": "grouped",
+      "evidence": "approximate_postflight",
+      "sources": ["https://example.com/not-a-flight"],
+      "note": "Test row."
+    },
+    {
+      "t": 150,
+      "id": "fairing_sep",
+      "label": "Fairing",
+      "say": "At 150 seconds the nose cone falls away.",
+      "precision": "approximate",
+      "grouping": "single",
+      "evidence": "approximate_postflight",
+      "sources": ["https://example.com/not-a-flight"],
+      "note": "Test row."
+    },
+    {
+      "t": 400,
+      "id": "orbit_and_return",
+      "label": "End",
+      "say": "Around 400 seconds these are not the same second.",
+      "precision": "approximate_grouped",
+      "grouping": "grouped",
+      "evidence": "approximate_postflight",
+      "sources": ["https://example.com/not-a-flight"],
+      "note": "Test row."
+    }
+  ]
+}

@@ -88,7 +88,8 @@ describe("flight contract 2026-10-17.2", () => {
   it("FC1 startFlight rejects an unknown or prototype scenario id", () => {
     expect(s().startFlight("missing")).toEqual({ ok: false, error: "unknown scenario: missing" });
     expect(s().startFlight("toString").ok).toBe(false);
-    expect(s().startFlight()).toEqual({ ok: false, error: "unknown scenario: reference" });
+    expect(s().startFlight()).toMatchObject({ ok: true, data: { scenarioId: "reference", status: "ready" } });
+    s().stopFlight();
     expect(s().flight.status).toBe("idle");
   });
 
