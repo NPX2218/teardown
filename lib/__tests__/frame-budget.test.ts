@@ -24,9 +24,9 @@ describe("frame budget", () => {
     const stalled = frameWallSlices(0.45);
     expect(stalled).toHaveLength(5);
     expect(stalled.reduce((sum, step) => sum + step, 0)).toBeCloseTo(0.45, 5);
-    const hitch = frameWallSlices(3);
-    expect(hitch.reduce((sum, step) => sum + step, 0)).toBeCloseTo(FRAME_WALL_BUDGET_S, 5);
+    expect(frameWallSlices(3)).toEqual([0.1]);
     expect(frameWallSlices(0)).toEqual([]);
+    expect(FRAME_WALL_BUDGET_S).toBe(0.5);
   });
 
   it("a warped slow frame reaches Sentinel-6 staging while the phone is attached", () => {
@@ -65,5 +65,39 @@ describe("frame budget", () => {
     expect(seen).toContain("Drifting off track");
     expect(useScene.getState().flight.simulatedTimeS).toBeGreaterThan(30);
     expect(useScene.getState().flight.readout?.throttle ?? 0).toBe(0);
+  });
+
+  it("a screenshot hitch does not skip the practice warning on the way to failure", () => {
+    useScene.getState().setPlayMode("mission");
+    useScene.getState().setMissionTrack("practice");
+    useScene.getState().setRocket({ connected: true, code: "ABCD" });
+    expect(useScene.getState().startFlight("classroom").ok).toBe(true);
+    const runId = useScene.getState().flight.runId!;
+    expect(useScene.getState().launchFlight().ok).toBe(true);
+    expect(useScene.getState().setFlightInput({ pitchRad: 0, throttle: 0, calibrated: true }, "local", runId).ok).toBe(true);
+    useScene.getState().setFlightWarp(4);
+
+    const banners: string[] = [];
+    const note = (banner: string | null | undefined) => {
+      if (banner && banners[banners.length - 1] !== banner) banners.push(banner);
+    };
+    for (let i = 0; i < 40 && !banners.includes("Drifting off track"); i += 1) {
+      for (const wall of frameWallSlices(0.4)) useScene.getState().advanceFlight(wall);
+      note(useScene.getState().flight.guide?.banner);
+    }
+    expect(banners).toContain("Drifting off track");
+
+    for (const wall of frameWallSlices(3)) useScene.getState().advanceFlight(wall);
+    expect(useScene.getState().flight.guide?.banner).toBe("Drifting off track");
+
+    for (let i = 0; i < 30 && !banners.includes("Mission failed: off nominal"); i += 1) {
+      for (const wall of frameWallSlices(0.4)) useScene.getState().advanceFlight(wall);
+      note(useScene.getState().flight.guide?.banner);
+    }
+    expect(banners).toContain("Return to trajectory");
+    const warningAt = banners.indexOf("Return to trajectory");
+    const failedAt = banners.indexOf("Mission failed: off nominal");
+    expect(warningAt).toBeGreaterThanOrEqual(0);
+    expect(failedAt).toBeGreaterThan(warningAt);
   });
 });
