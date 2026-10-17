@@ -24,18 +24,18 @@ See `00-index.md`.
 
 **Interfaces — Produces:** `hashLine(text: string): string` — stable 12-char hex of the trimmed text (used for cache filenames).
 
-`speakLine` routing: if `via === "rocket"` **and** the rocket is connected, `sendToRocket({ k: "say", id: hashLine(text), text })` and resolve on the matching `said` (or after `1500 + 55 * text.length + 4000` ms, then fall back to the screen). Otherwise play on the laptop in this order: (1) `public/audio/<hash>.<ext>` if it exists (fast, works offline); (2) `POST /api/voice { text }` with `TEXT_TIMEOUT_MS`; (3) browser `speechSynthesis`. Resolves when playback ends. Only one line plays at a time across **both** speakers: a new call stops the previous one wherever it is, unless it passes `queue: true`, which waits for the current line to finish (13 uses this to add an emissions sentence after a checkpoint line).
+`speakLine` always plays on the laptop, including `via: "rocket"`. Order: (1) `public/audio/<hash>.<ext>` if it exists (fast, works offline); (2) `POST /api/voice { text }` with `TEXT_TIMEOUT_MS`; (3) browser `speechSynthesis`. Cached files and Grok TTS play through the laptop audio element from `getOutputNode()`, so the mascot lip-sync follows the real audio. The phone does not speak these lines. Resolves when playback ends. Only one line plays at a time: a new call stops the previous one, unless it passes `queue: true`, which waits for the current line to finish (13 uses this to add an emissions sentence after a checkpoint line).
 
-Which speaker says what:
+Which lines use which `via` (both play on the laptop):
 | Speech | `via` | Why |
 |---|---|---|
-| Mission callouts and checkpoint prompts ("Liftoff! We're entering the first phase of flight", "Hold it steady!") | `rocket` | Short and exciting; the kid is looking at the rocket |
+| Mission callouts and checkpoint prompts ("Liftoff! We're entering the first phase of flight", "Hold it steady!") | `rocket` | Short callouts. Still the laptop speaker, next to the mic |
 | The short cheer at the end ("Touchdown! You did it!") | `rocket` | |
-| Tour narration, answers to questions, Grok's end-of-mission comment | `screen` | Longer; louder and clearer on the laptop; judges nearby can hear |
+| Tour narration, answers to questions, Grok's end-of-mission comment | `screen` | Longer answers, same laptop output |
 
 - [ ] **Step 1: Failing tests:** `H1` same text → same hash; `H2` `"  hi "` and `"hi"` → same hash; `H3` different text → different hash.
 - [ ] **Step 2:** fail → **Step 3:** implement hash, route (calls Grok Voice per the notes; returns the audio bytes with the right `Content-Type`), and `speakLine` → **Step 4:** pass.
-- [ ] **Step 5: Verify:** start the tour. Expected: the Grok voice reads each line on the laptop; `speakLine("Liftoff!", { via: "rocket" })` from the console plays on the paired phone; unpair → the same call plays on the laptop; stop the network (or unset the key) → it falls back without hanging.
+- [ ] **Step 5: Verify:** start the tour. Expected: the Grok voice reads each line on the laptop, including `speakLine("Liftoff!", { via: "rocket" })`. The paired phone stays quiet for speech. Stop the network (or unset the key) → it falls back without hanging.
 - [ ] **Step 6:** Commit `feat: grok voice with fallbacks`.
 
 ### Task 2: Pre-generate narration

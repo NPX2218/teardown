@@ -5,4 +5,5 @@ export const LINES = {
   touchdown: "Touchdown! You did it!",
   goodQuestion: "Good question!",
   cantReachGrok: "I couldn't reach Grok. Try again.",
+  didntHear: "I didn't hear you. Try again.",
 } as const;
