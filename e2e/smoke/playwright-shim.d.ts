@@ -16,12 +16,15 @@ declare module "@playwright/test" {
     getByText(text: unknown, options?: unknown): Locator;
     screenshot(options?: unknown): Promise<unknown>;
     evaluate(fn: unknown, arg?: unknown): Promise<unknown>;
+    waitForTimeout(ms: number): Promise<void>;
+    keyboard: { down(key: string): Promise<void>; up(key: string): Promise<void>; press(key: string): Promise<void> };
     video(): { saveAs(path: string): Promise<void> } | null;
   }
   export interface Locator {
     click(options?: unknown): Promise<void>;
     first(): Locator;
     innerText(): Promise<string>;
+    getAttribute(name: string): Promise<string | null>;
     evaluate(fn: unknown, arg?: unknown): Promise<unknown>;
     scrollIntoViewIfNeeded(): Promise<void>;
     screenshot(options?: unknown): Promise<unknown>;
@@ -36,7 +39,10 @@ declare module "@playwright/test" {
   }
   interface Expect {
     (value?: unknown): Assertion;
-    poll(fn: () => Promise<number>): { toBeGreaterThan(value: number): Promise<void> };
+    poll(fn: () => Promise<unknown>, options?: unknown): {
+      toBeGreaterThan(value: number): Promise<void>;
+      toMatch(pattern: RegExp): Promise<void>;
+    };
   }
   export const test: {
     (name: string, fn: (args: { browser: Browser }) => Promise<void> | void): void;

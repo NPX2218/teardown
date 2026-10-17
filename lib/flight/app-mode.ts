@@ -22,7 +22,7 @@ interface AppModeState {
 
 export const useAppMode = create<AppModeState>((set, get) => ({
   mode: "explore",
-  view: "overview",
+  view: "follow",
   /** -1 so an event at the liftoff instant can still be spoken once. */
   heardUntil: -1,
   cameraNonce: 0,
@@ -32,11 +32,11 @@ export const useAppMode = create<AppModeState>((set, get) => ({
     if (scene.flight.status === "idle" || scene.flight.scenarioId !== scenarioId) {
       scene.startFlight(scenarioId);
     }
-    set({ mode: "mission" });
+    set({ mode: "mission", view: "follow" });
   },
   openReplay: () => {
     useScene.getState().stopFlight();
-    set({ mode: "replay", heardUntil: -1 });
+    set({ mode: "replay", view: "follow", heardUntil: -1 });
   },
   openExplore: () => {
     const scene = useScene.getState();
@@ -48,5 +48,5 @@ export const useAppMode = create<AppModeState>((set, get) => ({
   setView: (view) => set({ view }),
   noteSeek: (t) => set({ heardUntil: Math.max(get().heardUntil, t) }),
   restartHeard: () => set({ heardUntil: -1 }),
-  resetCamera: () => set((state) => ({ cameraNonce: state.cameraNonce + 1, view: "overview" })),
+  resetCamera: () => set((state) => ({ cameraNonce: state.cameraNonce + 1, view: "follow" })),
 }));

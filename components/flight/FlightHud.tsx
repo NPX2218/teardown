@@ -22,6 +22,7 @@ import {
 import { handoffPitchToLocal, resumeFlightExplicit } from "@/lib/flight/phone-pitch";
 import { zeroRocket } from "@/lib/rocket/useRocket";
 import { clearCameraNudge } from "./cameraNudge";
+import { resetChaseOrbit } from "./chaseOrbit";
 import { useScene } from "@/lib/store";
 import type { FlightWarp } from "@/lib/types";
 import { EmissionsPlacement } from "./EmissionsPlacement";
@@ -279,7 +280,7 @@ export function FlightHud() {
           <div className={styles.actions}>
             <button type="button" className="btn" aria-pressed={view === "overview"} onClick={() => useAppMode.getState().setView("overview")}>Earth view</button>
             <button type="button" className="btn" aria-pressed={view === "follow"} onClick={() => useAppMode.getState().setView("follow")}>Follow rocket</button>
-            <button type="button" className="btn" onClick={() => { clearCameraNudge(); useAppMode.getState().resetCamera(); }}>Reset view</button>
+            <button type="button" className="btn" onClick={() => { clearCameraNudge(); resetChaseOrbit(); useAppMode.getState().resetCamera(); }}>Reset view</button>
             {status !== "idle" && !flight.outcome && (
               <button id="retry-flight" type="button" className="btn" onClick={() => { clearHeldAxes(); useScene.getState().retryFlight(); mark(); }}>Try again</button>
             )}
