@@ -82,6 +82,18 @@ describe("agent tools (04, flight migration)", () => {
     expect(parseToolArgs("  ")).toEqual({});
   });
 
+  it("demo tools start the tour and switch kid or engineer", async () => {
+    expect(await runTool("start_tour", {})).toMatchObject({ ok: true });
+    expect(s().tour.active).toBe(true);
+    expect(s().tour.step).toBe(0);
+    expect(await runTool("set_level", { level: "kid" })).toEqual({ ok: true });
+    expect(s().level).toBe("kid");
+    expect(await runTool("set_level", { level: "engineer" })).toMatchObject({ ok: true });
+    expect(s().level).toBe("engineer");
+    expect((await runTool("set_level", { level: "wizard" })).ok).toBe(false);
+    expect(s().level).toBe("engineer");
+  });
+
   it("A5c replay, level, camera, and imagine", async () => {
     expect((await runTool("fly_to", { target: "home" })).ok).toBe(true);
     expect((await runTool("start_replay", { mission_id: "practice" })).ok).toBe(true);

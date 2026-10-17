@@ -4,35 +4,29 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { GrokMascot } from "@/components/ui/GrokMascot";
+import { GuidePanel, type GuideLine } from "@/components/ui/GuidePanel";
 import { useReducedMotion } from "@/components/ui/useReducedMotion";
-import { setVoiceState, useMascotActivity } from "@/lib/mascot/activity";
+import { askAgent, cancelAgent } from "@/lib/agent/client";
+import { getScene } from "@/lib/agent/scene";
+import type { ChatMessage } from "@/lib/agent/types";
+import { setVoiceState, useMascotActivity, type MascotVoice } from "@/lib/mascot/activity";
 import { bindVoiceActivity } from "@/lib/mascot/voice-bridge";
-import { onVoiceState } from "@/lib/voice/activity";
 import { readFlightResult, readWarningLevel } from "@/lib/mascot/flight-cue";
 import { moodFor } from "@/lib/mascot/mood";
 import { outcomeFace, type FlightFace, type ResultStamp } from "@/lib/mascot/outcome";
+import { stepGuide, type GuideStep } from "@/lib/ui/guide-flow";
 import { motionPresets } from "@/lib/ui/motion";
 import { useScene } from "@/lib/store";
 import { useExhibit } from "@/lib/viewer/exhibit";
+import { resetVoiceActivity, onVoiceState } from "@/lib/voice/activity";
+import { runGuideVoiceSession, voiceErrorCopy } from "@/lib/voice/guide-session";
+import { isRocketConnected } from "@/lib/voice/rocket-port";
+import { listenOnce } from "@/lib/voice/listen";
+import { speakLine, stopSpeaking } from "@/lib/voice/speak";
 import styles from "./guide.module.css";
 
 /** Face control. The drawn circle is about two thirds of this, inside the engine viewBox. */
 const MASCOT_PX = 96;
-
-const ANSWERS = [
-  {
-    q: "What is a stage?",
-    a: "A stage is one section of the rocket. When its fuel is used up, it can let go.",
-  },
-  {
-    q: "What does the booster do?",
-    a: "The booster is the first stage. It lifts the rocket. On many flights it comes back and lands.",
-  },
-  {
-    q: "How do I fly?",
-    a: "Open Your mission, tap Launch, then use Tilt and Engine power. A paired phone can tilt for you. Engine power stays on this screen.",
-  },
-] as const;
 
 export function GuideLauncher() {
   const attract = useExhibit((s) => s.phase === "attract");
@@ -49,19 +43,75 @@ export function GuideLauncher() {
     flight: flightFace,
     warning,
   });
-  const [open, setOpen] = useState(false);
-  const [answer, setAnswer] = useState<number | null>(null);
+  const [step, setStep] = useState<GuideStep>("closed");
+  const [lines, setLines] = useState<GuideLine[]>([]);
+  const [draft, setDraft] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
   const titleId = useId();
+  const history = useRef<ChatMessage[]>([]);
+  const sendSeq = useRef(0);
+  const open = step !== "closed";
   const close = () => {
-    setOpen(false);
-    setAnswer(null);
+    sendSeq.current += 1;
+    cancelAgent();
+    stopSpeaking();
+    setStep("closed");
+    setLines([]);
+    setDraft("");
+    setBusy(false);
+    setVoiceError(null);
+    history.current = [];
   };
 
   useEffect(() => {
     if (!attract) return;
-    setOpen(false);
-    setAnswer(null);
+    close();
+    // Attract reset is the same close path. close is stable enough for this latch.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attract]);
+
+  useEffect(() => {
+    if (step !== "voice") return;
+    const ac = new AbortController();
+    const voiceHistory: ChatMessage[] = [];
+    setVoiceError(null);
+    void runGuideVoiceSession({
+      signal: ac.signal,
+      listen: (source, opts) => listenOnce(source, opts?.endEarly),
+      rocketConnected: isRocketConnected,
+      askAgent,
+      speakLine,
+      history: voiceHistory,
+      markActivity: () => getScene().markActivity(performance.now()),
+      onReply: (result) => {
+        if (!result.reply) return;
+        setLines((prev) => [...prev, { role: "guide", text: result.reply }]);
+      },
+      onError: (reason) => setVoiceError(voiceErrorCopy(reason)),
+    });
+    return () => {
+      ac.abort();
+      stopSpeaking();
+      cancelAgent();
+      resetVoiceActivity();
+    };
+  }, [step]);
+
+  async function send(text: string) {
+    const q = text.trim();
+    if (q === "" || busy) return;
+    const mine = ++sendSeq.current;
+    setBusy(true);
+    setDraft("");
+    setLines((prev) => [...prev, { role: "you", text: q }]);
+    getScene().markActivity(performance.now());
+    const result = await askAgent(q, history.current);
+    if (mine !== sendSeq.current) return;
+    history.current = result.history;
+    if (result.reply) setLines((prev) => [...prev, { role: "guide", text: result.reply }]);
+    setBusy(false);
+  }
 
   useEffect(() => {
     const stop = bindVoiceActivity(onVoiceState);
@@ -81,7 +131,7 @@ export function GuideLauncher() {
         aria-expanded={open}
         aria-controls={titleId}
         aria-label={open ? "Close the guide" : "Open the guide"}
-        onClick={() => (open ? close() : setOpen(true))}
+        onClick={() => (step === "closed" ? setStep("choose") : close())}
       >
         <span className={styles.face}>
           <GrokMascot
@@ -95,41 +145,34 @@ export function GuideLauncher() {
         </span>
       </button>
       <AnimatePresence>
-        {open && (
+        {step !== "closed" && (
           <motion.section
             key="guide"
             id={titleId}
             className={`card sheet ${styles.panel}`}
             role="dialog"
             aria-label="Guide"
-            initial={{ opacity: 0, y: 8 }}
+            initial={reducedMotion ? false : { opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 8 }}
-            transition={motionPresets.out}
+            exit={reducedMotion ? { opacity: 1 } : { opacity: 0, y: 8 }}
+            transition={reducedMotion ? { duration: 0 } : motionPresets.out}
           >
-            <button type="button" className={`btn btn-icon overlay__close ${styles.close}`} aria-label="Close the guide" onClick={close}>
-              ×
-            </button>
-            <p className="eyebrow">Guide</p>
-            <h2>Ask in plain words.</h2>
-            <p>
-              <span className="chip">On this computer</span>
-            </p>
-            <p className="small">Live answers show up when Grok is connected. These buttons work either way.</p>
-            <div className={styles.questions}>
-              {ANSWERS.map((item, index) => (
-                <button
-                  key={item.q}
-                  type="button"
-                  className="btn"
-                  aria-pressed={answer === index}
-                  onClick={() => setAnswer(answer === index ? null : index)}
-                >
-                  {item.q}
-                </button>
-              ))}
-            </div>
-            {answer !== null && <p className="lead">{ANSWERS[answer].a}</p>}
+            <GuidePanel
+              mode={step}
+              voice={activity.voice as MascotVoice}
+              reducedMotion={reducedMotion}
+              lines={lines}
+              draft={draft}
+              busy={busy}
+              voiceError={voiceError}
+              onText={() => setStep(stepGuide(step, "text"))}
+              onVoice={() => setStep(stepGuide(step, "voice"))}
+              onBack={() => setStep(stepGuide(step, "back"))}
+              onClose={close}
+              onDraft={setDraft}
+              onSend={(text) => void send(text)}
+              onStopVoice={() => setStep(stepGuide(step, "stop"))}
+            />
           </motion.section>
         )}
       </AnimatePresence>

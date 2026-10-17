@@ -60,7 +60,7 @@ button.launch[aria-expanded="true"] {
 .panel {
   position: relative;
   width: min(22rem, calc(100vw - 32px));
-  max-height: min(42dvh, 22rem);
+  max-height: min(70dvh, 28rem);
   overflow: auto;
   overscroll-behavior: contain;
   text-align: left;
@@ -69,10 +69,59 @@ button.launch[aria-expanded="true"] {
 
 .close { position: absolute; top: 10px; right: 10px; }
 
-.questions { display: grid; gap: 8px; }
-.questions > button { width: 100%; justify-content: flex-start; }
+.questions { display: flex; flex-wrap: wrap; gap: 8px; }
+.questions > button { justify-content: flex-start; }
+
+.choices { display: flex; gap: 8px; margin-top: 12px; }
+.choices > button { flex: 1; }
+
+.ask { display: flex; gap: 8px; margin: 12px 0; }
+.field {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--hairline-2);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+}
+.field:focus { outline: 1px solid var(--line-strong); outline-offset: 2px; }
+
+.log { display: grid; gap: 8px; margin-top: 12px; }
+.you { margin: 0; color: var(--text-2); }
+
+.voiceRow { display: flex; align-items: center; gap: 12px; margin: 16px 0; }
+.dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 16px;
+}
+.dots > span {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--text);
+  animation: guide-dot 1s var(--ease-ui) infinite;
+}
+.dots > span:nth-child(2) { animation-delay: 0.15s; }
+.dots > span:nth-child(3) { animation-delay: 0.3s; }
+.dots[data-motion="reduce"] > span,
+.dots[data-voice="idle"] > span { animation: none; opacity: 0.45; }
+
+@keyframes guide-dot {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.35; }
+  40% { transform: translateY(-4px); opacity: 1; }
+}
 
 @media (max-width: 720px) {
   .wrap { right: 12px; bottom: 12px; }
-  .panel { max-height: 42dvh; }
+  .panel { max-height: 70dvh; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dots > span { animation: none; opacity: 0.8; }
 }

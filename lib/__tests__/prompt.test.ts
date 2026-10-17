@@ -37,6 +37,8 @@ describe("system prompt (04 Task 3, flight migration)", () => {
     for (const level of ["kid", "curious", "engineer"] as const) {
       const p = buildSystemPrompt(PARTS, MISSIONS, level);
       expect(p).toContain(FLIGHT_BOUNDARY_RULE);
+      expect(p).toContain("call start_tour");
+      expect(p).toContain("call set_level");
       expect(p).toContain(RETIRED_SURFACES_RULE);
       expect(p).not.toContain("missionStars");
       expect(p).not.toContain("A message starting with COACH:");

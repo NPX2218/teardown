@@ -49,6 +49,9 @@ describe("fallbackIntent (04 Task 4)", () => {
     expect(fallbackIntent("show me the grid fins")).toEqual({ tool: "select_part", args: { part_id: "gridfins" } });
     expect(fallbackIntent("where are the LEGS?")).toEqual({ tool: "select_part", args: { part_id: "legs" } });
     expect(fallbackIntent("take the tour")).toEqual({ tool: "start_tour", args: {} });
+    expect(fallbackIntent("Give me a tour")).toEqual({ tool: "start_tour", args: {} });
+    expect(fallbackIntent("Explain like I'm a kid")).toEqual({ tool: "set_level", args: { level: "kid" } });
+    expect(fallbackIntent("Explain like an engineer")).toEqual({ tool: "set_level", args: { level: "engineer" } });
   });
 
   it("F3 weather matches nothing", () => {

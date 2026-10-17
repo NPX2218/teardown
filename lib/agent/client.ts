@@ -58,6 +58,16 @@ const PART_MATCHERS: { re: RegExp; id: string }[] = [
 
 const QUESTION = /^(what|why|how|when|where|who|which|is|are|does|do|can|could)\b/;
 
+/** "Explain like I'm a kid" / "Explain like an engineer" → set_level. Tour phrases stay a tour. */
+export function explainLevelIntent(text: string): "kid" | "engineer" | null {
+  const t = text.trim().toLowerCase();
+  const asks = /\bexplain\b/.test(t) || /\blike i(?:'|’)m\b/.test(t);
+  if (!asks) return null;
+  if (/\bengineer\b/.test(t)) return "engineer";
+  if (/\bkid\b/.test(t)) return "kid";
+  return null;
+}
+
 function firstReplayId(): string | undefined {
   const historical = Object.entries(MISSIONS).find(([, mission]) => mission.kind === "historical");
   if (historical) return historical[0];
@@ -74,7 +84,9 @@ export function fallbackIntent(text: string): Intent | null {
       const first = firstReplayId();
       if (first !== undefined) return { tool: "start_replay", args: { mission_id: first } };
     }
-    if (/\btour/.test(t)) return { tool: "start_tour", args: {} };
+    if (/\btour/.test(t) && !explainLevelIntent(t)) return { tool: "start_tour", args: {} };
+    const level = explainLevelIntent(t);
+    if (level) return { tool: "set_level", args: { level } };
     if (/^(let['’]s fly[!.]?|fly( the mission)?[!.]?)$/.test(t)) {
       return { tool: "start_mission", args: {} };
     }
@@ -88,6 +100,11 @@ export function fallbackReply(intent: Intent | null, result: ToolResult | null):
   if (!intent || !result?.ok) return LINES.cantReachGrok;
   if (intent.tool === "start_replay") return "I couldn't reach Grok, so I started the launch.";
   if (intent.tool === "start_tour") return "I couldn't reach Grok, so I started the tour.";
+  if (intent.tool === "set_level") {
+    const level = (intent.args as { level?: unknown }).level;
+    if (level === "engineer") return "I couldn't reach Grok, so I'll explain it like an engineer.";
+    if (level === "kid") return "I couldn't reach Grok, so I'll explain it like you're a kid.";
+  }
   if (intent.tool === "start_mission") return "I couldn't reach Grok, so I opened the flight briefing.";
   if (intent.tool === "select_part") {
     const id = (intent.args as { part_id?: unknown }).part_id;
