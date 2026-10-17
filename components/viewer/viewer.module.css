@@ -232,3 +232,12 @@
     justify-content: flex-start;
   }
 }
+
+/* The cluster is wider than a phone. Wrap it and keep Settings at the end of the bar. */
+@media (max-width: 440px) {
+  .barEnd {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    row-gap: var(--sp-4);
+  }
+}
