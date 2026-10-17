@@ -1,5 +1,6 @@
 // lib/voice/browser-audio.ts — browser adapters for SpeakerDeps (05 Task 1). Owner: Anders.
 // No browser (node, tests, SSR): nothing plays and nothing hangs.
+import { clearOutputNode, setOutputNode } from "@/lib/voice/activity";
 import { AUDIO_MS_PER_CHAR, SPEAK_BASE_MS, SPEAK_MS_PER_CHAR } from "@/lib/voice/format";
 import type { Playback, PlaybackResult } from "@/lib/voice/speaker";
 import { TEXT_TIMEOUT_MS } from "@/lib/timeout";
@@ -24,6 +25,7 @@ function playElement(src: string, text: string, release?: () => void): Playback 
     return settled("failed");
   }
   const audio = new Audio(src);
+  setOutputNode(audio);
   let timer: ReturnType<typeof setTimeout> | undefined;
   let finish: (r: PlaybackResult) => void = () => {};
   let isDone = false;
@@ -36,6 +38,7 @@ function playElement(src: string, text: string, release?: () => void): Playback 
       audio.onerror = null;
       audio.onloadedmetadata = null;
       try { audio.pause(); } catch { /* ignore */ }
+      clearOutputNode(audio);
       release?.();
       resolve(r);
     };
@@ -69,6 +72,7 @@ export function playBlob(blob: Blob, text: string): Playback {
   return playElement(objectUrl, text, () => URL.revokeObjectURL(objectUrl));
 }
 
+/** speechSynthesis has no element, so getOutputNode() stays empty on this path. */
 export function browserSpeak(text: string): Playback {
   if (!hasWindow() || !("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
     return settled("ended");

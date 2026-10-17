@@ -1,4 +1,5 @@
 // lib/voice/speak.ts — speakLine (05 replaces the 01 placeholder body; same signature). Owner: Anders.
+// Mascot hook: lib/voice/activity.ts (onVoiceState, getMicStream, getOutputNode). Do not import lib/mascot.
 import { isRocketConnected, onRocketMessage, sendToRocket } from "@/lib/voice/rocket-port";
 import { browserSpeak, fetchVoice, playBlob, playUrl } from "@/lib/voice/browser-audio";
 import { cachedAudioUrl, loadManifest } from "@/lib/voice/manifest";

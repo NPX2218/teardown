@@ -1,6 +1,7 @@
 // lib/voice/ask.ts — push-to-talk flow without React (05 Task 3). Owner: Anders.
 import type { ChatMessage } from "@/lib/agent/types";
 import { agentGeneration } from "@/lib/agent/client";
+import { holdVoiceState } from "@/lib/voice/activity";
 import { asListenError, type ListenErrorReason } from "@/lib/voice/errors";
 import { LINES } from "@/lib/voice/lines";
 import type { SpeakOptions } from "@/lib/voice/speak";
@@ -58,6 +59,15 @@ export interface AnswerResult { ok: boolean; reply: string; history: ChatMessage
 
 /** Says "Good question!" from the rocket, asks Grok, then speaks on the laptop. Never throws. */
 export async function answerQuestion(text: string, deps: AnswerDeps): Promise<AnswerResult> {
+  const release = holdVoiceState("thinking");
+  try {
+    return await answerWhileThinking(text, deps);
+  } finally {
+    release();
+  }
+}
+
+async function answerWhileThinking(text: string, deps: AnswerDeps): Promise<AnswerResult> {
   deps.markActivity();
   void deps.speakLine(LINES.goodQuestion, { via: "rocket" }).catch(() => {});
   let ok = false;

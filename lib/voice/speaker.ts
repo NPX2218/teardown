@@ -1,5 +1,6 @@
 // lib/voice/speaker.ts — speakLine ordering, routing, and fallbacks (05 Task 1). Owner: Anders.
 // No browser globals. Phone delivery sends stopSay before a laptop fallback.
+import { holdVoiceState } from "@/lib/voice/activity";
 import type { RocketMessage } from "@/lib/voice/rocket-port";
 import { MAX_VOICE_CHARS, sayCapMs } from "@/lib/voice/format";
 import { hashLine } from "@/lib/voice/hash";
@@ -152,6 +153,7 @@ export function createSpeaker(deps: SpeakerDeps): {
 
   async function playLine(text: string, via: "screen" | "rocket", gen: number): Promise<void> {
     if (gen !== generation || text.trim() === "") return;
+    const release = holdVoiceState("speaking");
     const ctl = new AbortController();
     current = ctl;
     try {
@@ -165,6 +167,7 @@ export function createSpeaker(deps: SpeakerDeps): {
       /* a broken stage must not hang the flight */
     } finally {
       if (current === ctl) current = null;
+      release();
     }
   }
 

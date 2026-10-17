@@ -4,6 +4,7 @@
 import { useEffect, useRef, useState } from "react";
 import { askAgent, agentGeneration } from "@/lib/agent/client";
 import { getScene } from "@/lib/agent/scene";
+import { resetVoiceActivity } from "@/lib/voice/activity";
 import { answerQuestion, historyForGeneration, listenWithFallback, MIC_SOURCE } from "@/lib/voice/ask";
 import { asListenError } from "@/lib/voice/errors";
 import { RESET_EVENT } from "@/lib/voice/flags";
@@ -39,6 +40,7 @@ export function PushToTalk({ embedded = false }: { embedded?: boolean } = {}) {
       busy.current = false;
       phaseRef.current = "idle";
       stopSpeaking();
+      resetVoiceActivity();
       history.current = [];
       generation.current = agentGeneration();
       setCaption("");

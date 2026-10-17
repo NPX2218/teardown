@@ -1,5 +1,12 @@
 // lib/voice/listen.ts — microphone → transcript (05 Task 3). Owner: Anders.
 // Screen audio goes to the realtime socket with an ephemeral token. The API key stays on the server.
+import {
+  clearMicStream,
+  holdVoiceState,
+  micLevelFromSamples,
+  noteMicLevel,
+  setMicStream,
+} from "@/lib/voice/activity";
 import { runListenSession, REALTIME_PCM_RATE, type RealtimeConnectors } from "@/lib/voice/realtime";
 import { defaultRealtimeConnect } from "@/lib/voice/realtime-connect";
 import { onRocketMessage, sendToRocket } from "@/lib/voice/rocket-port";
@@ -8,6 +15,16 @@ import { TEXT_TIMEOUT_MS } from "@/lib/timeout";
 const ROCKET_LISTEN_MS = 10_000;
 
 export async function listenOnRocket(signal?: AbortSignal): Promise<string> {
+  // The phone holds the microphone. This side only announces "listening".
+  const release = holdVoiceState("listening");
+  try {
+    return await listenOnRocketOnce(signal);
+  } finally {
+    release();
+  }
+}
+
+function listenOnRocketOnce(signal?: AbortSignal): Promise<string> {
   return new Promise((resolve, reject) => {
     let settled = false;
     const finish = (fn: () => void) => {
@@ -64,30 +81,40 @@ async function capturePcm(signal?: AbortSignal): Promise<Uint8Array> {
     if (name === "NotAllowedError" || name === "SecurityError") throw "denied";
     throw "unsupported";
   }
-  const ctx = new AudioContext({ sampleRate: REALTIME_PCM_RATE });
-  const source = ctx.createMediaStreamSource(stream);
-  const processor = ctx.createScriptProcessor(4096, 1, 1);
+  setMicStream(stream);
+  const release = holdVoiceState("listening");
+  let ctx: AudioContext | undefined;
+  let source: MediaStreamAudioSourceNode | undefined;
+  let processor: ScriptProcessorNode | undefined;
   const chunks: Float32Array[] = [];
-  processor.onaudioprocess = (ev) => {
-    chunks.push(new Float32Array(ev.inputBuffer.getChannelData(0)));
-  };
-  source.connect(processor);
-  processor.connect(ctx.destination);
-  const started = performance.now();
-  await new Promise<void>((resolve) => {
-    const timer = setTimeout(resolve, 4000);
-    const stop = () => {
-      clearTimeout(timer);
-      resolve();
+  try {
+    ctx = new AudioContext({ sampleRate: REALTIME_PCM_RATE });
+    source = ctx.createMediaStreamSource(stream);
+    processor = ctx.createScriptProcessor(4096, 1, 1);
+    processor.onaudioprocess = (ev) => {
+      const data = ev.inputBuffer.getChannelData(0);
+      chunks.push(new Float32Array(data));
+      noteMicLevel(micLevelFromSamples(data));
     };
-    if (signal?.aborted) stop();
-    else signal?.addEventListener("abort", stop, { once: true });
-    if (performance.now() - started > 8000) stop();
-  });
-  processor.disconnect();
-  source.disconnect();
-  stream.getTracks().forEach((t) => t.stop());
-  await ctx.close().catch(() => {});
+    source.connect(processor);
+    processor.connect(ctx.destination);
+    await new Promise<void>((resolve) => {
+      const timer = setTimeout(resolve, 4000);
+      const stop = () => {
+        clearTimeout(timer);
+        resolve();
+      };
+      if (signal?.aborted) stop();
+      else signal?.addEventListener("abort", stop, { once: true });
+    });
+  } finally {
+    try { processor?.disconnect(); } catch { /* already stopped */ }
+    try { source?.disconnect(); } catch { /* already stopped */ }
+    stream.getTracks().forEach((t) => t.stop());
+    await ctx?.close().catch(() => {});
+    clearMicStream(stream);
+    release();
+  }
   return floatToPcm16(chunks);
 }
 
@@ -97,16 +124,22 @@ export async function listenOnScreen(
 ): Promise<string> {
   const pcm = await capturePcm(signal);
   if (pcm.byteLength < 2) throw "no-speech";
-  const res = await fetch("/api/voice/session", { method: "POST" });
-  if (!res.ok) throw "network";
-  const body: unknown = await res.json();
-  const token = typeof body === "object" && body !== null ? (body as { value?: unknown }).value : undefined;
-  if (typeof token !== "string" || token === "") throw "network";
+  // The mic is closed. The transcript request is the start of thinking.
+  const release = holdVoiceState("thinking");
   try {
-    return await runListenSession({ token, pcm, connect, timeoutMs: TEXT_TIMEOUT_MS });
-  } catch (err) {
-    if (err === "no-speech" || err === "network" || err === "denied" || err === "unsupported") throw err;
-    throw "network";
+    const res = await fetch("/api/voice/session", { method: "POST" });
+    if (!res.ok) throw "network";
+    const body: unknown = await res.json();
+    const token = typeof body === "object" && body !== null ? (body as { value?: unknown }).value : undefined;
+    if (typeof token !== "string" || token === "") throw "network";
+    try {
+      return await runListenSession({ token, pcm, connect, timeoutMs: TEXT_TIMEOUT_MS });
+    } catch (err) {
+      if (err === "no-speech" || err === "network" || err === "denied" || err === "unsupported") throw err;
+      throw "network";
+    }
+  } finally {
+    release();
   }
 }
 
