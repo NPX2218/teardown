@@ -5,7 +5,6 @@ import { getScene, resetScene } from "@/lib/agent/scene";
 import { useScene } from "@/lib/store";
 import {
   HANDLERS,
-  IMAGINE_NOT_READY,
   parseToolArgs,
   runTool,
   TOOL_NAMES,
@@ -103,10 +102,6 @@ describe("agent tools (04, flight migration)", () => {
     expect((await runTool("set_level", { level: "engineer" })).ok).toBe(true);
     expect(s().level).toBe("engineer");
     expect((await runTool("set_level", { level: "expert" })).ok).toBe(false);
-    expect(await runTool("imagine", { prompt: "landing", part_id: "legs" })).toEqual({
-      ok: false,
-      error: IMAGINE_NOT_READY,
-    });
     expect(await runTool("imagine", { prompt: "landing", part_id: "wings" })).toEqual({
       ok: false,
       error: "unknown part: wings",

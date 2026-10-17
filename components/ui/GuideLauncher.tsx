@@ -20,10 +20,9 @@ import { motionPresets } from "@/lib/ui/motion";
 import { useScene } from "@/lib/store";
 import { RESET_EVENT, useExhibit } from "@/lib/viewer/exhibit";
 import { resetVoiceActivity, onVoiceState } from "@/lib/voice/activity";
-import { runGuideVoiceSession, voiceErrorCopy } from "@/lib/voice/guide-session";
-import { isRocketConnected } from "@/lib/voice/rocket-port";
-import { listenOnce } from "@/lib/voice/listen";
-import { speakLine, stopSpeaking } from "@/lib/voice/speak";
+import { voiceErrorCopy } from "@/lib/voice/guide-session";
+import { startMascotVoice, VoiceUnavailable } from "@/lib/voice/realtime-guide";
+import { stopSpeaking } from "@/lib/voice/speak";
 import styles from "./guide.module.css";
 
 /** Face control. The drawn circle is about two thirds of this, inside the engine viewBox. */
@@ -121,21 +120,11 @@ export function GuideLauncher() {
   useEffect(() => {
     if (step !== "voice") return;
     const ac = new AbortController();
-    const voiceHistory: ChatMessage[] = [];
     setVoiceError(null);
-    void runGuideVoiceSession({
-      signal: ac.signal,
-      listen: (source, opts) => listenOnce(source, opts?.endEarly),
-      rocketConnected: isRocketConnected,
-      askAgent,
-      speakLine,
-      history: voiceHistory,
-      markActivity: () => getScene().markActivity(performance.now()),
-      onReply: (result) => {
-        if (!result.reply) return;
-        setLines((prev) => [...prev, { role: "guide", text: result.reply }]);
-      },
-      onError: (reason) => setVoiceError(voiceErrorCopy(reason)),
+    void startMascotVoice({ signal: ac.signal }).catch((err: unknown) => {
+      if (ac.signal.aborted) return;
+      if (err instanceof VoiceUnavailable) setVoiceError(err.message);
+      else setVoiceError(voiceErrorCopy("network"));
     });
     return () => {
       ac.abort();

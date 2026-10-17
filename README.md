@@ -118,7 +118,7 @@ If the phone disconnects, the flight pauses. Mouse, touch and keyboard can fly t
 | | |
 |:---|:---|
 | **AGENT** | Grok with function calling. It can select parts, explode the rocket and move the camera by calling the same store actions the buttons use. It can't steer a flight or award a win. |
-| **VOICE** | Grok Voice speaks the guide and the mission callouts. Hold to talk, and Grok transcribes the question. |
+| **VOICE** | Grok Voice on the mascot. Voice opens a live session that can start the tour and set the explanation level (kid, curious, engineer). Text still goes through the agent. |
 | **IMAGINE** | *Show in action* turns the selected part into a Grok Imagine picture, grounded in the part's data. |
 | **GROK BOT** | The guide lives in a corner face that reacts while Grok listens and talks. |
 
@@ -171,9 +171,18 @@ Three rules hold it together:
 
 ```bash
 npm ci
-cp .env.local.example .env.local   # add XAI_API_KEY and the XAI_* model names
+cp .env.local.example .env.local   # set the variables below
 npm run dev                        # http://localhost:3000
 ```
+
+The committed template is `.env.local.example`. The gitignore keeps every other `.env*` file, including a name like `.env.example`, out of the repo.
+
+| Variable | What it does |
+|:---|:---|
+| `XAI_API_KEY` | Authorizes the voice token (`POST /v1/realtime/client_secrets`), the text agent, and Imagine. |
+| `XAI_TEXT_MODEL` | Chat model for the text guide. |
+| `XAI_IMAGE_MODEL` | Imagine model. Current docs id: `grok-imagine-image-2.0`. |
+| `XAI_VOICE` | Optional TTS voice id. Defaults to `eve`. The live Voice socket uses `eve` as well. |
 
 **Try the phone rocket without a phone.** Run each command in its own terminal:
 

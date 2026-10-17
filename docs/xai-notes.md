@@ -32,7 +32,7 @@ Docs read:
 - Session: client sends `{ type: "session.update", session: { voice, instructions, turn_detection, audio } }`. Default voice in the docs is `eve`. Default audio is `audio/pcm` at 24000 Hz, both directions. JSON transport sends output audio as base64 on `response.output_audio.delta` (alias `response.audio.delta` on the overview).
 - Speak a known line: `conversation.item.create` with `input_text`, then `response.create`. Audio deltas follow until `response.done`.
 - Listen: set `turn_detection` to `null` for push-to-talk, append PCM with `input_audio_buffer.append`, then `input_audio_buffer.commit`. User transcript events `conversation.item.input_audio_transcription.updated` / `.completed` are emitted only when `audio.input.transcription.model` is `"grok-transcribe"`. `updated` is cumulative, not a delta.
-- Function calls on the voice socket (`response.function_call_arguments.done`) are **not** used for exhibit tools. Scene tools stay on the text agent so a voice turn cannot steer, launch, or award a flight.
+- Function calls on the mascot Voice socket: `session.update` registers only `start_tour` and `set_level`. On `response.function_call_arguments.done` the client runs the tool, sends `conversation.item.create` with `function_call_output`, then one `response.create`. Flight tools such as `start_mission` stay off this socket, so a voice turn cannot launch, steer, or award a flight. The push-to-talk listen session still registers no tools.
 - Latency, rate limits, price: **not measured**. No key.
 
 ## Text to speech (05 narration files)
@@ -55,8 +55,16 @@ Confirmed on the text-to-speech page, not guessed:
 
 ## Imagine (09) → `XAI_IMAGE_MODEL`
 
-- **Not confirmed in this pass.** Stage 09 is out of scope. The agent `imagine` tool validates arguments and returns `imagine not available yet`. It does not invent an image URL or call an image endpoint.
-- Endpoint, request body, response, latency, rate limits, price: **pending a 09 docs pass with a key**.
+Checked against the image generation docs on 2026-10-17. This was a docs pass, not a live call.
+
+- Endpoint the route calls: `POST https://api.x.ai/v1/images/generations` with `Authorization: Bearer $XAI_API_KEY`.
+- Model id for `XAI_IMAGE_MODEL`: `grok-imagine-image-2.0`, the current docs model. The route does not guess a model. A blank key or model is `503` `{ "error": "imagine is not set up on the server" }`.
+- Body this app sends: `{ model, prompt, n: 1, response_format: "url" }`. The docs also allow `aspect_ratio`, `resolution` (`1k` or `2k`), and `quality` (`low`, `medium`, `auto`).
+- Reply shape: `{ data: [{ url }] }` or `{ data: [{ b64_json }] }`. A `url` must be `https`. A `b64_json` value becomes a JPEG data URL. Anything else is a 502, and the route does not invent a picture.
+- Edits are `POST https://api.x.ai/v1/images/edits` with `image: { url, type: "image_url" }`. `IMAGE_INPUT_SUPPORTED` stays false, so the part card sends the grounded text prompt only.
+- The mission patch uses the same generation call, then stores the bytes and returns `/api/imagine/patch/<id>`.
+- The agent `imagine` tool starts that same part-card request. The mascot Voice socket registers `start_tour` and `set_level` only, so this tool stays on the text agent.
+- Latency, rate limits, price: **not measured** here. The docs list image pricing separately.
 
 ## Fallback when the provider is down
 

@@ -171,7 +171,7 @@ Say:
 On screen:
 
 - Grok can select parts, explode the rocket and fly the camera by calling the same actions the buttons use.
-- Grok Voice speaks the guide and the mission callouts. Hold to talk and Grok transcribes your question.
+- Grok Voice on the mascot can start the tour and set the explanation level. It can't launch or steer.
 - Grok can explain a flight. It can’t steer one or award a win.
 
 Say:

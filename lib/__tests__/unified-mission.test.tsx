@@ -85,6 +85,12 @@ describe("one mission entry (user request 2026-10-17)", () => {
     expect(html).toContain("Explore");
     expect(html.match(/Your mission/g)).toHaveLength(1);
     expect(html).not.toContain("Flight replay");
+    const about = html.indexOf(">About<");
+    const engineer = html.indexOf(">Engineer<");
+    const settings = html.indexOf(">Settings<");
+    expect(about).toBeGreaterThan(-1);
+    expect(engineer).toBeGreaterThan(about);
+    expect(settings).toBeGreaterThan(engineer);
   });
 
   it("U2: the briefing offers custom flight and a mission guide in the same panel (report 2026-10-17)", () => {
