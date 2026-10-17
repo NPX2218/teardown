@@ -4,7 +4,7 @@
 //   npm run sim:phone -- ABCD
 //   npm run sim:phone -- ABCD --replay scripts/sim-phone.sample.json
 //
-// Transport: NEXT_PUBLIC_ROCKET_RELAY, else supabase when the public keys exist, else the local WebSocket relay.
+// Transport: NEXT_PUBLIC_ROCKET_RELAY, else the local WebSocket relay.
 import { existsSync, readFileSync } from "node:fs";
 import { emitKeypressEvents } from "node:readline";
 import { pathToFileURL } from "node:url";
@@ -108,11 +108,10 @@ function loadEnvLocal(): void {
   }
 }
 
-/** Keys present and no override → supabase. Otherwise the local relay, unless the env already chose. */
+/** The local relay, unless the env already chose. */
 export function chooseSimRelay(): void {
   if (process.env.NEXT_PUBLIC_ROCKET_RELAY) return;
-  const hasKeys = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-  process.env.NEXT_PUBLIC_ROCKET_RELAY = hasKeys ? "supabase" : "local";
+  process.env.NEXT_PUBLIC_ROCKET_RELAY = "local";
 }
 
 function rocketLin(gesture: SimGesture | null, until: number, now: number): { lin: Vec3; pitch: number | null } {

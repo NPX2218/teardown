@@ -70,8 +70,6 @@ beforeEach(() => {
 afterEach(() => {
   delete process.env.NEXT_PUBLIC_ROCKET_RELAY;
   delete process.env.NEXT_PUBLIC_ROCKET_RELAY_URL;
-  delete process.env.NEXT_PUBLIC_SUPABASE_URL;
-  delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 });
 
 describe("sim phone", () => {
@@ -106,15 +104,8 @@ describe("sim phone", () => {
     expect(portrait.pitchRad).toBeCloseTo((20 * Math.PI) / 180, 2);
   });
 
-  it("uses supabase when keys exist and the local relay when they do not", () => {
+  it("uses the local relay unless the env already chose (supabase removed 2026-10-17)", () => {
     delete process.env.NEXT_PUBLIC_ROCKET_RELAY;
-    process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "anon";
-    chooseSimRelay();
-    expect(process.env.NEXT_PUBLIC_ROCKET_RELAY).toBe("supabase");
-    delete process.env.NEXT_PUBLIC_ROCKET_RELAY;
-    delete process.env.NEXT_PUBLIC_SUPABASE_URL;
-    delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     chooseSimRelay();
     expect(process.env.NEXT_PUBLIC_ROCKET_RELAY).toBe("local");
     process.env.NEXT_PUBLIC_ROCKET_RELAY = "broadcast";

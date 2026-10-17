@@ -13,9 +13,9 @@ Per-device evidence for slice 10. Update after HTTPS testing on physical hardwar
 
 - Desktop Chrome at `/rocket`: after tap, **NO SENSORS** after ~3 s (expected; no motion hardware).
 - Sensor math and message routing covered by vitest fixtures (`lib/__tests__/sensors.test.ts`, `phone.test.ts`, `rocket-voice.test.ts`).
-- Production relay is Supabase Realtime (`NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`). With those keys set and `NEXT_PUBLIC_ROCKET_RELAY` unset, nothing else is used.
-- Dev/test with no keys uses a BroadcastChannel (`NEXT_PUBLIC_ROCKET_RELAY=broadcast`, also the default outside production). Two devices need `NEXT_PUBLIC_ROCKET_RELAY=local` plus `npm run relay:dev`, or the Supabase keys. See `docs/SIM-PHONE.md`.
-- Production with no keys still rejects `openLink` with "relay not configured", and the phone shows OFFLINE with retry.
+- The relay is the local WebSocket relay (`lib/rocket/dev-relay.ts`, port 8787). For a real phone, `npm run tunnel` starts it, opens cloudflared quick tunnels for the app and the relay, and writes `NEXT_PUBLIC_ROCKET_RELAY=local` and `NEXT_PUBLIC_ROCKET_RELAY_URL=wss://<relay tunnel>` into the local env file. It waits for both tunnels before printing READY, because scanning a brand-new trycloudflare host too early makes the Wi-Fi DNS cache a miss for about 60 s.
+- `NEXT_PUBLIC_ROCKET_RELAY=broadcast` uses a BroadcastChannel and only works between tabs of one browser (dev and tests). Two devices need `local`. See `docs/SIM-PHONE.md`.
+- Production with no relay configured still rejects `openLink` with "relay not configured", and the phone shows OFFLINE with retry.
 
 ## Observations
 

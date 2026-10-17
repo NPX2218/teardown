@@ -1,5 +1,7 @@
 # 11 · Rocket Link + Gestures — Implementation Spec
 
+Note (2026-10-17): Supabase was later removed; the link now runs over the local relay through a cloudflared tunnel (npm run tunnel).
+
 ## Current scope revision — 17 October 2026
 
 **This section supersedes the checkpoint, gesture, orientation, and mission-writing instructions below.** [07 — Replay + Mission](07-replay.spec.md) owns the current simulation state, input types, physics clock, fail/success rules, and reset seams. Those contracts must be settled before implementation. This is a documentation revision; no new game or phone-controller implementation has been verified.
