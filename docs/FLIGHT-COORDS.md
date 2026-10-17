@@ -1,15 +1,19 @@
 # Flight coordinates
 
-The simulator flies in a plane through the centre of the Earth. There is no latitude, longitude, or launch site in the code. Replay without a kinematic reference is a drawing of the mission clock, not a path that was flown.
+The simulator flies in three dimensions around a spherical Earth. Its Cartesian state is rotated onto the selected launch site for drawing. Replay without a kinematic reference is a drawing of the mission clock, not a path that was flown.
 
 ## State
 
-`createFlight` in `lib/flight.helpers.ts` starts the rocket at `(x, y) = (0, EARTH_RADIUS_M)` with `EARTH_RADIUS_M = 6_378_137`. Pitch `0` points straight away from the centre. Positive pitch turns toward downrange, which is `+X` on the pad. The tangent used by the scene is `(y, -x)` normalised.
+`createFlight` in `lib/flight.helpers.ts` starts the rocket at `(x, y, z) = (0, EARTH_RADIUS_M, 0)` with `EARTH_RADIUS_M = 6_378_137`. Pitch and side lean (`yawRad`) are torque-limited physical angles. Positive pitch turns downrange, `+X` on the pad; positive side lean turns crossrange, `+Z` on the pad. Missing side lean, crossrange position and crossrange velocity default to zero for old state shapes.
+
+`noseDirection` in `lib/flight/attitude.helpers.ts` is the source for both thrust and drawing. With radial `R`, downrange tangent `T = normalize(R × +Z)`, and crossrange tangent `B = T × R`, the physical nose is `sin(pitch) T + cos(pitch) cos(yaw) R + cos(pitch) sin(yaw) B`. The tangent has a finite fallback at the crossrange poles. Side lean is not compass heading.
+
+The renderer never applies a separate phone or camera rotation to this nose. Steering changes force and then velocity; it does not redirect existing velocity. Engines-off rotation therefore produces no steering impulse. Two-dimensional conic calculations project the actual position/velocity into their instantaneous orbital plane and lift the prediction back to three dimensions.
 
 Altitude and downrange:
 
 ```
-altitudeM = hypot(x, y) - EARTH_RADIUS_M
+altitudeM = hypot(x, y, z) - EARTH_RADIUS_M
 downrangeM = atan2(x, y) * EARTH_RADIUS_M
 ```
 
@@ -58,13 +62,13 @@ The replay caption is `replayDataCaption`. A practice mission reads `Data: Pract
 
 ## Two flight modes
 
-Free flight is the default. Phone or laptop pitch steers `stepFlight`. Nothing holds the rocket to a path. Outcomes come from the existing classroom judge plus `classifyAnomaly` in `lib/flight/anomalies.ts`, which `integrateSession` calls after each substep. Direct `stepFlight` tests still see the classroom judge, including escape as a failure.
+Free flight is the default. Phone pitch and side lean, or laptop pitch, steer `stepFlight`. Phone lean passes through a neutral band, quadratic response and wall-time command slew before the owner mixer; the physical nose then follows through the existing torque controller. Recalibration clears held steering while awaiting upright. Nothing holds the rocket to a path. Outcomes come from the existing classroom judge plus `classifyAnomaly` in `lib/flight/anomalies.ts`, which `integrateSession` calls after each substep. Direct `stepFlight` tests still see the classroom judge, including escape as a failure.
 
 Mission mode follows `missionTrackId` on the store. The field is not named `mission`. `lib/replay.ts` and `lib/flight/reference.ts` read `mission.reference`.
 
 When any sample has a null altitude or a null velocity, mission mode tracks milestones and the clock only. `FlightGuide.corridor` stays false. The note is `Reference trajectory unavailable`. No ghost, no corridor edges, and no autopilot. A missing number is not replaced with the classroom profile. Sentinel-6 stays in that state. The practice mission is the exception that already has numbers: a PRACTICE corridor recorded by flying the classroom profile, labelled simulated practice reference, not historical.
 
-When every sample has altitude and velocity, the ghost and the altitude ribbon are drawn by `GuidanceMarks` (a sibling of `Earth()`, not inside it). The player still steers. With no phone connected, `autopilotInput` follows the reference pitch and speed. The HUD shows altitude, speed, and pitch error, a target-pitch line, and the correction cue.
+When every sample has altitude and velocity, the ghost and the altitude ribbon are drawn by `GuidanceMarks`. The player steers with accepted phone or laptop commands in every connection state. Reference guidance scores and advises; it never replaces pitch or throttle. The HUD shows altitude, speed, and pitch error, a target-pitch line, and the correction cue. The angular corridor and structural checks include side lean; trails and impacts retain crossrange coordinates.
 
 One configuration, `CORRIDOR` in `lib/flight/corridor.ts`:
 

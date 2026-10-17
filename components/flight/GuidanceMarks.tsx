@@ -22,10 +22,10 @@ function siteText(mission: Mission | null): string | null {
   return typeof extra.launchSite?.text === "string" ? extra.launchSite.text : null;
 }
 
-function makeLine(points: { x: number; y: number }[], color: string, frame: GlobeFrame): THREE.Line {
+function makeLine(points: { x: number; y: number; z?: number }[], color: string, frame: GlobeFrame): THREE.Line {
   const data = new Float32Array(points.length * 3);
   points.forEach((point, index) => {
-    const [x, y, z] = earthRadiiToScene(physicsMetersToEarthRadii(point.x, point.y, frame));
+    const [x, y, z] = earthRadiiToScene(physicsMetersToEarthRadii(point.x, point.y, frame, point.z ?? 0));
     data[index * 3] = x;
     data[index * 3 + 1] = y;
     data[index * 3 + 2] = z;

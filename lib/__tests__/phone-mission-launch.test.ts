@@ -40,8 +40,9 @@ describe("phone tilt steers a launched mission", () => {
     expect(launchControlledFlight().ok).toBe(true);
     expect(useScene.getState().flight.status).toBe("flying");
     hold(4, 200); // a hand never holds exactly upright
-    hold(20, 200);
-    expect(pitchDeg()).toBeCloseTo(20, 1);
+    expect(pitchDeg()).toBeLessThan(1);
+    hold(20, 1000);
+    expect(pitchDeg()).toBeCloseTo(5.7788347, 5);
   });
 
   it("M2 a launch held a few degrees off upright still arms the phone", () => {
@@ -50,18 +51,18 @@ describe("phone tilt steers a launched mission", () => {
     useScene.getState().setFlightAxisOwner("pitch", "phone");
     expect(useScene.getState().launchFlight().ok).toBe(true);
     hold(4, 200);
-    hold(25, 200);
-    expect(pitchDeg()).toBeCloseTo(25, 1);
+    hold(25, 1000);
+    expect(pitchDeg()).toBeCloseTo(9.4351962, 5);
   });
 
   it("M3 a hand-held lean that never passes near upright still steers (live log: -21° to -45°, never armed)", () => {
     padWithPhone();
     hold(-20, 200);
     expect(launchControlledFlight().ok).toBe(true);
-    hold(-35, 200);
-    expect(pitchDeg()).toBeCloseTo(-35, 1);
-    hold(-15, 200);
-    expect(pitchDeg()).toBeCloseTo(-15, 1);
+    hold(-35, 2000);
+    expect(pitchDeg()).toBeCloseTo(-19.4233056, 5);
+    hold(-15, 2000);
+    expect(pitchDeg()).toBeCloseTo(-3.0142687, 5);
   });
 
   it("M7 the phone lean changes the course, not just the drawn rocket", () => {
@@ -99,8 +100,8 @@ describe("lift gesture launch", () => {
     hold(0, 400, [0, 4, 0]); // the lift
     expect(useScene.getState().flight.status).toBe("flying");
     hold(2, 2000);
-    hold(30, 500);
-    expect(pitchDeg()).toBeCloseTo(30, 1);
+    hold(30, 1500);
+    expect(pitchDeg()).toBeCloseTo(13.9833532, 5);
   });
 });
 

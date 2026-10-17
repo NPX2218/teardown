@@ -19,7 +19,6 @@ import { emptyGuide, stepGuide, type GuideSample } from "@/lib/flight/guidance";
 import { historicalMissions } from "@/lib/flight/mission-select";
 import {
   REFERENCE_UNAVAILABLE,
-  autopilotInput,
   corridorEdges,
   referenceHasKinematics,
   referencePath,
@@ -163,7 +162,6 @@ describe("mission reference", () => {
     expect(sampleReference(SENTINEL_MILESTONES, 136)).toBeNull();
     expect(referencePath(SENTINEL_MILESTONES)).toBeNull();
     expect(corridorEdges(SENTINEL_MILESTONES, CORRIDOR.altM)).toBeNull();
-    expect(autopilotInput(SENTINEL_MILESTONES, 136, 1000)).toBeNull();
     expect(referencePoint(1_300_000, null)).toBeNull();
     const mission: Mission = {
       ...MISSIONS.practice,

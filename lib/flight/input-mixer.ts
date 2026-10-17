@@ -8,7 +8,7 @@ export const PITCH_LIMIT_RAD = Math.PI / 2;
 /** A sample inside this band counts as neutral after an owner change. */
 export const NEUTRAL_PITCH_RAD = 0.02;
 
-export const NEUTRAL_FLIGHT_INPUT: FlightInput = { pitchRad: 0, throttle: 0 };
+export const NEUTRAL_FLIGHT_INPUT: FlightInput = { pitchRad: 0, yawRad: 0, throttle: 0 };
 
 export function clampPitchRad(value: unknown): number | null {
   if (typeof value !== "number" || !Number.isFinite(value)) return null;
@@ -43,7 +43,7 @@ function isNeutral(axis: ControlAxis, value: number, source: ControlSource): boo
  */
 export function mixFlightInput(flight: FlightSession, command: FlightAxisCommand, source: ControlSource): MixResult {
   const submitted: ControlAxis[] = [];
-  if (command.pitchRad !== undefined) submitted.push("pitch");
+  if (command.pitchRad !== undefined || command.yawRad !== undefined) submitted.push("pitch");
   if (command.throttle !== undefined) submitted.push("throttle");
   if (submitted.length === 0) {
     return { ok: false, error: "empty flight input", input: flight.input, armed: flight.armed, ignoredAxes: [] };
@@ -60,23 +60,24 @@ export function mixFlightInput(flight: FlightSession, command: FlightAxisCommand
       unowned.push(axis);
       continue;
     }
-    const clamped = axis === "pitch" ? clampPitchRad(command.pitchRad) : clampThrottle(command.throttle);
-    if (clamped === null) {
+    const clamped = axis === "pitch" ? clampPitchRad(command.pitchRad === undefined ? flight.input.pitchRad : command.pitchRad) : clampThrottle(command.throttle);
+    const yaw = axis === "pitch" ? clampPitchRad(command.yawRad === undefined ? 0 : command.yawRad) : 0;
+    if (clamped === null || yaw === null) {
       invalid.push(axis);
       continue;
     }
     const key = axis === "pitch" ? "pitchRad" : "throttle";
     if (!armed[axis]) {
       const phoneReady = source !== "phone" || command.calibrated === true;
-      if (phoneReady && isNeutral(axis, clamped, source)) {
+      if (phoneReady && isNeutral(axis, clamped, source) && (axis !== "pitch" || isNeutral(axis, yaw, source))) {
         armed = { ...armed, [axis]: true };
-        input = { ...input, [key]: clamped };
+        input = { ...input, [key]: clamped, ...(axis === "pitch" ? { yawRad: yaw } : {}) };
       } else {
         waiting.push(axis);
       }
       continue;
     }
-    input = { ...input, [key]: clamped };
+    input = { ...input, [key]: clamped, ...(axis === "pitch" ? { yawRad: yaw } : {}) };
   }
 
   const ignoredAxes = [...unowned, ...invalid, ...waiting];
@@ -99,6 +100,6 @@ export function assignAxisOwner(flight: FlightSession, axis: ControlAxis, source
     ...flight,
     owners: { ...flight.owners, [axis]: source },
     armed: { ...flight.armed, [axis]: false },
-    input: { ...flight.input, [key]: 0 },
+    input: { ...flight.input, [key]: 0, ...(axis === "pitch" ? { yawRad: 0 } : {}) },
   };
 }

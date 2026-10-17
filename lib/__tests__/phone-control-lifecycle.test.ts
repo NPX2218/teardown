@@ -35,6 +35,14 @@ function launch(): void {
   expect(launchControlledFlight().ok).toBe(true);
 }
 
+function acquiresHeldLean(): void {
+  sample(35);
+  // The run starts neutral but keeps its mount; the next second may turn only 12°.
+  expect(useScene.getState().flight.input.pitchRad).toBe(0);
+  for (let i = 0; i < 20; i += 1) sample(35);
+  expect(useScene.getState().flight.input.pitchRad).toBeCloseTo(12 * Math.PI / 180, 10);
+}
+
 // REGRESSION GUARD for PR #34, reported 2026-10-17: tests include the real mounted watcher.
 describe("phone calibration across mode and run changes (PR #34)", () => {
   it("P1: Explore calibration survives opening a mission while leaning (PR #34)", () => {
@@ -42,8 +50,7 @@ describe("phone calibration across mode and run changes (PR #34)", () => {
     sample(35);
     mission();
     launch();
-    sample(35);
-    expect(useScene.getState().flight.input.pitchRad).toBeCloseTo(35 * Math.PI / 180);
+    acquiresHeldLean();
   });
 
   it("P2: first Replay launch keeps the mount through its new run (PR #34)", () => {
@@ -51,8 +58,7 @@ describe("phone calibration across mode and run changes (PR #34)", () => {
     useScene.getState().startReplay("practice");
     sample(0);
     expect(commitShellEvent("launch", "replay").ok).toBe(true);
-    sample(35);
-    expect(useScene.getState().flight.input.pitchRad).toBeCloseTo(35 * Math.PI / 180);
+    acquiresHeldLean();
   });
 
   it("P3: retry keeps the same paired mount while a visitor holds a lean (PR #34)", () => {
@@ -62,8 +68,7 @@ describe("phone calibration across mode and run changes (PR #34)", () => {
     sample(35);
     useScene.getState().retryFlight();
     launch();
-    sample(35);
-    expect(useScene.getState().flight.input.pitchRad).toBeCloseTo(35 * Math.PI / 180);
+    acquiresHeldLean();
   });
 
   it("P4: choosing screen tilt on the pad survives Launch (PR #34)", () => {
@@ -116,6 +121,6 @@ describe("phone engine push ownership (PR #34)", () => {
     commitPhoneAxes({ pitchRad: 0.3, throttle: 0.5, throttlePush: true, calibrated: true });
     expect(handoffPitchToLocal().ok).toBe(true);
     expect(useScene.getState().flight.owners).toEqual({ pitch: "local", throttle: "local" });
-    expect(useScene.getState().flight.input).toEqual({ pitchRad: 0, throttle: 0.5 });
+    expect(useScene.getState().flight.input).toEqual({ pitchRad: 0, yawRad: 0, throttle: 0.5 });
   });
 });

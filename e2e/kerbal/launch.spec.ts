@@ -79,7 +79,7 @@ function startSim(): { stop: () => Promise<void> } {
       env: {
         ...process.env,
         NEXT_PUBLIC_ROCKET_RELAY: "local",
-        NEXT_PUBLIC_ROCKET_RELAY_URL: "ws://127.0.0.1:8787",
+        NEXT_PUBLIC_ROCKET_RELAY_URL: `ws://127.0.0.1:${process.env.KERBAL_RELAY_PORT || 8787}`,
       },
       stdio: "ignore",
     },
@@ -175,7 +175,7 @@ test("phone steers free flight, mission, and replay", async ({ browser }) => {
         const text = await view.laptop.locator("#flight-status").innerText();
         const match = text.match(/tilt\s+(-?\d+)/i);
         return match ? Math.abs(Number(match[1])) : 0;
-      }).toBeGreaterThan(15);
+      }).toBeGreaterThan(8); // 28° hand lean becomes 12.06° after the gentle quadratic response.
       await expect(view.laptop.locator("[data-map-marker]")).toHaveCount(0);
       await view.laptop.screenshot({ path: resolve(ART, "liftoff.png") });
 
@@ -208,7 +208,7 @@ test("phone steers free flight, mission, and replay", async ({ browser }) => {
         const text = await view.laptop.locator("#flight-status").innerText();
         const match = text.match(/tilt\s+(-?\d+)/i);
         return match ? Math.abs(Number(match[1])) : 0;
-      }).toBeGreaterThan(15);
+      }).toBeGreaterThan(8);
 
       await view.laptop.getByRole("button", { name: "Flight replay" }).click();
       await view.laptop.getByRole("button", { name: "Practice sample" }).click();
@@ -219,7 +219,7 @@ test("phone steers free flight, mission, and replay", async ({ browser }) => {
       await expect.poll(async () => {
         const raw = await view.laptop.locator("[data-flight-mode='replay']").getAttribute("data-flight-pitch");
         return Math.abs(Number(raw ?? 0));
-      }).toBeGreaterThan(0.2);
+      }).toBeGreaterThan(0.15);
       await expect(view.laptop.locator("[data-map-marker]")).toHaveCount(0);
       await view.laptop.screenshot({ path: resolve(ART, "replay-steering.png") });
 

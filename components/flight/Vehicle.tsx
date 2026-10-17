@@ -7,16 +7,11 @@ import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { EARTH_RADIUS_M } from "@/lib/flight.helpers";
 import { EARTH_RADIUS } from "@/lib/flight/scene-types";
-import { useAppMode } from "@/lib/flight/app-mode";
-import { useScene } from "@/lib/store";
-import { aimAtCamera } from "@/lib/rocket/orient";
-import { flightAttitudeNow } from "@/lib/rocket/useRocket";
 import { FLIGHT_SCENE } from "@/lib/viewer/colors";
 import { flightDrawNow } from "./flightDraw";
 import { FALCON_HEIGHT_M, fitFalcon } from "./fitFalcon";
 import { EnginePlume } from "./fx/EnginePlume";
 import { StageSeparation } from "./fx/StageSeparation";
-import { phoneOwnsVehicleAttitude } from "./Vehicle.helpers";
 
 const MODEL = "/models/falcon9.glb";
 useGLTF.preload(MODEL);
@@ -27,9 +22,6 @@ const scratch = {
   radial: new THREE.Vector3(),
   quat: new THREE.Quaternion(),
   world: new THREE.Vector3(),
-  cam: new THREE.Vector3(),
-  inv: new THREE.Quaternion(),
-  phone: new THREE.Quaternion(),
   pivot: new THREE.Vector3(),
 };
 
@@ -37,8 +29,6 @@ const scratch = {
 const PIVOT_M = [28, 56];
 /** On the pad the rocket sits on its bells; the pivot moves up to the CoM over the first 40 m of climb. */
 const PIVOT_BLEND_M = 40;
-/** Side lean settles in ~0.4 s, matching the gimbal-torque pitch turn instead of snapping per frame. */
-const LEAN_RATE_PER_S = 2.5;
 
 function FalconModel() {
   const { scene } = useGLTF(MODEL);
@@ -63,11 +53,7 @@ export function Vehicle({ stage, throttle, altitudeKm, elapsedS }: {
 }) {
   const rig = useRef<THREE.Group>(null);
   const marker = useRef<THREE.Mesh>(null);
-  const previousRun = useRef<string | null>(null);
-  // Smoothed phone side-lean/twist on top of the physics nose, like Explore's slerp.
-  const phone = useMemo(() => new THREE.Quaternion(), []);
-
-  useFrame(({ camera }, delta) => {
+  useFrame(({ camera }) => {
     const draw = flightDrawNow.current;
     const node = rig.current;
     if (!draw || !node) return;
@@ -78,26 +64,7 @@ export function Vehicle({ stage, throttle, altitudeKm, elapsedS }: {
     scratch.radial.set(draw.position[0], draw.position[1], draw.position[2]).normalize();
     node.position.set(draw.position[0], draw.position[1], draw.position[2]);
     node.position.addScaledVector(scratch.radial, 0.6 / EARTH_RADIUS_M);
-    const scene = useScene.getState();
-    if (previousRun.current !== scene.flight.runId) {
-      phone.identity();
-      previousRun.current = scene.flight.runId;
-    }
-    const mode = useAppMode.getState().mode;
-    const ownsAttitude = phoneOwnsVehicleAttitude(mode, scene.flight.status, scene.flight.owners.pitch, scene.rocket.connected);
-    const att = ownsAttitude ? flightAttitudeNow.current : null;
-    scratch.phone.identity();
-    if (att) {
-      // Camera direction in the physics-nose frame, so "toward the visitor" means "toward the camera".
-      scratch.cam.copy(camera.position);
-      node.parent?.worldToLocal(scratch.cam);
-      scratch.cam.sub(node.position).applyQuaternion(scratch.inv.copy(scratch.quat).invert());
-      const q = aimAtCamera(att, Math.atan2(scratch.cam.x, scratch.cam.z));
-      scratch.phone.set(q[1], q[2], q[3], q[0]);
-    }
-    if (ownsAttitude) phone.slerp(scratch.phone, 1 - Math.exp(-LEAN_RATE_PER_S * Math.min(delta, 0.1)));
-    else if (mode === "explore" || scene.flight.status === "idle" || scene.flight.status === "ready" || scene.flight.owners.pitch !== "phone" || !scene.rocket.connected) phone.identity();
-    node.quaternion.copy(scratch.quat).multiply(phone);
+    node.quaternion.copy(scratch.quat);
     // Turn about the CoM, not the bells: keep the CoM where it would sit upright and swing the base under it.
     const pivotM = PIVOT_M[Math.min(stage, 1)] * Math.min(1, Math.max(0, draw.altitudeM / PIVOT_BLEND_M));
     scratch.pivot.set(0, pivotM, 0).applyQuaternion(node.quaternion);

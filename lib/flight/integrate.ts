@@ -18,7 +18,7 @@ import {
 } from "@/lib/flight.helpers";
 import { emissionsForInteractive, publishInteractiveFuel } from "@/lib/flight/fuel-readout";
 import { emptyGuide, stepGuide, type GuideContext, type GuideSample } from "@/lib/flight/guidance";
-import { autopilotInput } from "@/lib/flight/reference";
+import { noseDirection } from "@/lib/flight/attitude.helpers";
 
 /** Hidden tabs and any status other than flying do not take a physical step. */
 export function shouldAdvanceFlight(status: FlightStatus, documentHidden: boolean): boolean {
@@ -29,7 +29,7 @@ export interface IntegrateOptions {
   playMode?: PlayMode;
   reference?: MissionReference | null;
   events?: { t: number; id: string }[];
-  /** When true, mission mode does not fly the reference by itself. */
+  /** Connection metadata; guidance never overrides accepted pilot input. */
   phoneConnected?: boolean;
 }
 
@@ -53,8 +53,7 @@ export function integrateSession(
   let steps = 0;
   while (accumulator >= SUBSTEP_S - 1e-12 && steps < MAX_FRAME_STEPS && !body.outcome) {
     accumulator -= SUBSTEP_S;
-    const input = guidedInput(flight, body, options);
-    body = stepFlight(body, input, SUBSTEP_S);
+    body = stepFlight(body, flight.input, SUBSTEP_S);
     const judged = stepGuide(guide, sampleOf(body, SUBSTEP_S), ctx);
     guide = judged.guide;
     if (judged.outcome) body = { ...body, outcome: judged.outcome };
@@ -72,29 +71,20 @@ function endTime(events: { t: number }[], reference: MissionReference | null): n
   return Math.max(...times);
 }
 
-function guidedInput(flight: FlightSession, body: FlightBody, options: IntegrateOptions): FlightSession["input"] {
-  const mission = (options.playMode ?? "free") === "mission";
-  const phoneOwns = options.phoneConnected === true || flight.owners.pitch === "phone";
-  if (!mission || phoneOwns) return flight.input;
-  const speed = Math.hypot(body.vx, body.vy);
-  return autopilotInput(options.reference, body.simulatedTimeS, speed) ?? flight.input;
-}
-
 function sampleOf(body: FlightBody, dt: number): GuideSample {
   const orbit = orbitFromState(body);
-  const radius = Math.hypot(body.x, body.y);
+  const z = body.z ?? 0;
+  const vz = body.vz ?? 0;
+  const radius = Math.hypot(body.x, body.y, z);
   const alt = radius - EARTH_RADIUS_M;
-  const speed = Math.hypot(body.vx, body.vy);
+  const speed = Math.hypot(body.vx, body.vy, vz);
   let radial = 0;
-  let tangential = 0;
   if (radius > 1) {
-    const rx = body.x / radius;
-    const ry = body.y / radius;
-    radial = body.vx * rx + body.vy * ry;
-    tangential = body.vx * ry - body.vy * rx;
+    radial = (body.vx * body.x + body.vy * body.y + vz * z) / radius;
   }
-  const flightPath = Math.atan2(tangential, radial);
-  const aoa = body.pitchRad - flightPath;
+  const nose = noseDirection(body, body.pitchRad, body.yawRad ?? 0);
+  const alignment = speed > 1e-9 ? (nose.x * body.vx + nose.y * body.vy + nose.z * vz) / speed : 1;
+  const aoa = Math.acos(Math.min(1, Math.max(-1, alignment)));
   const rho = alt > 0 && alt < ATMOSPHERE.limitM ? ATMOSPHERE.rho0KgPerM3 * Math.exp(-alt / ATMOSPHERE.scaleHeightM) : 0;
   const qPa = 0.5 * rho * speed * speed;
   const mass = massKg(body);
@@ -107,10 +97,14 @@ function sampleOf(body: FlightBody, dt: number): GuideSample {
     dt,
     x: body.x,
     y: body.y,
+    z,
     altM: alt,
     speedMs: speed,
     radialSpeedMps: radial,
     pitchRad: body.pitchRad,
+    yawRad: body.yawRad ?? 0,
+    tiltRad: Math.acos(Math.min(1, Math.max(-1, Math.cos(body.pitchRad) * Math.cos(body.yawRad ?? 0)))),
+    turnRateRadS: Math.hypot(body.pitchRateRadS ?? 0, Math.cos(body.pitchRad) * (body.yawRateRadS ?? 0)),
     throttle: body.throttle,
     airborne: body.airborne,
     propellantKg: propellantKg(body),

@@ -136,12 +136,16 @@ describe("sim phone", () => {
     const tilted = sample.find((step) => step.pitchDeg === 25);
     expect(tilted).toBeDefined();
     phone.send(frameFor(0));
-    phone.send(frameFor(tilted!.pitchDeg));
-    await waitFor(() => useScene.getState().flight.input.pitchRad > 0.2);
+    // Real samples spend real wall time: a single frame must not jump to a lean.
+    for (let i = 0; i < 20; i += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      phone.send(frameFor(tilted!.pitchDeg));
+    }
+    await waitFor(() => useScene.getState().flight.input.pitchRad > 0.15);
 
     const pitched = useScene.getState().setFlightInput({ throttle: 1 }, "local", runId);
     expect(pitched.ok).toBe(true);
-    expect(useScene.getState().flight.input.pitchRad).toBeGreaterThan(0.2);
+    expect(useScene.getState().flight.input.pitchRad).toBeGreaterThan(0.15);
     expect(useScene.getState().flight.input.throttle).toBe(1);
     expect(useScene.getState().flight.owners.pitch).toBe("phone");
 
@@ -152,7 +156,7 @@ describe("sim phone", () => {
     // 11's placeholder stepper holds the state. 07's integrator actually moves the rocket.
     if (steered.simulatedTimeS > before + 0.5) {
       expect(Math.abs(steered.state?.velocityMps?.x ?? 0)).toBeGreaterThan(1);
-      expect(steered.state?.pitchRad ?? 0).toBeGreaterThan(0.2);
+      expect(steered.state?.pitchRad ?? 0).toBeGreaterThan(0.12);
     }
 
     phone.close();

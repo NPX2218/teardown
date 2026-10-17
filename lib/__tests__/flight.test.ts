@@ -340,7 +340,7 @@ describe("flight simulator F1–F24 (2026-10-17)", () => {
     expect(submitPhonePitch(0.4, true).ok).toBe(true);
     expect(submitPhonePitch(0.3, true).ok).toBe(true);
     expect(useScene.getState().setFlightInput({ throttle: 0.7 }, "local", runId).ok).toBe(true);
-    expect(useScene.getState().flight.input).toEqual({ pitchRad: 0.3, throttle: 0.7 });
+    expect(useScene.getState().flight.input).toEqual({ pitchRad: 0.3, yawRad: 0, throttle: 0.7 });
     useScene.getState().setRocket({ connected: false, code: null });
     expect(useScene.getState().flight.status).toBe("paused");
     expect(submitPhonePitch(0.5, true).error).toBe("flight is paused");

@@ -41,7 +41,7 @@ export function KerbalWorld() {
     labels.push({ id: "apo", text: "Highest point", at: draw.orbit.apoapsis });
   }
   const boom = status === "crashed" && impact
-    ? physicsMetersToEarthRadii(impact.x, impact.y, globeFrameFor(draw.site))
+    ? physicsMetersToEarthRadii(impact.x, impact.y, globeFrameFor(draw.site), impact.z ?? 0)
     : draw.position;
   const sun = draw.site.name === "Starbase"
     ? sunFromHorizon(draw.site.lat, draw.site.lon, 248, 12)

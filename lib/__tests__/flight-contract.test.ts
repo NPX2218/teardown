@@ -144,7 +144,7 @@ describe("flight contract 2026-10-17.2", () => {
     expect(s().setFlightInput({ pitchRad: 0.4, calibrated: false }, "phone", runId).ok).toBe(false);
     expect(s().setFlightInput({ pitchRad: 0.4, calibrated: true }, "phone", runId).ok).toBe(true);
     expect(s().setFlightInput({ throttle: 0.55 }, "local", runId).ok).toBe(true);
-    expect(s().flight.input).toEqual({ pitchRad: 0.4, throttle: 0.55 });
+    expect(s().flight.input).toEqual({ pitchRad: 0.4, yawRad: 0, throttle: 0.55 });
     const stolen = s().setFlightInput({ pitchRad: 1 }, "local", runId);
     expect(stolen.ok).toBe(false);
     expect(stolen.error).toBe("axis not owned: pitch");
@@ -186,7 +186,7 @@ describe("flight contract 2026-10-17.2", () => {
     expect(s().setFlightInput({ pitchRad: 0.3 }, "local", runId).ok).toBe(false);
     s().setFlightAxisOwner("pitch", "phone");
     s().setFlightInput({ pitchRad: 0.25, calibrated: true }, "phone", runId);
-    expect(s().flight.input).toEqual({ pitchRad: 0.25, throttle: 0.4 });
+    expect(s().flight.input).toEqual({ pitchRad: 0.25, yawRad: 0, throttle: 0.4 });
   });
 
   it("FC7 phone loss pauses flight and a stale phone frame cannot resume it", () => {
@@ -199,7 +199,7 @@ describe("flight contract 2026-10-17.2", () => {
     s().setRocket({ connected: false, code: null });
     expect(s().flight.status).toBe("paused");
     expect(s().flight.owners.pitch).toBe("local");
-    expect(s().flight.input).toEqual({ pitchRad: 0, throttle: 0 });
+    expect(s().flight.input).toEqual({ pitchRad: 0, yawRad: 0, throttle: 0 });
     expect(s().advanceFlight(0.016)).toBeUndefined();
     expect(s().flight.status).toBe("paused");
     expect(s().setFlightInput({ pitchRad: 0.2, calibrated: true }, "phone", runId)).toEqual({

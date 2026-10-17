@@ -453,7 +453,7 @@ export const useScene = create<SceneState>()((set, get) => {
         },
         warningLevel: "failed",
         failureReason: text,
-        impact: position ? { x: position.x, y: position.y, t: flight.simulatedTimeS } : null,
+        impact: position ? { ...position, t: flight.simulatedTimeS } : null,
       });
       return { ok: true };
     },

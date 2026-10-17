@@ -22,10 +22,15 @@ export interface GuideSample {
   dt: number;
   x: number;
   y: number;
+  z?: number;
   altM: number;
   speedMs: number;
   radialSpeedMps: number;
   pitchRad: number;
+  yawRad?: number;
+  /** Total lean and angular speed for anomaly checks in any steering direction. */
+  tiltRad?: number;
+  turnRateRadS?: number;
   throttle: number;
   airborne: boolean;
   propellantKg: number;
@@ -71,7 +76,7 @@ export function emptyGuide(playMode: PlayMode): FlightGuide {
 
 function withTrail(guide: FlightGuide, sample: GuideSample): FlightGuide["trail"] {
   const next = guide.trail.filter((point) => sample.t - point.t <= TRAIL_S);
-  next.push({ t: sample.t, x: sample.x, y: sample.y });
+  next.push({ t: sample.t, x: sample.x, y: sample.y, ...(sample.z !== undefined ? { z: sample.z } : {}) });
   return next;
 }
 
@@ -130,7 +135,12 @@ export function stepGuide(previous: FlightGuide, sample: GuideSample, ctx: Guide
     if (ref) {
       const altError = sample.altM - ref.altM;
       const velError = sample.speedMs - ref.velMs;
-      const pitchError = ref.pitchRad === null ? null : sample.pitchRad - ref.pitchRad;
+      const pitchError = ref.pitchRad === null ? null : (sample.yawRad ?? 0) === 0
+        ? sample.pitchRad - ref.pitchRad
+        : Math.acos(Math.min(1, Math.max(-1,
+          Math.sin(sample.pitchRad) * Math.sin(ref.pitchRad)
+          + Math.cos(sample.pitchRad) * Math.cos(sample.yawRad ?? 0) * Math.cos(ref.pitchRad),
+        )));
       const drift = stepDrift(
         {
           warningLevel: guide.warningLevel,
@@ -180,8 +190,8 @@ export function stepGuide(previous: FlightGuide, sample: GuideSample, ctx: Guide
     altM: sample.altM,
     speedMs: sample.speedMs,
     radialSpeedMps: sample.radialSpeedMps,
-    pitchRad: sample.pitchRad,
-    pitchRateRadS: rate,
+    pitchRad: sample.tiltRad ?? sample.pitchRad,
+    pitchRateRadS: sample.turnRateRadS ?? rate,
     throttle: sample.throttle,
     airborne: sample.airborne,
     propellantKg: sample.propellantKg,
@@ -218,7 +228,7 @@ export function stepGuide(previous: FlightGuide, sample: GuideSample, ctx: Guide
     guide.failureReason = outcome.reason;
     guide.banner = outcome.reason === OFF_NOMINAL_REASON ? OFF_NOMINAL_REASON : guide.banner;
     if (outcome.kind === "crashed" && !guide.impact) {
-      guide.impact = { x: sample.x, y: sample.y, t: sample.t };
+      guide.impact = { x: sample.x, y: sample.y, ...(sample.z !== undefined ? { z: sample.z } : {}), t: sample.t };
     }
     guide.cue = "boom";
     if (guide.accuracy === null) guide.accuracy = finishAccuracy(guide);

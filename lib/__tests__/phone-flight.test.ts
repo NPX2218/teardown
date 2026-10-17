@@ -37,10 +37,12 @@ describe("phone pitch on the flight mixer", () => {
     const runId = launchWithPhone();
     expect(submitPhonePitch(0.4, true).ok).toBe(true);
     handleRocketMessage(frame(), 1_000);
-    handleRocketMessage(frame(0.35), 1_050);
+    for (let i = 1; i <= 20; i += 1) handleRocketMessage(frame(0.35), 1_000 + i * 50);
     const pitched = useScene.getState().setFlightInput({ throttle: 1 }, "local", runId);
     expect(pitched.ok).toBe(true);
-    expect(useScene.getState().flight.input.pitchRad).toBeGreaterThan(0.2);
+    // A 20° physical lean is deliberately gentler than the old one-to-one command.
+    expect(useScene.getState().flight.input.pitchRad).toBeGreaterThan(0.09);
+    expect(useScene.getState().flight.input.pitchRad).toBeLessThan(0.12);
     expect(useScene.getState().flight.input.throttle).toBe(1);
     expect(useScene.getState().orientation).toBeNull();
     advance(2);
@@ -48,7 +50,7 @@ describe("phone pitch on the flight mixer", () => {
     expect(steered.status).toBe("flying");
     expect(steered.simulatedTimeS).toBeGreaterThan(1);
     expect(Math.abs(steered.state?.velocityMps?.x ?? 0)).toBeGreaterThan(1);
-    expect(steered.state?.pitchRad).toBeGreaterThan(0.2);
+    expect(steered.state?.pitchRad).toBeGreaterThan(0.08);
 
     useScene.setState(initial, true);
     resetRocketState();
@@ -90,7 +92,7 @@ describe("phone pitch on the flight mixer", () => {
 
     expect(resumeFlightExplicit().ok).toBe(true);
     expect(useScene.getState().flight.status).toBe("flying");
-    expect(useScene.getState().flight.input).toEqual({ pitchRad: 0, throttle: 0 });
+    expect(useScene.getState().flight.input).toEqual({ pitchRad: 0, yawRad: 0, throttle: 0 });
     expect(useScene.getState().flight.owners.pitch).toBe("local");
     handleRocketMessage(frame(0.8), 3_100);
     expect(useScene.getState().flight.input.pitchRad).toBe(0);
@@ -99,8 +101,8 @@ describe("phone pitch on the flight mixer", () => {
   it("handoff: screen tilt takes pitch and later phone frames do not steer", () => {
     const runId = launchWithPhone();
     handleRocketMessage(frame(), 4_000);
-    handleRocketMessage(frame(0.4), 4_050);
-    expect(useScene.getState().flight.input.pitchRad).toBeGreaterThan(0.2);
+    for (let i = 1; i <= 20; i += 1) handleRocketMessage(frame(0.4), 4_000 + i * 50);
+    expect(useScene.getState().flight.input.pitchRad).toBeGreaterThan(0.12);
     useScene.getState().setFlightInput({ throttle: 0.6 }, "local", runId);
 
     expect(handoffPitchToLocal().ok).toBe(true);

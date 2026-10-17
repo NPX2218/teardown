@@ -1,7 +1,6 @@
 import * as THREE from "three";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAppMode, type AppMode } from "@/lib/flight/app-mode";
-import { flightAttitudeNow } from "@/lib/rocket/useRocket";
 import { useScene } from "@/lib/store";
 import type { FlightStatus } from "@/lib/types";
 import { flightDrawNow } from "@/components/flight/flightDraw";
@@ -24,7 +23,6 @@ beforeEach(() => {
   useScene.setState(initial, true);
   useAppMode.setState(initialMode, true);
   frame.callback = null;
-  flightAttitudeNow.current = [Math.cos(0.2), 0, 0, Math.sin(0.2)];
   flightDrawNow.current = buildFlightDraw({
     site: STARBASE, positionM: null, pitchRad: 0, throttle: 0, airborne: false,
     altitudeM: 0, activeStageId: "booster", simulatedTimeS: 0, separatedAtS: null,
@@ -51,7 +49,18 @@ function render(mode: AppMode, status: FlightStatus, owner: "local" | "phone", c
 }
 
 // REGRESSION GUARD for PR #34, 2026-10-17: a live phone must not move an unowned or frozen drawing.
-describe("vehicle phone attitude ownership", () => {
+describe("vehicle draws only physical attitude", () => {
+  it("V10: actual nose is unchanged by camera azimuth (2026-10-17 report)", () => {
+    render("mission", "flying", "phone");
+    const expected = new THREE.Vector3(...flightDrawNow.current!.nose);
+    for (const position of [[14, 8, 14], [-14, 6, 10], [4, 18, -12]]) {
+      const camera = new THREE.PerspectiveCamera();
+      camera.position.set(position[0], position[1], position[2]);
+      frame.callback!({ camera }, 0.1);
+      const nose = new THREE.Vector3(0, 1, 0).applyQuaternion(frame.rig!.quaternion);
+      expect(nose.angleTo(expected)).toBeLessThan(1e-7);
+    }
+  });
   it.each(["ready", "paused", "orbit", "crashed", "failed", "idle"] as const)("V1: %s cannot receive live phone lean (PR #34)", (status) => {
     expect(render("mission", status, "phone")).toBeLessThan(1e-7);
   });
@@ -64,21 +73,19 @@ describe("vehicle phone attitude ownership", () => {
   it("V4: Explore cannot receive flight phone lean (PR #34)", () => {
     expect(render("explore", "flying", "phone")).toBeLessThan(1e-7);
   });
-  it.each(["mission", "replay"] as const)("V5: live phone-owned %s still follows phone lean (PR #34)", (mode) => {
-    expect(render(mode, "flying", "phone")).toBeGreaterThan(0.01);
+  it.each(["mission", "replay"] as const)("V5: live phone-owned %s follows the physical nose (PR #34)", (mode) => {
+    expect(render(mode, "flying", "phone")).toBeLessThan(1e-7);
   });
   it.each(["paused", "orbit", "crashed", "failed"] as const)("V6: %s freezes the existing drawn lean (PR #34)", (status) => {
     render("mission", "flying", "phone");
     const before = frame.rig!.quaternion.clone();
     useScene.setState((state) => ({ flight: { ...state.flight, status } }));
-    flightAttitudeNow.current = [Math.cos(0.5), 0, 0, -Math.sin(0.5)];
     frame.callback!({ camera: new THREE.PerspectiveCamera() }, 0.1);
     expect(frame.rig!.quaternion.angleTo(before)).toBeLessThan(1e-7);
   });
   it("V9: retry and launch within one frame clear the previous run's smoothed lean (PR #34)", () => {
     render("mission", "flying", "phone");
     useScene.setState((state) => ({ flight: { ...state.flight, runId: "replacement-run" } }));
-    flightAttitudeNow.current = null;
     frame.callback!({ camera: new THREE.PerspectiveCamera() }, 0.1);
     const nose = new THREE.Vector3(0, 1, 0).applyQuaternion(frame.rig!.quaternion);
     expect(nose.angleTo(new THREE.Vector3(...flightDrawNow.current!.nose))).toBeLessThan(1e-7);

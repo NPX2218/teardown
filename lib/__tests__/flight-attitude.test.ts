@@ -1,14 +1,14 @@
-// Your mission: the visible flight rocket shows the phone's side lean and twist on top of the physics nose.
-// Pitch is left out because the physics already draws it. Mount is the S24 FE landscape shell.
+// Phone lean commands the same physical nose used by thrust and the flight drawing.
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { FLIGHT_SCENARIOS } from "@/data/flight/index";
 import { getDetector } from "@/lib/gestures";
-import { tiltQuat } from "@/lib/rocket/mount";
-import { withoutPitch } from "@/lib/rocket/orient";
-import { flightAttitudeNow, handleRocketMessage, resetRocketState, startRocketWatch } from "@/lib/rocket/useRocket";
+import { handleRocketMessage, lastRocketAttitude, resetRocketState, startRocketWatch } from "@/lib/rocket/useRocket";
 import { useScene } from "@/lib/store";
 import type { ClassifiedNumber, FlightScenario, Quat, Vec3 } from "@/lib/types";
 import { frameFor } from "../../scripts/sim-phone";
+import { readFlightDraw } from "@/components/flight/readFlightDraw";
+import { useAppMode } from "@/lib/flight/app-mode";
+import { globeFrameFor, dot } from "@/lib/flight/scene-types";
 
 const SCENARIO_ID = "flight-attitude-fixture";
 const initial = useScene.getState();
@@ -44,12 +44,14 @@ beforeEach(() => {
   useScene.setState(initial, true);
   resetRocketState();
   getDetector().reset();
+  useAppMode.setState({ mode: "mission" });
 });
 
 function hold(pitchDeg: number, ms: number, yawDeg = 0): void {
   for (let i = 0; i <= ms; i += 50) {
     handleRocketMessage(frameFor(pitchDeg, [0, 0, 0], "s24fe", yawDeg), t);
     t += 50;
+    if (useScene.getState().flight.status === "flying") useScene.getState().advanceFlight(0.05);
   }
 }
 
@@ -66,92 +68,84 @@ function rotate(q: Quat, v: Vec3): Vec3 {
   ];
 }
 
-const flightNose = (): Vec3 => rotate(flightAttitudeNow.current ?? [1, 0, 0, 0], [0, 1, 0]);
-const angle = (a: Quat, b: Quat): number => 2 * Math.acos(Math.min(1, Math.abs(a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3])));
 
 function flyingWithPhone(): void {
   expect(useScene.getState().startFlight(SCENARIO_ID).ok).toBe(true);
   useScene.getState().setRocket({ connected: true, code: "AB2C" });
   useScene.getState().setFlightAxisOwner("pitch", "phone");
   expect(useScene.getState().launchFlight().ok).toBe(true);
+  useScene.getState().setFlightInput({ throttle: 1 }, "local", useScene.getState().flight.runId!);
 }
 
-describe("withoutPitch", () => {
-  it("A0 strips the fore/aft turn and keeps the side lean", () => {
-    expect(angle(withoutPitch(tiltQuat(30, 20)), tiltQuat(0, 20))).toBeLessThan(1e-6);
-    expect(angle(withoutPitch(tiltQuat(30, 0)), [1, 0, 0, 0])).toBeLessThan(1e-6);
-  });
-});
-
-describe("flight rocket follows the phone", () => {
-  it("A1 a side lean mid-flight tips the flight model; physics pitch input is unaffected", () => {
+// REGRESSION GUARD for the 2026-10-17 steering report: both phone lean axes must move physics.
+describe("flight rocket follows physical phone steering", () => {
+  it("A1: side lean produces crossrange velocity and the drawn nose (2026-10-17 report)", () => {
     flyingWithPhone();
     hold(0, 300);
-    expect(flightAttitudeNow.current).not.toBeNull();
-    expect(flightNose()[1]).toBeCloseTo(1, 3);
-    hold(0, 300, 20);
-    const nose = flightNose();
-    expect(Math.abs(nose[0])).toBeCloseTo(Math.sin(20 * DEG), 2);
-    expect(nose[1]).toBeCloseTo(Math.cos(20 * DEG), 2);
-    expect(useScene.getState().flight.input.pitchRad).toBeCloseTo(0, 2);
+    hold(0, 4000, 20);
+    const flight = useScene.getState().flight;
+    expect(flight.input.pitchRad).toBeCloseTo(0, 2);
+    expect(flight.state!.yawRad).toBeGreaterThan(3 * DEG);
+    expect(flight.state!.positionM!.z).toBeGreaterThan(1);
+    expect(flight.state!.velocityMps!.z).toBeGreaterThan(1);
+    const draw = readFlightDraw();
+    expect(dot(draw.nose, globeFrameFor(draw.site).right)).toBeGreaterThan(0.05);
   });
 
-  it("A2 a fore/aft lean steers physics but is not drawn twice on the model", () => {
+  it("A2: fore/aft lean moves downrange without a second visual tilt (2026-10-17 report)", () => {
     flyingWithPhone();
     hold(0, 300);
-    hold(30, 300);
-    expect(useScene.getState().flight.input.pitchRad).toBeCloseTo(30 * DEG, 2);
-    expect(angle(flightAttitudeNow.current!, [1, 0, 0, 0])).toBeLessThan(1e-3);
+    hold(30, 4000);
+    const flight = useScene.getState().flight;
+    expect(flight.input.pitchRad).toBeGreaterThan(10 * DEG);
+    expect(flight.input.pitchRad).toBeLessThan(30 * DEG);
+    expect(flight.state!.pitchRad).toBeGreaterThan(10 * DEG);
+    expect(flight.state!.yawRad ?? 0).toBeCloseTo(0, 8);
+    expect(flight.state!.velocityMps!.x).toBeGreaterThan(1);
+    const draw = readFlightDraw();
+    expect(dot(draw.nose, globeFrameFor(draw.site).right)).toBeCloseTo(0, 8);
   });
 
-  it("A3 the same phone pose gives the same flight attitude", () => {
+  it("A3: returning to a pose restores its steering command (2026-10-17 report)", () => {
     flyingWithPhone();
     hold(0, 300);
-    hold(10, 300, 15);
-    const first = flightAttitudeNow.current!;
-    hold(35, 600, -25);
-    hold(0, 300);
-    hold(10, 300, 15);
-    expect(angle(flightAttitudeNow.current!, first)).toBeLessThan(1e-3);
+    hold(10, 4000, 15);
+    const first = { ...useScene.getState().flight.input };
+    hold(35, 3000, -25);
+    hold(0, 3000);
+    hold(10, 4000, 15);
+    expect(useScene.getState().flight.input.pitchRad).toBeCloseTo(first.pitchRad, 3);
+    expect(useScene.getState().flight.input.yawRad).toBeCloseTo(first.yawRad!, 3);
   });
 
-  it("A4 disconnect, reset and a new run clear it", () => {
+  it("A4: disconnect clears calibration and retry returns physical attitude to neutral (2026-10-17 report)", () => {
     flyingWithPhone();
-    hold(0, 300, 20);
-    expect(flightAttitudeNow.current).not.toBeNull();
-    resetRocketState();
-    expect(flightAttitudeNow.current).toBeNull();
-
     const stop = startRocketWatch();
     try {
-      hold(0, 300, 20);
-      expect(flightAttitudeNow.current).not.toBeNull();
+      hold(0, 4000, 20);
+      expect(lastRocketAttitude()).not.toBeNull();
       useScene.getState().setRocket({ connected: false, code: null });
-      expect(flightAttitudeNow.current).toBeNull();
-
-      useScene.getState().setRocket({ connected: true, code: "AB2C" });
-      hold(0, 300, 20);
-      expect(flightAttitudeNow.current).not.toBeNull();
-      const runId = useScene.getState().flight.runId;
-      useScene.getState().abortFlight("test");
-      expect(useScene.getState().startFlight(SCENARIO_ID).ok).toBe(true);
-      expect(useScene.getState().flight.runId).not.toBe(runId);
-      expect(flightAttitudeNow.current).toBeNull();
-    } finally {
-      stop();
-    }
+      expect(lastRocketAttitude()).toBeNull();
+      useScene.getState().abortFlight("fixture abort");
+      expect(useScene.getState().retryFlight().ok).toBe(true);
+      const state = useScene.getState().flight.state!;
+      expect(state.pitchRad).toBe(0);
+      expect(state.yawRad ?? 0).toBe(0);
+      expect(state.positionM).toBeNull();
+    } finally { stop(); }
   });
 
-  it("A5 idle explore still drives store orientation and never the flight attitude", () => {
+  it("A5: idle Explore keeps its full orientation without a flight (2026-10-17 report)", () => {
+    useAppMode.setState({ mode: "explore" });
     hold(0, 300);
     hold(30, 300, 10);
     expect(useScene.getState().orientation).not.toBeNull();
-    expect(flightAttitudeNow.current).toBeNull();
     const nose = rotate(useScene.getState().orientation!, [0, 1, 0]);
-    expect(nose[2]).toBeGreaterThan(0.3); // explore keeps the full lean, pitch included
+    expect(nose[2]).toBeGreaterThan(0.3);
+    expect(useScene.getState().flight.status).toBe("idle");
   });
 
-  it("A6 while flying the store orientation stays put (idle-only)", () => {
+  it("A6: flying leaves the Explore orientation alone (2026-10-17 report)", () => {
     flyingWithPhone();
     hold(0, 300, 20);
     expect(useScene.getState().orientation).toBeNull();

@@ -14,8 +14,9 @@ import {
   type RocketAttitude,
   type RocketBasis,
 } from "@/lib/rocket/mount";
-import { quatConj, quatFromTo, quatMul, quatNormalize, relativeOrientation, withoutPitch } from "@/lib/rocket/orient";
+import { quatConj, quatFromTo, quatMul, quatNormalize, relativeOrientation } from "@/lib/rocket/orient";
 import { commitPhoneAxes, commitShellEvent } from "@/lib/flight/controls";
+import { stepPhoneSteering, type PhoneSteering } from "@/lib/flight/phone-steering.helpers";
 import { SHELL_GESTURE, ShellGestureDetector, throttleFromShell, type ShellEvent } from "@/lib/rocket/shell-gestures";
 import { useScene } from "@/lib/store";
 import type { Quat, RocketMessage, ShellStatusLevel, ShellStatusWord, Vec3 } from "@/lib/types";
@@ -35,11 +36,17 @@ let compPitch = 0;
 let lastFrameAt: number | null = null;
 let lastStatus = "";
 const shell = new ShellGestureDetector();
+let steering: PhoneSteering = { pitchRad: 0, yawRad: 0 };
+let steeringAt: number | null = null;
+let steeringRunId: string | null = null;
 
-/** Phone attitude for the flight model, rocket frame, pitch removed (physics draws pitch). Vehicle reads it per frame. */
-export const flightAttitudeNow: { current: Quat | null } = { current: null };
+function clearSteering(): void {
+  steering = { pitchRad: 0, yawRad: 0 };
+  steeringAt = null;
+  steeringRunId = null;
+}
 
-/** Latest rocket-frame lean. Yaw is here because the planar flight only stores pitch. */
+/** Latest raw rocket-frame lean; flight shaping does not alter the sensor reading. */
 export function lastRocketAttitude(): RocketAttitude | null {
   return attitude ? { ...attitude } : null;
 }
@@ -49,7 +56,7 @@ function clearMount(): void {
   q0 = null;
   home = [1, 0, 0, 0];
   attitude = null;
-  flightAttitudeNow.current = null;
+  clearSteering();
   compPitch = 0;
   lastFrameAt = null;
   shell.reset();
@@ -120,6 +127,9 @@ export function zeroRocket(): void {
   const { flight, rocket } = store;
   if (rocket.connected && flight.status !== "idle" && flight.runId) {
     store.setFlightAxisOwner("pitch", "phone");
+    // Same-owner changes are deliberately no-ops in the mixer. Explicitly release
+    // the old target while HOLD waits for a new upright calibration frame.
+    store.setFlightInput({ pitchRad: 0, yawRad: 0, calibrated: true }, "phone", flight.runId);
   }
 }
 
@@ -168,8 +178,18 @@ export function handleRocketMessage(m: RocketMessage, now: number): void {
       applyShellEvent(shell.push({ linRocket, gravRocket, tMs: now }), now);
       const throttle = throttleFromShell(linRocket, lean.pitchRad);
       const pushed = linRocket[1] >= SHELL_GESTURE.throttlePush || linRocket[2] >= SHELL_GESTURE.throttlePush;
+      const live = useScene.getState().flight;
+      if (live.status === "flying" && live.owners.pitch === "phone") {
+        if (steeringRunId !== live.runId) clearSteering();
+        steeringRunId = live.runId;
+        steering = stepPhoneSteering(steering, lean, steeringAt === null ? 0 : (now - steeringAt) / 1000);
+        steeringAt = now;
+      } else {
+        clearSteering();
+      }
       commitPhoneAxes({
-        pitchRad: lean.pitchRad,
+        pitchRad: steering.pitchRad,
+        yawRad: steering.yawRad,
         throttle,
         // The lift that launched is still moving the rocket up; it is not a request for the throttle.
         throttlePush: pushed && now - launchedAt > LAUNCH_PUSH_GRACE_MS,
@@ -177,11 +197,10 @@ export function handleRocketMessage(m: RocketMessage, now: number): void {
       });
     }
 
-    if (basis && q0) {
+    if (basis && q0 && flight.status === "idle") {
       // Phone turn since the lock, moved from phone axes into rocket axes (the mount), then applied to the model.
       const turned = quatNormalize(quatMul(home, relativeOrientation(q0, m.q, quatConj(basis.q))));
-      if (flight.status === "idle") store.setOrientation(turned);
-      else flightAttitudeNow.current = withoutPitch(turned);
+      store.setOrientation(turned);
     }
 
     const det = getDetector();
@@ -220,11 +239,12 @@ export function startRocketWatch(): () => void {
       // The mount describes the paired shell, not a flight. Keep its basis
       // when opening a mission or retrying while the visitor holds a lean.
       shell.reset();
-      flightAttitudeNow.current = null;
+      clearSteering();
       launchedAt = Number.NEGATIVE_INFINITY;
       lastStatus = "";
     }
     if (s.flight.status !== was.flight.status) {
+      clearSteering();
       if (s.flight.status === "orbit") publishStatus("ORBIT", "ok", true);
       else if (s.flight.status === "crashed") publishStatus("CRASH", "bad", true);
       else if (s.flight.status === "failed" && lastStatus.startsWith("ABORT") === false) publishStatus("CRASH", "bad", true);

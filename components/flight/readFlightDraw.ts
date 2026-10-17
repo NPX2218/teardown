@@ -89,7 +89,7 @@ export function readFlightDraw(): FlightDraw {
   const flight = scene.flight;
   const state = flight.state;
   const scenario = scenarioFor(flight.scenarioId);
-  let path: { x: number; y: number }[] | null = null;
+  let path: { x: number; y: number; z?: number }[] | null = null;
   let pathClosed = false;
   let pathHitsEarth = false;
   let elements = EMPTY_ELEMENTS;
@@ -112,6 +112,7 @@ export function readFlightDraw(): FlightDraw {
     site,
     positionM: state?.positionM ?? null,
     pitchRad: state?.pitchRad ?? flight.input.pitchRad,
+    yawRad: state?.yawRad ?? flight.input.yawRad ?? 0,
     throttle: state?.throttle ?? flight.input.throttle,
     airborne: state?.airborne ?? false,
     altitudeM: flight.readout?.altitudeM ?? null,

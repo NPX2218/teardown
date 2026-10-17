@@ -8,6 +8,9 @@
 // Substeps are exactly 1/60 simulated second. A frame may take at most 48
 // of them (lib/flight/integrate.ts). Identical substep inputs match.
 
+import { length3, noseDirection, turnAngle, type Vector3 } from "@/lib/flight/attitude.helpers";
+export { noseDirection } from "@/lib/flight/attitude.helpers";
+
 import type {
   FlightInput,
   FlightObjective,
@@ -56,7 +59,7 @@ export const ATTITUDE = {
   gameAuthority: 3,
   /** Cold-gas thrusters still turn the nose slowly with the engines off. */
   rcsAccelRadS2: 0.05,
-  /** 20 degrees/s top turn rate keeps a fast hand from whipping the stack around. */
+  /** 20 degrees/s per-axis turn rate keeps a fast hand from whipping the stack around. */
   maxRateRadS: 0.35,
   /** Braking uses 80% of authority so the nose settles without overshoot. */
   brakeMargin: 0.8,
@@ -91,6 +94,10 @@ export interface FlightBody {
   y: number;
   vx: number;
   vy: number;
+  z?: number;
+  vz?: number;
+  yawRad?: number;
+  yawRateRadS?: number;
   pitchRad: number;
   /** Nose turn rate. Missing means 0 (older saved states). */
   pitchRateRadS?: number;
@@ -120,6 +127,7 @@ export interface OrbitElements {
 export interface CoastPoint {
   x: number;
   y: number;
+  z?: number;
 }
 
 export interface CoastPreview {
@@ -149,6 +157,10 @@ export function createFlight(scenario: FlightScenario): FlightBody {
     y: EARTH_RADIUS_M,
     vx: 0,
     vy: 0,
+    z: 0,
+    vz: 0,
+    yawRad: 0,
+    yawRateRadS: 0,
     pitchRad: 0,
     throttle: 0,
     activeStageIndex: 0,
@@ -183,7 +195,7 @@ export function propellantKg(state: FlightBody): number {
 
 export function stepFlight(state: FlightBody, input: FlightInput, dt: number): FlightBody {
   if (state.outcome) return state;
-  if (!Number.isFinite(dt) || dt <= 0 || !Number.isFinite(input.pitchRad) || !Number.isFinite(input.throttle)) {
+  if (!Number.isFinite(dt) || dt <= 0 || !Number.isFinite(input.pitchRad) || !Number.isFinite(input.yawRad ?? 0) || !Number.isFinite(input.throttle)) {
     return stop(state, "Simulation stopped.");
   }
   const steps = Math.round(dt / SUBSTEP_S);
@@ -202,15 +214,18 @@ export function stepFlight(state: FlightBody, input: FlightInput, dt: number): F
   return next;
 }
 
-export function orbitFromState(state: Pick<FlightBody, "x" | "y" | "vx" | "vy">): OrbitElements {
+export function orbitFromState(state: Pick<FlightBody, "x" | "y" | "z" | "vx" | "vy" | "vz">): OrbitElements {
   const { x, y, vx, vy } = state;
-  const r = Math.hypot(x, y);
-  const speed2 = vx * vx + vy * vy;
+  const z = state.z ?? 0;
+  const vz = state.vz ?? 0;
+  const r = length3(x, y, z);
+  const speed2 = vx * vx + vy * vy + vz * vz;
   if (!Number.isFinite(r) || r < 1 || !Number.isFinite(speed2)) {
     return emptyOrbit(false);
   }
   const energy = speed2 / 2 - EARTH_MU_M3_S2 / r;
-  const h = x * vy - y * vx;
+  const hz = x * vy - y * vx;
+  const h = z === 0 && vz === 0 ? hz : Math.hypot(y * vz - z * vy, z * vx - x * vz, hz);
   if (!Number.isFinite(energy) || !Number.isFinite(h)) return emptyOrbit(false);
   if (Math.abs(energy) < 1e-6) {
     return {
@@ -251,8 +266,10 @@ export function orbitFromState(state: Pick<FlightBody, "x" | "y" | "vx" | "vy">)
 
 export function readFlight(state: FlightBody): FlightReadout {
   const orbit = orbitFromState(state);
-  const r = Math.hypot(state.x, state.y);
-  const finite = Number.isFinite(r) && r > 1 && Number.isFinite(state.vx) && Number.isFinite(state.vy);
+  const z = state.z ?? 0;
+  const vz = state.vz ?? 0;
+  const r = length3(state.x, state.y, z);
+  const finite = Number.isFinite(r) && r > 1 && Number.isFinite(state.vx) && Number.isFinite(state.vy) && Number.isFinite(vz);
   let radial: number | null = null;
   let tangential: number | null = null;
   let total: number | null = null;
@@ -260,9 +277,11 @@ export function readFlight(state: FlightBody): FlightReadout {
   if (finite) {
     const rx = state.x / r;
     const ry = state.y / r;
-    radial = state.vx * rx + state.vy * ry;
-    tangential = state.vx * ry + state.vy * -rx;
-    total = Math.hypot(state.vx, state.vy);
+    radial = state.vx * rx + state.vy * ry + vz * z / r;
+    total = length3(state.vx, state.vy, vz);
+    tangential = z === 0 && vz === 0
+      ? state.vx * ry + state.vy * -rx
+      : Math.hypot(state.vx - radial * rx, state.vy - radial * ry, vz - radial * z / r);
     altitude = r - EARTH_RADIUS_M;
   }
   return {
@@ -284,13 +303,15 @@ export function toFlightState(state: FlightBody): FlightState {
   return {
     pitchRad: state.pitchRad,
     pitchRateRadS: state.pitchRateRadS ?? 0,
+    yawRad: state.yawRad ?? 0,
+    yawRateRadS: state.yawRateRadS ?? 0,
     throttle: state.throttle,
     activeStageId: state.stages[state.activeStageIndex]?.id ?? state.stages[0]?.id ?? "",
     simulatedTimeS: state.simulatedTimeS,
     stages: state.stages.map((stage) => ({ ...stage })),
     payloadKg: state.payloadKg,
-    positionM: { x: state.x, y: state.y },
-    velocityMps: { x: state.vx, y: state.vy },
+    positionM: { x: state.x, y: state.y, z: state.z ?? 0 },
+    velocityMps: { x: state.vx, y: state.vy, z: state.vz ?? 0 },
     thrustOffS: state.thrustOffS,
     airborne: state.airborne,
   };
@@ -306,6 +327,10 @@ export function bodyFromFlightState(scenario: FlightScenario, state: FlightState
     y: state.positionM.y,
     vx: state.velocityMps.x,
     vy: state.velocityMps.y,
+    z: state.positionM.z ?? 0,
+    vz: state.velocityMps.z ?? 0,
+    yawRad: state.yawRad ?? 0,
+    yawRateRadS: state.yawRateRadS ?? 0,
     pitchRad: state.pitchRad,
     pitchRateRadS: state.pitchRateRadS ?? 0,
     throttle: state.throttle,
@@ -332,6 +357,33 @@ export function fuelNotice(state: FlightBody): string | null {
  * the curve meets the ground or the energy is unbound.
  */
 export function coastPreview(state: FlightBody): CoastPreview {
+  const z = state.z ?? 0;
+  const vz = state.vz ?? 0;
+  if (z === 0 && vz === 0) return planarCoastPreview(state);
+  // Express r/v in their instantaneous orbital plane, reuse the planar conic,
+  // then lift every sample back into three dimensions. Radial paths use any
+  // perpendicular tangent because their transverse velocity is zero.
+  const radius = length3(state.x, state.y, z);
+  if (!(radius > 0) || !Number.isFinite(radius)) return { points: [], hitsEarth: false, closed: false, coast: true };
+  const radial = { x: state.x / radius, y: state.y / radius, z: z / radius };
+  const hx = state.y * vz - z * state.vy;
+  const hy = z * state.vx - state.x * vz;
+  const hz = state.x * state.vy - state.y * state.vx;
+  const h = Math.hypot(hx, hy, hz);
+  const tangent = h > 1e-8
+    ? { x: (hy * radial.z - hz * radial.y) / h, y: (hz * radial.x - hx * radial.z) / h, z: (hx * radial.y - hy * radial.x) / h }
+    : noseDirection(state, Math.PI / 2);
+  const vr = state.vx * radial.x + state.vy * radial.y + vz * radial.z;
+  const vt = state.vx * tangent.x + state.vy * tangent.y + vz * tangent.z;
+  const projected = planarCoastPreview({ ...state, x: radius, y: 0, z: 0, vx: vr, vy: vt, vz: 0 });
+  return { ...projected, points: projected.points.map(point => ({
+    x: point.x * radial.x + point.y * tangent.x,
+    y: point.x * radial.y + point.y * tangent.y,
+    z: point.x * radial.z + point.y * tangent.z,
+  })) };
+}
+
+function planarCoastPreview(state: FlightBody): CoastPreview {
   const orbit = orbitFromState(state);
   const h = orbit.angularMomentum ?? 0;
   if (!orbit.finite || orbit.energy === null || Math.abs(h) < 1) {
@@ -471,16 +523,8 @@ export function attitudeAuthorityRadS2(state: FlightBody, throttle: number): num
 /** Moves the nose toward the target with limited torque: no snap, no overshoot. Clamps hold it upright on the pad. */
 export function turnNose(state: FlightBody, targetRad: number, throttle: number, dt: number): { pitchRad: number; pitchRateRadS: number } {
   if (!state.airborne) return { pitchRad: 0, pitchRateRadS: 0 };
-  const rate = state.pitchRateRadS ?? 0;
-  const err = targetRad - state.pitchRad;
-  const alpha = attitudeAuthorityRadS2(state, throttle);
-  // Fastest rate that can still brake to a stop at the target.
-  const brakeRate = Math.sqrt(2 * alpha * ATTITUDE.brakeMargin * Math.abs(err));
-  const wantRate = Math.sign(err) * Math.min(ATTITUDE.maxRateRadS, brakeRate, Math.abs(err) / ATTITUDE.rateTauS);
-  // Track the wanted rate as hard as the torque allows, so braking never starts late.
-  const accel = clamp((wantRate - rate) / dt, -alpha, alpha);
-  const nextRate = clamp(rate + accel * dt, -ATTITUDE.maxRateRadS, ATTITUDE.maxRateRadS);
-  return { pitchRad: clamp(state.pitchRad + nextRate * dt, -Math.PI / 2, Math.PI / 2), pitchRateRadS: nextRate };
+  const turned = turnAngle(state.pitchRad, state.pitchRateRadS ?? 0, targetRad, attitudeAuthorityRadS2(state, throttle), dt, ATTITUDE);
+  return { pitchRad: turned.angle, pitchRateRadS: turned.rate };
 }
 
 function stepOnce(state: FlightBody, input: FlightInput, dt: number): FlightBody {
@@ -488,9 +532,14 @@ function stepOnce(state: FlightBody, input: FlightInput, dt: number): FlightBody
   if (!finiteBody(state)) return stop(state, "Simulation stopped.");
   const throttle = clamp(input.throttle, 0, 1);
   const nose = turnNose(state, clamp(input.pitchRad, -Math.PI / 2, Math.PI / 2), throttle, dt);
+  const side = state.airborne
+    ? turnAngle(state.yawRad ?? 0, state.yawRateRadS ?? 0, clamp(input.yawRad ?? 0, -Math.PI / 2, Math.PI / 2), attitudeAuthorityRadS2(state, throttle), dt, ATTITUDE)
+    : { angle: 0, rate: 0 };
   let cursor: FlightBody = {
     ...state,
     ...nose,
+    yawRad: side.angle,
+    yawRateRadS: side.rate,
     throttle,
     stages: state.stages.map((stage) => ({ ...stage })),
   };
@@ -533,17 +582,17 @@ function burnAndMove(state: FlightBody, dt: number, burnKg: number): FlightBody 
       next = { ...next, airborne: true };
       const moved = translate(next, dt, powered);
       if (moved.outcome) return moved;
-      if (segmentHitsEarth(next.x, next.y, moved.x, moved.y)) {
+      if (segmentHitsEarth(next.x, next.y, moved.x, moved.y, next.z ?? 0, moved.z ?? 0)) {
         return stop(moved, "The rocket hit the ground.", "crashed");
       }
       next = moved;
     } else {
-      next = { ...next, x: 0, y: EARTH_RADIUS_M, vx: 0, vy: 0 };
+      next = { ...next, x: 0, y: EARTH_RADIUS_M, z: 0, vx: 0, vy: 0, vz: 0 };
     }
   } else {
     const moved = translate(next, dt, powered);
     if (moved.outcome) return moved;
-    if (segmentHitsEarth(next.x, next.y, moved.x, moved.y)) {
+    if (segmentHitsEarth(next.x, next.y, moved.x, moved.y, next.z ?? 0, moved.z ?? 0)) {
       return stop(moved, "The rocket hit the ground.", "crashed");
     }
     next = moved;
@@ -553,60 +602,64 @@ function burnAndMove(state: FlightBody, dt: number, burnKg: number): FlightBody 
 
 function translate(state: FlightBody, dt: number, powered: boolean): FlightBody {
   const a = acceleration(state, powered);
-  if (!Number.isFinite(a.x) || !Number.isFinite(a.y)) return stop(state, "Simulation stopped.");
+  if (!Number.isFinite(a.x) || !Number.isFinite(a.y) || !Number.isFinite(a.z ?? 0)) return stop(state, "Simulation stopped.");
   const vx = state.vx + a.x * dt;
   const vy = state.vy + a.y * dt;
-  return { ...state, vx, vy, x: state.x + vx * dt, y: state.y + vy * dt };
+  const vz = (state.vz ?? 0) + (a.z ?? 0) * dt;
+  return { ...state, vx, vy, vz, x: state.x + vx * dt, y: state.y + vy * dt, z: (state.z ?? 0) + vz * dt };
 }
 
-function acceleration(state: FlightBody, powered: boolean): Vec2 {
-  const r = Math.hypot(state.x, state.y);
-  if (r < 1) return { x: Number.NaN, y: Number.NaN };
+function acceleration(state: FlightBody, powered: boolean): Vector3 {
+  const z = state.z ?? 0;
+  const vz = state.vz ?? 0;
+  const r = length3(state.x, state.y, z);
+  if (r < 1) return { x: Number.NaN, y: Number.NaN, z: Number.NaN };
   const rx = state.x / r;
   const ry = state.y / r;
   const gravity = EARTH_MU_M3_S2 / (r * r);
   let ax = -rx * gravity;
   let ay = -ry * gravity;
+  let az = -(z / r) * gravity;
   const mass = massKg(state);
   const stage = state.stages[state.activeStageIndex];
   const plan = state.stagePlan[state.activeStageIndex];
   if (mass > 0 && state.throttle > 0 && stage && plan && powered) {
     const thrust = (state.throttle * plan.thrustN) / mass;
-    const c = Math.cos(state.pitchRad);
-    const s = Math.sin(state.pitchRad);
-    const tx = ry;
-    const ty = -rx;
-    ax += thrust * (c * rx + s * tx);
-    ay += thrust * (c * ry + s * ty);
+    const nose = noseDirection(state, state.pitchRad, state.yawRad ?? 0);
+    ax += thrust * nose.x;
+    ay += thrust * nose.y;
+    az += thrust * nose.z;
   }
   if (state.airborne && mass > 0) {
     const alt = r - EARTH_RADIUS_M;
-    const speed = Math.hypot(state.vx, state.vy);
+    const speed = length3(state.vx, state.vy, vz);
     if (alt > 0 && alt < ATMOSPHERE.limitM && speed > 1) {
       const rho = ATMOSPHERE.rho0KgPerM3 * Math.exp(-alt / ATMOSPHERE.scaleHeightM);
       const drag = (0.5 * ATMOSPHERE.dragCoefficient * ATMOSPHERE.areaM2 * rho * speed * speed) / mass;
       ax -= drag * (state.vx / speed);
       ay -= drag * (state.vy / speed);
+      az -= drag * (vz / speed);
     }
   }
-  return { x: ax, y: ay };
+  return { x: ax, y: ay, z: az };
 }
 
 function radialAccel(state: FlightBody, powered: boolean): number {
   const a = acceleration(state, powered);
-  const r = Math.hypot(state.x, state.y);
+  const r = length3(state.x, state.y, state.z ?? 0);
   if (!Number.isFinite(a.x) || r < 1) return Number.NaN;
-  return (a.x * state.x + a.y * state.y) / r;
+  return (a.x * state.x + a.y * state.y + (a.z ?? 0) * (state.z ?? 0)) / r;
 }
 
-export function segmentHitsEarth(x0: number, y0: number, x1: number, y1: number): boolean {
-  const r0 = Math.hypot(x0, y0);
-  const r1 = Math.hypot(x1, y1);
+export function segmentHitsEarth(x0: number, y0: number, x1: number, y1: number, z0 = 0, z1 = 0): boolean {
+  const r0 = length3(x0, y0, z0);
+  const r1 = length3(x1, y1, z1);
   if (r1 < EARTH_RADIUS_M - SURFACE_EPS_M) return true;
   const dx = x1 - x0;
   const dy = y1 - y0;
-  const a = dx * dx + dy * dy;
-  const b = 2 * (x0 * dx + y0 * dy);
+  const dz = z1 - z0;
+  const a = dx * dx + dy * dy + dz * dz;
+  const b = 2 * (x0 * dx + y0 * dy + z0 * dz);
   const c = r0 * r0 - EARTH_RADIUS_M * EARTH_RADIUS_M;
   if (a < 1e-6) return false;
   const disc = b * b - 4 * a * c;
@@ -622,7 +675,7 @@ function judge(state: FlightBody, dt: number, thrusting: boolean): FlightBody {
   if (!finiteBody(state)) return stop(state, "Simulation stopped.");
   const orbit = orbitFromState(state);
   if (!orbit.finite) return stop(state, "Simulation stopped.");
-  const alt = Math.hypot(state.x, state.y) - EARTH_RADIUS_M;
+  const alt = length3(state.x, state.y, state.z ?? 0) - EARTH_RADIUS_M;
   if (state.airborne && orbit.energy !== null && orbit.energy > ESCAPE_ENERGY && alt > 1_000) {
     return stop(state, "You are leaving Earth. This goal is an orbit around Earth.");
   }
@@ -649,7 +702,7 @@ function judge(state: FlightBody, dt: number, thrusting: boolean): FlightBody {
 }
 
 function finiteBody(state: FlightBody): boolean {
-  const values = [state.x, state.y, state.vx, state.vy, state.simulatedTimeS];
+  const values = [state.x, state.y, state.z ?? 0, state.vx, state.vy, state.vz ?? 0, state.pitchRad, state.pitchRateRadS ?? 0, state.yawRad ?? 0, state.yawRateRadS ?? 0, state.simulatedTimeS];
   return values.every((value) => Number.isFinite(value)) && massKg(state) > 0;
 }
 

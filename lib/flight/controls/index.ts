@@ -25,6 +25,7 @@ export function measuresDrift(mode: ControlMode, playMode: "free" | "mission"): 
 
 export interface PhoneAxes {
   pitchRad: number;
+  yawRad?: number;
   /** Null leaves the laptop throttle alone. */
   throttle: number | null;
   /** A real push, not the pitch-derived throttle hint. */
@@ -41,15 +42,18 @@ export function commitPhoneAxes(sample: PhoneAxes, mode: ControlMode = currentCo
   if (mode === "explore" && store.flight.status === "idle") return { ok: true };
   const live = store.flight;
   if (live.status !== "flying" || !live.runId) return { ok: false, error: "no active flight" };
+  let steering: ToolResult = { ok: false, error: "phone steering not owned" };
   if (live.owners.pitch === "phone") {
-    const pitched = store.setFlightInput(
-      { pitchRad: sample.pitchRad, calibrated: sample.calibrated },
+    steering = store.setFlightInput(
+      { pitchRad: sample.pitchRad, yawRad: sample.yawRad ?? 0, calibrated: sample.calibrated },
       "phone",
       live.runId,
     );
-    if (!pitched.ok && sample.throttle === null) return pitched;
   }
-  if (sample.throttle === null) return releasePhoneThrottle();
+  if (sample.throttle === null) {
+    const released = releasePhoneThrottle();
+    return released.ok ? steering : released;
+  }
   if (sample.throttlePush && sample.calibrated && store.rocket.connected && useScene.getState().flight.owners.throttle !== "phone") {
     const moved = store.setFlightAxisOwner("throttle", "phone");
     if (!moved.ok) return moved;
@@ -59,7 +63,7 @@ export function commitPhoneAxes(sample: PhoneAxes, mode: ControlMode = currentCo
     if (!armed.ok) return armed;
   }
   const owned = useScene.getState().flight;
-  if (!owned.runId || owned.owners.throttle !== "phone") return { ok: true };
+  if (!owned.runId || owned.owners.throttle !== "phone") return steering;
   return store.setFlightInput({ throttle: sample.throttle, calibrated: sample.calibrated }, "phone", owned.runId);
 }
 
