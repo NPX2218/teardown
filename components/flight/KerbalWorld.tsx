@@ -49,9 +49,9 @@ export function KerbalWorld() {
 
   return (
     <group scale={EARTH_RADIUS}>
-      <LaunchSite site={draw.site} />
+      <LaunchSite site={draw.site} launchCloudIntensity={draw.altitudeKm < 4 ? draw.throttle : 0} />
       <Atmosphere altitudeKm={draw.altitudeKm} sunDirection={sun} />
-      <CloudLayer altitudeKm={draw.altitudeKm} />
+      <CloudLayer altitudeKm={draw.altitudeKm} pad={draw.up} />
       <Vehicle stage={draw.stage} throttle={draw.throttle} altitudeKm={draw.altitudeKm} elapsedS={draw.elapsedS} />
       <OrbitPath state={draw.orbit} />
       <Explosion position={boom} active={status === "crashed" && impact !== null} />
