@@ -20,7 +20,7 @@ export function ViewerSlot() {
       {exploring && <Stage />}
       <Header />
       {exploring && (
-        <div className={`${styles.rail} ${styles.bottomBar}`} data-part-open={partOpen}>
+        <div className={`${styles.rail} ${styles.bottomBar}`} data-explore-rail data-part-open={partOpen}>
           <div className={styles.tools}>
             <ExplodeSlider />
             <TourButton />

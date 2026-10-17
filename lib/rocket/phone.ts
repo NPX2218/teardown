@@ -1,5 +1,5 @@
 // lib/rocket/phone.ts — pure helpers for the /rocket page (10 Task 4). Owner: Neel.
-import type { RocketMessage, SoundId } from "@/lib/types";
+import type { RocketMessage, ShellStatusLevel, ShellStatusWord, SoundId } from "@/lib/types";
 import { isPairCode } from "@/lib/rocket/protocol"; // 11 Task 1 (same lane): one source for the code alphabet
 
 /** "?code=k7qx " → "K7QX"; anything that isn't a valid pair code → null. */
@@ -17,6 +17,8 @@ export interface PhoneHandlers {
   stopSay(id?: string): void;
   listen(): void;
   stopListen(): void;
+  showStatus(word: ShellStatusWord, level: ShellStatusLevel, flash: boolean): void;
+  calibrate(): void;
 }
 
 /** Laptop → phone messages (already checked by decodeMessage in link.ts). Phone → laptop kinds are ignored. */
@@ -25,10 +27,13 @@ export function routePhoneMessage(m: RocketMessage, h: PhoneHandlers): void {
     case "sound": h.playSound(m.id, m.loop ? { loop: true } : undefined); return;
     case "stop": h.stopSound(m.id); return;
     case "vibrate": h.vibrate(m.pattern); return;
-    case "say": h.say({ id: m.id, cacheKey: m.cacheKey, text: m.text }); return;
-    case "stopSay": h.stopSay(m.id); return;
+    case "say":
+    case "stopSay":
+      return;
     case "listen": h.listen(); return;
     case "stopListen": h.stopListen(); return;
+    case "status": h.showStatus(m.word, m.level, m.flash === true); return;
+    case "calibrate": h.calibrate(); return;
     case "frame": case "said": case "heard": case "listenError": return;
     default: { const never: never = m; void never; }
   }

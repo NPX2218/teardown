@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import type { RocketMessage } from "@/lib/types";
 import {
-  LAPTOP_LISTEN_WAIT_MS, LISTEN_MAX_MS, LISTEN_NO_SPEECH_MS, LISTEN_POST_MS, MIC_PROMPT_MS, LISTEN_SILENCE_MS, ListenFail, RocketEar, RocketVoice, VOICE_START_BUDGET_MS,
+  LAPTOP_LISTEN_WAIT_MS, LISTEN_MAX_MS, LISTEN_NO_SPEECH_MS, LISTEN_POST_MS, MIC_PROMPT_MS, LISTEN_SILENCE_MS, ListenFail, RocketEar, RocketVoice,
   listenVerdict, type EarDeps, type MicState, type Playback, type Recording, type VoiceDeps,
 } from "@/lib/rocket/voice";
 
@@ -37,130 +37,23 @@ function voiceDeps(over: Partial<VoiceDeps> = {}) {
 }
 const saids = (sent: RocketMessage[]) => sent.filter((m) => m.k === "said").map((m) => (m.k === "said" ? m.id : ""));
 
-describe("rocket voice: say (10 Task 6)", () => {
-  it("RV-S1 cached file is used when the manifest has the key; said sent once at the end", async () => {
+describe("rocket voice: Grok speech stays on the laptop", () => {
+  it("say and stopSay do not fetch, speak, duck, or report said", async () => {
     const t = voiceDeps();
     const v = new RocketVoice(t.deps);
     v.say({ id: "a-1", cacheKey: "cached123456", text: "Liftoff!" });
     await flush();
-    expect(t.fetched.map((f) => f.url)).toEqual(["/audio/cached123456.mp3"]);
+    v.stopSay("a-1");
+    v.stopSay();
+    expect(t.fetched).toEqual([]);
     expect(t.spoken).toEqual([]);
+    expect(t.played).toEqual([]);
+    expect(t.ducks).toEqual([]);
     expect(saids(t.sent)).toEqual([]);
-    expect(v.currentId()).toBe("a-1");
-    t.playbacks[0].end();
-    await flush();
-    expect(saids(t.sent)).toEqual(["a-1"]);
     expect(v.currentId()).toBeNull();
   });
-
-  it("RV-S2 manifest miss → POST /api/voice with the text", async () => {
-    const inits: RequestInit[] = [];
-    const t = voiceDeps({ fetchBytes: async (url, init) => { inits.push(init); return new ArrayBuffer(url.length); } });
-    new RocketVoice(t.deps).say({ id: "b-1", cacheKey: "abcdefabcdef", text: "Hold it steady!" });
-    await flush();
-    expect(inits).toHaveLength(1);
-    expect(inits[0].method).toBe("POST");
-    expect(JSON.parse(String(inits[0].body))).toEqual({ text: "Hold it steady!" });
-    expect(t.played).toHaveLength(1);
-  });
-
-  it("RV-S3 cached and /api/voice both fail → the phone's own voice speaks", async () => {
-    const t = voiceDeps({ fetchBytes: async () => { throw new Error("HTTP 500"); } });
-    new RocketVoice(t.deps).say({ id: "c-1", cacheKey: "cached123456", text: "Max-Q!" });
-    await flush();
-    expect(t.spoken).toEqual(["Max-Q!"]);
-    t.playbacks[0].end();
-    await flush();
-    expect(saids(t.sent)).toEqual(["c-1"]);
-  });
-
-  it("RV-S4 the start budget bounds the fetches; past it, go straight to speech", async () => {
-    const t = voiceDeps();
-    t.deps.cachedUrl = async () => { t.tick(VOICE_START_BUDGET_MS); return null; }; // manifest took the whole budget
-    new RocketVoice(t.deps).say({ id: "d-1", cacheKey: "abcdefabcdef", text: "Flip!" });
-    await flush();
-    expect(t.fetched).toEqual([]);
-    expect(t.spoken).toEqual(["Flip!"]);
-
-    const u = voiceDeps();
-    new RocketVoice(u.deps).say({ id: "d-2", cacheKey: "abcdefabcdef", text: "Flip!" });
-    await flush();
-    expect(u.fetched[0].timeoutMs).toBeLessThanOrEqual(VOICE_START_BUDGET_MS);
-  });
-
-  it("RV-S4b a manifest lookup that never answers can't block the line past the budget", async () => {
-    vi.useFakeTimers();
-    try {
-      const t = voiceDeps({ cachedUrl: () => new Promise<string | null>(() => {}), now: () => Date.now() }); // fake timers move Date
-      new RocketVoice(t.deps).say({ id: "d-3", cacheKey: "abcdefabcdef", text: "Hello" });
-      await vi.advanceTimersByTimeAsync(VOICE_START_BUDGET_MS);
-      await flush();
-      // budget used up waiting for the manifest → straight to the phone's voice
-      expect(t.fetched).toEqual([]);
-      expect(t.spoken).toEqual(["Hello"]);
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
-  it("RV-S5 a new say stops the current one; each id gets exactly one said, old first", async () => {
-    const t = voiceDeps();
-    const v = new RocketVoice(t.deps);
-    v.say({ id: "e-1", cacheKey: "cached123456", text: "One" });
-    await flush();
-    v.say({ id: "e-2", cacheKey: "cached123456", text: "Two" });
-    expect(t.playbacks[0].stopped).toBe(1);
-    expect(saids(t.sent)).toEqual(["e-1"]);
-    await flush();
-    t.playbacks[1].end();
-    await flush();
-    expect(saids(t.sent)).toEqual(["e-1", "e-2"]);
-  });
-
-  it("RV-S6 stopSay: matching id or no id stops it; another id is ignored", async () => {
-    const t = voiceDeps();
-    const v = new RocketVoice(t.deps);
-    v.say({ id: "f-1", cacheKey: "cached123456", text: "One" });
-    await flush();
-    v.stopSay("zz-9");
-    expect(v.currentId()).toBe("f-1");
-    v.stopSay("f-1");
-    expect(saids(t.sent)).toEqual(["f-1"]);
-    v.say({ id: "f-2", cacheKey: "cached123456", text: "Two" });
-    await flush();
-    v.stopSay();
-    expect(saids(t.sent)).toEqual(["f-1", "f-2"]);
-    v.stopSay(); // nothing playing: no extra said
-    await flush();
-    expect(saids(t.sent)).toEqual(["f-1", "f-2"]);
-  });
-
-  it("RV-S7 rumble ducks while talking and comes back, even when every source fails", async () => {
-    const t = voiceDeps({
-      fetchBytes: async () => { throw new Error("offline"); },
-      speakText: () => ({ done: Promise.reject(new Error("no voice")), stop: () => {} }),
-    });
-    new RocketVoice(t.deps).say({ id: "g-1", cacheKey: "cached123456", text: "Hi" });
-    await flush();
-    expect(t.ducks).toEqual([true, false]);
-    expect(saids(t.sent)).toEqual(["g-1"]);
-  });
-
-  it("RV-S8 audio that arrives after its line was stopped is stopped and ignored", async () => {
-    let release: (b: ArrayBuffer) => void = () => {};
-    const t = voiceDeps({ fetchBytes: () => new Promise<ArrayBuffer>((r) => { release = r; }) });
-    const v = new RocketVoice(t.deps);
-    v.say({ id: "h-1", cacheKey: "cached123456", text: "Late" });
-    await flush();
-    v.stopSay("h-1");
-    release(new ArrayBuffer(4));
-    await flush();
-    expect(t.played).toHaveLength(0);
-    expect(t.spoken).toHaveLength(0);
-    expect(saids(t.sent)).toEqual(["h-1"]);
-    expect(t.ducks).toEqual([true, false]);
-  });
 });
+
 
 function earDeps(over: Partial<EarDeps> = {}, mic: MicState = "granted") {
   const sent: RocketMessage[] = [];

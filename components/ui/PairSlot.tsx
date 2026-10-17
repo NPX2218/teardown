@@ -1,5 +1,11 @@
 "use client";
-// components/ui/PairSlot.tsx — empty slot (01 Task 5). Owner: Neel. Only the owner fills it.
+// components/ui/PairSlot.tsx — fills the 01 slot with the pairing UI (11 Task 2). Owner: Neel. app/page.tsx never changes.
+import { PairRocket } from "@/components/ui/PairRocket";
+
 export function PairSlot() {
-  return <div data-slot="pair" />;
+  return (
+    <div data-slot="pair">
+      <PairRocket />
+    </div>
+  );
 }

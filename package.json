@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "relay:dev": "tsx scripts/dev-relay.ts",
+    "sim:phone": "tsx scripts/sim-phone.ts"
   },
   "dependencies": {
     "@react-three/drei": "9.114.0",
@@ -15,6 +17,7 @@
     "@supabase/supabase-js": "^2.49.1",
     "motion": "14.3.0",
     "next": "14.2.35",
+    "qrcode": "^1.5.4",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "server-only": "0.0.1",
@@ -23,13 +26,16 @@
   },
   "devDependencies": {
     "@types/node": "^20",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "18.3.12",
     "@types/react-dom": "18.3.1",
     "@types/three": "0.169.0",
+    "@types/ws": "^8.18.2",
     "eslint": "^8",
     "eslint-config-next": "14.2.35",
     "tsx": "4.19.2",
     "typescript": "5.6.3",
-    "vitest": "2.1.9"
+    "vitest": "2.1.9",
+    "ws": "^8.22.0"
   }
 }

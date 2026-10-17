@@ -1,13 +1,9 @@
+"use client";
+import { usePathname } from "next/navigation";
+import { Credits } from "./Credits";
+
 export function Footer() {
-  return (
-    <footer className="legal">
-      <span>Made by Neel Bansal and Anders Haroldson</span>
-      <span>Student project. Not affiliated with SpaceX or xAI.</span>
-      <span>Specs from public SpaceX vehicle pages.</span>
-      <span>
-        Model: &ldquo;Falcon 9 - SpaceX&rdquo; by Stanley Creative,{" "}
-        <a className="hit" href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>
-      </span>
-    </footer>
-  );
+  const path = usePathname();
+  if (path === "/rocket" || path.startsWith("/rocket/")) return null;
+  return <Credits />;
 }

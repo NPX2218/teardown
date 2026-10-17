@@ -1,63 +1,41 @@
-import { afterEach, describe, expect, it } from "vitest";
-import { attachPhoneSpeech, onRocketMessage, resetRocketCommands, sendToRocket } from "@/lib/rocket/commands";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { attachLink, onRocketMessage, receiveRocketMessage, resetRocketCommands, sendToRocket } from "@/lib/rocket/commands";
+import type { RocketLink } from "@/lib/rocket/link";
+import type { RocketMessage } from "@/lib/types";
+
+const FRAME: RocketMessage = { k: "frame", q: [1, 0, 0, 0], lin: [0, 0, 0], grav: [0, -9.8, 0] };
 
 afterEach(() => {
   resetRocketCommands();
+  attachLink(null);
 });
 
-describe("phone speech commands", () => {
-  it("plays say on the phone speaker and reports said", () => {
-    const spoken: string[] = [];
-    let finish = () => {};
-    attachPhoneSpeech({
-      speak(text, onEnd) {
-        spoken.push(text);
-        finish = onEnd;
-        return { cancel: () => onEnd() };
-      },
-    });
-    const heard: string[] = [];
+describe("laptop speech stays off the phone", () => {
+  it("drops say and stopSay and does not report said", () => {
+    const link: RocketLink & { send: ReturnType<typeof vi.fn> } = { send: vi.fn(), close: vi.fn() };
+    attachLink(link);
+    receiveRocketMessage(FRAME, 1000);
+    const said: string[] = [];
     onRocketMessage("said", (message) => {
-      if (message.k === "said") heard.push(message.id);
+      if (message.k === "said") said.push(message.id);
     });
     sendToRocket({ k: "say", id: "line-1", cacheKey: "line-1", text: "Liftoff." });
-    expect(spoken).toEqual(["Liftoff."]);
-    expect(heard).toEqual([]);
-    finish();
-    expect(heard).toEqual(["line-1"]);
+    sendToRocket({ k: "stopSay", id: "line-1" });
+    sendToRocket({ k: "stopSay" });
+    expect(link.send).not.toHaveBeenCalled();
+    expect(said).toEqual([]);
   });
 
-  it("stopSay cancels the current line and still reports said", () => {
-    const heard: string[] = [];
-    attachPhoneSpeech({
-      speak(_text, onEnd) {
-        return { cancel: () => onEnd() };
-      },
-    });
-    onRocketMessage("said", (message) => {
-      if (message.k === "said") heard.push(message.id);
-    });
-    sendToRocket({ k: "say", id: "line-2", cacheKey: "line-2", text: "Cutoff." });
-    sendToRocket({ k: "stopSay", id: "line-2" });
-    expect(heard).toEqual(["line-2"]);
-    sendToRocket({ k: "stopSay", id: "line-2" });
-    expect(heard).toEqual(["line-2"]);
-  });
-
-  it("stopSay ignores a different id", () => {
-    let cancelled = 0;
-    attachPhoneSpeech({
-      speak(_text, onEnd) {
-        return {
-          cancel: () => {
-            cancelled += 1;
-            onEnd();
-          },
-        };
-      },
-    });
-    sendToRocket({ k: "say", id: "keep", cacheKey: "keep", text: "Hold." });
-    sendToRocket({ k: "stopSay", id: "other" });
-    expect(cancelled).toBe(0);
+  it("still forwards engine, staging, and abort cues", () => {
+    const link: RocketLink & { send: ReturnType<typeof vi.fn> } = { send: vi.fn(), close: vi.fn() };
+    attachLink(link);
+    receiveRocketMessage(FRAME, 1000);
+    const sound: RocketMessage = { k: "sound", id: "liftoff_rumble" };
+    const stop: RocketMessage = { k: "stop", id: "liftoff_rumble" };
+    const vibrate: RocketMessage = { k: "vibrate", pattern: [200, 80, 200, 80, 600] };
+    sendToRocket(sound);
+    sendToRocket(stop);
+    sendToRocket(vibrate);
+    expect(link.send.mock.calls.map((call) => call[0])).toEqual([sound, stop, vibrate]);
   });
 });

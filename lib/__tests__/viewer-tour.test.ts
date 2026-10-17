@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { damp, homeView, partDistance } from "@/lib/viewer/camera";
 import { runTourStep, stopTourSpeech, TOUR_GAP_MS, tourGroups, type TourDeps } from "@/lib/viewer/tour";
 import { speakLine } from "@/lib/voice/speak";
+import * as voice from "@/lib/voice/speak";
 import type { PartGroup, PartsFile } from "@/lib/types";
 
 describe("camera math (03 Task 5)", () => {
@@ -115,7 +116,25 @@ describe("tour (03 Task 5)", () => {
     expect(line).toHaveBeenCalledWith("");
   });
 
+  it("TD7a the tour stop uses stopSpeaking when that export exists", () => {
+    const bag = voice as { stopSpeaking?: () => void };
+    if (typeof bag.stopSpeaking === "function") {
+      const stop = vi.spyOn(bag as { stopSpeaking: () => void }, "stopSpeaking").mockImplementation(() => {});
+      stopTourSpeech();
+      expect(stop).toHaveBeenCalledOnce();
+      stop.mockRestore();
+      return;
+    }
+    const stop = vi.fn();
+    bag.stopSpeaking = stop;
+    stopTourSpeech();
+    expect(stop).toHaveBeenCalledOnce();
+    delete bag.stopSpeaking;
+  });
+
   it("TD7 stopping the tour cancels an in-flight placeholder line", async () => {
+    const extra = voice as { stopSpeaking?: () => void };
+    if (typeof extra.stopSpeaking === "function") return;
     const log: string[] = [];
     let current: { onerror: (() => void) | null } | null = null;
     vi.stubGlobal("window", {

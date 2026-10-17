@@ -19,6 +19,7 @@ import { emptyGuide, stepGuide, type GuideSample } from "@/lib/flight/guidance";
 import { historicalMissions } from "@/lib/flight/mission-select";
 import {
   REFERENCE_UNAVAILABLE,
+  autopilotInput,
   corridorEdges,
   referenceHasKinematics,
   referencePath,
@@ -115,6 +116,22 @@ const TIMING_ONLY: MissionReference = {
   ],
 };
 
+/** Published Sentinel-6 rows from PR #5 (5292d48). Every kinematic field stays null. */
+const SENTINEL_MILESTONES: MissionReference = {
+  id: "sentinel-6-michael-freilich-milestones",
+  label: "Published milestone times only. Not a measured path.",
+  interpolated: false,
+  samples: [
+    { t: 0, altKm: null, downrangeKm: null, velMs: null, pitchDeg: null, event: "liftoff" },
+    { t: 61, altKm: null, downrangeKm: null, velMs: null, pitchDeg: null, event: "max-Q" },
+    { t: 136, altKm: null, downrangeKm: null, velMs: null, pitchDeg: null, event: "MECO" },
+    { t: 136, altKm: null, downrangeKm: null, velMs: null, pitchDeg: null, event: "stage sep" },
+    { t: 180, altKm: null, downrangeKm: null, velMs: null, pitchDeg: null, event: "fairing" },
+    { t: 480, altKm: null, downrangeKm: null, velMs: null, pitchDeg: null, event: "SECO" },
+    { t: 3195, altKm: null, downrangeKm: null, velMs: null, pitchDeg: null, event: "insertion" },
+  ],
+};
+
 describe("mission reference", () => {
   it("drops the corridor when altitude or velocity is null", () => {
     expect(referenceHasKinematics(TIMING_ONLY)).toBe(false);
@@ -133,6 +150,52 @@ describe("mission reference", () => {
     expect(stepped.guide.deviation).toBeNull();
     expect(stepped.guide.milestones).toEqual(["liftoff"]);
     expect(stepped.outcome).toBeNull();
+  });
+
+  it("follows the seven null Sentinel-6 milestone rows without inventing a corridor", () => {
+    expect(SENTINEL_MILESTONES.samples).toHaveLength(7);
+    for (const row of SENTINEL_MILESTONES.samples) {
+      expect(row.altKm).toBeNull();
+      expect(row.downrangeKm).toBeNull();
+      expect(row.velMs).toBeNull();
+      expect(row.pitchDeg).toBeNull();
+    }
+    expect(referenceHasKinematics(SENTINEL_MILESTONES)).toBe(false);
+    expect(sampleReference(SENTINEL_MILESTONES, 136)).toBeNull();
+    expect(referencePath(SENTINEL_MILESTONES)).toBeNull();
+    expect(corridorEdges(SENTINEL_MILESTONES, CORRIDOR.altM)).toBeNull();
+    expect(autopilotInput(SENTINEL_MILESTONES, 136, 1000)).toBeNull();
+    expect(referencePoint(1_300_000, null)).toBeNull();
+    const mission: Mission = {
+      ...MISSIONS.practice,
+      id: "sentinel-6-michael-freilich",
+      kind: "historical",
+      source: "https://www.esa.int/Applications/Observing_the_Earth/Copernicus/Sentinel-6/Launch",
+      reference: SENTINEL_MILESTONES,
+    };
+    expect(referenceTrajectoryNote(mission)).toBe("Reference trajectory unavailable");
+    expect(replayDataCaption(mission)).toBe("Data: https://www.esa.int/Applications/Observing_the_Earth/Copernicus/Sentinel-6/Launch");
+
+    const events = SENTINEL_MILESTONES.samples.map((row) => ({ t: row.t, id: row.event as string }));
+    let guide = emptyGuide("mission");
+    let outcome: { kind: string; reason: string } | null = null;
+    for (const t of [0, 61, 136, 180, 480, 3195]) {
+      const stepped = stepGuide(guide, guideSample({ t, dt: 1 }), {
+        playMode: "mission",
+        reference: SENTINEL_MILESTONES,
+        events,
+        endTimeS: 3195,
+      });
+      guide = stepped.guide;
+      outcome = stepped.outcome;
+      expect(guide.corridor).toBe(false);
+      expect(guide.note).toBe("Reference trajectory unavailable");
+      expect(guide.deviation).toBeNull();
+      expect(guide.warningLevel === "caution" || guide.warningLevel === "warning").toBe(false);
+    }
+    expect(guide.milestones).toEqual(["liftoff", "max-Q", "MECO", "stage sep", "fairing", "SECO", "insertion"]);
+    expect(outcome).toEqual({ kind: "orbit", reason: "Mission complete." });
+    expect(guide.accuracy).toBeNull();
   });
 
   it("reads a kinematic sample without adding a point the record does not have", () => {

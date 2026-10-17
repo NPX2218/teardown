@@ -2,7 +2,8 @@
 // app/rocket/page.tsx — the phone inside the model rocket (10 Tasks 2, 3, 4, 6). Owner: Neel.
 // The phone is only a sensor and a speaker: all game logic stays on the laptop.
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { SOUND_IDS, type RocketFrame, type RocketMessage, type SoundId } from "@/lib/types";
+import { SOUND_IDS, type RocketFrame, type RocketMessage, type ShellStatusLevel, type ShellStatusWord, type SoundId } from "@/lib/types";
+import { cameraInsetSide } from "@/lib/rocket/mount";
 import { isIOS, requestMotionPermission, usePhoneSensors, type SensorDebug } from "@/lib/rocket/usePhoneSensors";
 import {
   getAudioContext, loopingNow, playSound, preloadSounds, setPlaybackSession, stopSound, subscribeSounds, unlockAudio,
@@ -13,13 +14,28 @@ import {
 } from "@/lib/rocket/voice";
 import { RETRY_MS, hasStatusWord, parsePairCode, routePhoneMessage, statusWord, type LinkState } from "@/lib/rocket/phone";
 import { openLink, type RocketLink } from "@/lib/rocket/link";
+import { Credits } from "@/components/ui/Credits";
 import { useReducedMotion } from "@/components/ui/useReducedMotion";
 import css from "./rocket.module.css";
 
 // Sounds that make the flame flicker harder (plan 10 Task 4 Step 4).
 const RUMBLES: readonly SoundId[] = ["liftoff_rumble", "maxq_rumble", "entry_burn"];
-const LEGAL = "Student project. Not affiliated with SpaceX or xAI.";
 const NO_LOOPS: SoundId[] = []; // stable server snapshot for useSyncExternalStore
+
+/** Fullscreen first (a user gesture), then landscape-primary. Android Chrome supports both. */
+async function lockLandscape(): Promise<void> {
+  const root = document.documentElement;
+  if (!document.fullscreenElement && typeof root.requestFullscreen === "function") {
+    try { await root.requestFullscreen(); } catch { /* already fullscreen, or the browser refused */ }
+  }
+  const orientation = screen.orientation as ScreenOrientation & { lock?: (kind: string) => Promise<void> };
+  if (typeof orientation.lock !== "function") return;
+  try {
+    await orientation.lock("landscape-primary");
+  } catch {
+    try { await orientation.lock("landscape"); } catch { /* desktop, or the lock was denied */ }
+  }
+}
 
 type Phase = "start" | "starting" | "running" | "denied" | "insecure";
 
@@ -38,6 +54,11 @@ export default function RocketPage() {
   const [lastSound, setLastSound] = useState<SoundId | null>(null);
   const [ios, setIos] = useState(false);              // read after mount (no server/client mismatch)
   const [noSession, setNoSession] = useState(false);  // iPhone without navigator.audioSession → silent switch can mute us
+  const [shellWord, setShellWord] = useState<ShellStatusWord | null>(null);
+  const [shellLevel, setShellLevel] = useState<ShellStatusLevel>("ok");
+  const [flashing, setFlashing] = useState(false);
+  const [orientAngle, setOrientAngle] = useState(0);
+  const flashTimer = useRef<number | null>(null);
 
   const linkRef = useRef<RocketLink | null>(null);
   const wakeRef = useRef<WakeLockSentinel | null>(null);
@@ -62,7 +83,14 @@ export default function RocketPage() {
     setNoSession(isIOS() && !("audioSession" in navigator));
     if (!window.isSecureContext) setPhase("insecure");
     document.body.classList.add("kiosk");
-    return () => document.body.classList.remove("kiosk");
+    const readAngle = () => setOrientAngle(screen.orientation?.angle ?? 0);
+    readAngle();
+    screen.orientation?.addEventListener("change", readAngle);
+    return () => {
+      document.body.classList.remove("kiosk");
+      screen.orientation?.removeEventListener("change", readAngle);
+      if (flashTimer.current) window.clearTimeout(flashTimer.current);
+    };
   }, []);
 
   const onMessage = useCallback((m: RocketMessage) => {
@@ -72,12 +100,28 @@ export default function RocketPage() {
       playSound: (id, opts) => { playSound(id, opts); if (hasStatusWord(id)) setLastSound(id); },
       stopSound: (id) => { stopSound(id); if (id === undefined) setLastSound(null); }, // "stop all" = new flight
       vibrate,
-      say: (s) => voice.say(s),
-      stopSay: (id) => voice.stopSay(id),
+      say: () => {},
+      stopSay: () => {},
       listen: () => ear.listen(),
       stopListen: () => ear.stopListen(),
+      showStatus: (word, level, flash) => {
+        setShellWord(word);
+        setShellLevel(level);
+        // Vibration is muffled inside the shell and missing on iOS. The colour flash is the backup.
+        if (level === "bad") vibrate([200, 80, 200, 80, 600]);
+        else if (level === "warn" && word !== "HOLD") vibrate([120]);
+        if (flash) {
+          setFlashing(true);
+          if (flashTimer.current) window.clearTimeout(flashTimer.current);
+          flashTimer.current = window.setTimeout(() => setFlashing(false), 1200);
+        }
+      },
+      calibrate: () => {
+        setShellWord("HOLD");
+        setShellLevel("warn");
+      },
     });
-  }, [voice, ear]);
+  }, [ear]);
 
   /** Close any old link and join the exhibit's channel again. Safe to call often. */
   const connect = useCallback(async () => {
@@ -186,8 +230,9 @@ export default function RocketPage() {
     unlockAudio();                                    // Web Audio needs a tap
     const sessionOk = setPlaybackSession();           // iPhone: play even with the silent switch on
     setSilentHint(ios && !sessionOk);
-    primeSpeech();                                    // iPhone: the built-in voice needs one tap-time utterance
+    primeSpeech();                                    // no-op: Grok speech stays on the laptop
     const motion = requestMotionPermission();         // iPhone: both motion prompts inside the tap
+    void lockLandscape();                             // Android: landscape-primary after fullscreen, inside the tap
     // Start the mic prompt inside the tap too (iPhone drops user activation after a slow await); join both.
     // An unanswered mic prompt must not block the rocket: give it 8 s (the text timeout rule), then go on.
     const mic = PHONE_LISTEN_ENABLED
@@ -207,26 +252,36 @@ export default function RocketPage() {
     setAudioAsleep(!!ctx && ctx.state !== "running");
   };
 
-  const word = statusWord(linkState, listening, lastSound);
+  const word = shellWord && linkState === "connected" && !listening
+    ? shellWord
+    : linkState === "connected" && !listening && !shellWord
+      ? "HOLD"
+      : statusWord(linkState, listening, lastSound);
+  const level: ShellStatusLevel = linkState === "offline" || linkState === "nocode"
+    ? "bad"
+    : shellWord && linkState === "connected"
+      ? shellLevel
+      : word === "HOLD" ? "warn" : "ok";
+  const camera = cameraInsetSide(orientAngle);
 
   // ---------------- render ----------------
   if (phase === "insecure") {
     return (
-      <main className="phone">
+      <main className={`phone ${css.shell}`} data-camera={camera} data-level={level}>
         <div />
-        <section className="card phone__status">
+        <section className={`card phone__status ${css.band}`}>
           <p className="lead">Open this page with https:// so the phone can feel motion.</p>
         </section>
-        <p className="legal">{LEGAL}</p>
+        <Credits />
       </main>
     );
   }
 
   if (phase === "start" || phase === "starting") {
     return (
-      <main className="phone">
+      <main className={`phone ${css.shell}`} data-camera={camera} data-level={level}>
         <div />
-        <section className="phone__status stack">
+        <section className={`phone__status stack ${css.band}`}>
           <button className="btn btn-accent btn-lg attract" onClick={() => void start()} disabled={phase === "starting"}>
             Tap to start your rocket
           </button>
@@ -234,16 +289,16 @@ export default function RocketPage() {
             <p className="card"><span className="chip chip--warn">Turn off silent mode so the rocket can talk</span></p>
           )}
         </section>
-        <p className="legal">{LEGAL}</p>
+        <Credits />
       </main>
     );
   }
 
   if (phase === "denied") {
     return (
-      <main className="phone">
+      <main className={`phone ${css.shell}`} data-camera={camera} data-level={level}>
         <div />
-        <section className="card phone__status stack">
+        <section className={`card phone__status stack ${css.band}`}>
           <p className="lead">
             {ios
               ? "Motion is off. Close Safari, scan the code again and tap Allow. Older iPhones: Settings → Safari → Motion & Orientation Access."
@@ -251,13 +306,13 @@ export default function RocketPage() {
           </p>
           <button className="btn btn-accent" onClick={() => void start()}>Try again</button>
         </section>
-        <p className="legal">{LEGAL}</p>
+        <Credits />
       </main>
     );
   }
 
   return (
-    <main className="phone">
+    <main className={`phone ${css.shell}`} data-camera={camera} data-level={level}>
       <header className="card row" aria-live="polite">
         {linkState === "connected" && <span className="chip chip--ok">Connected to exhibit {code}</span>}
         {linkState === "connecting" && <span className="chip">Connecting…</span>}
@@ -267,7 +322,7 @@ export default function RocketPage() {
         {silentHint && <span className="chip chip--warn">Turn off silent mode</span>}
       </header>
 
-      <section className="phone__status">
+      <section className={`phone__status ${css.band}`}>
         {noSensors ? (
           <div className="card stack">
             <span className="chip chip--bad">NO SENSORS</span>
@@ -276,18 +331,25 @@ export default function RocketPage() {
           </div>
         ) : (
           <>
-            {linkState === "connected" && <Flame rumbling={rumbling} reduce={reduce} />}
-            <p className={listening && !reduce ? `display ${css.pulse}` : "display"} role="status">{word}</p>
+            {linkState === "connected" && shellWord === "LIFTOFF" && <Flame rumbling={rumbling} reduce={reduce} />}
+            <p
+              className={`${css.word} ${css[level]} ${listening && !reduce ? css.pulse : ""}`}
+              role="status"
+            >
+              {word}
+            </p>
           </>
         )}
         {linkState === "offline" && <button className="btn" onClick={() => void connect()}>Try again</button>}
       </section>
+      {flashing && <div className={`${css.flash} ${css[level]}`} aria-hidden="true" />}
 
       <footer>
-        {debugOn && <DebugPanel debug={debug} voice={voice} ear={ear} />}
+        {debugOn && <DebugPanel debug={debug} ear={ear} />}
+        <Credits />
       </footer>
 
-      {audioAsleep && (
+      {audioAsleep && !shellWord && (
         <button className={`btn btn-accent btn-lg ${css.wake}`} onClick={() => void wakeAudio()}>Tap to wake the rocket</button>
       )}
     </main>
@@ -307,7 +369,7 @@ function Flame({ rumbling, reduce }: { rumbling: boolean; reduce: boolean }) {
 
 const LOOPED: readonly SoundId[] = ["liftoff_rumble", "maxq_rumble", "entry_burn", "music_launch"]; // plan 10 Task 3
 
-function DebugPanel({ debug, voice, ear }: { debug: SensorDebug; voice: RocketVoice; ear: RocketEar }) {
+function DebugPanel({ debug, ear }: { debug: SensorDebug; ear: RocketEar }) {
   const g = debug.grav?.map((v) => v.toFixed(1)).join(", ") ?? "none";
   return (
     <div className="card stack small">
@@ -319,7 +381,6 @@ function DebugPanel({ debug, voice, ear }: { debug: SensorDebug; voice: RocketVo
         ))}
         <button className="btn" onClick={() => stopSound()}>Stop all</button>
         <button className="btn" onClick={() => vibrate([400, 100, 400])}>Vibrate</button>
-        <button className="btn" onClick={() => voice.say({ id: "debug", cacheKey: "debug", text: "Liftoff! The rocket is talking." })}>Say</button>
         <button className="btn" onClick={() => ear.listen()}>Listen</button>
       </div>
     </div>

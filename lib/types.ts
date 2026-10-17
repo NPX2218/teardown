@@ -190,6 +190,8 @@ export interface RocketFrame {
   q: Quat; // orientation
   lin: Vec3; // linear acceleration, gravity removed, m/s², phone frame
   grav: Vec3; // gravity vector, m/s², phone frame (points toward the ground)
+  /** Gyro, degrees/second about device x, y, z. Optional: gravity still steers without it. */
+  rate?: Vec3;
 }
 
 // Phone-relay vocabulary from 11. Not a flight mode and not an orbit award.
@@ -216,19 +218,25 @@ export interface ToolResult {
 
 export type ListenErrorReason = "denied" | "no-speech" | "unsupported" | "network";
 
+/** Big word on the phone, readable through the shell window. */
+export type ShellStatusWord = "HOLD" | "ARMED" | "LIFTOFF" | "CAUTION" | "WARNING" | "CRASH" | "ORBIT" | "ABORT";
+export type ShellStatusLevel = "ok" | "warn" | "bad";
+
 // Messages between the laptop and the phone rocket (validated by 11 Task 1)
 export type RocketMessage =
-  | { k: "frame"; q: Quat; lin: Vec3; grav: Vec3 } // phone → laptop
+  | { k: "frame"; q: Quat; lin: Vec3; grav: Vec3; rate?: Vec3 } // phone → laptop
   | { k: "sound"; id: SoundId; loop?: boolean } // laptop → phone
   | { k: "stop"; id?: SoundId } // laptop → phone
   | { k: "vibrate"; pattern: number[] } // laptop → phone
-  | { k: "say"; id: string; cacheKey: string; text: string } // laptop → phone
-  | { k: "stopSay"; id?: string } // laptop → phone: stop speaking
-  | { k: "said"; id: string } // phone → laptop: request `id` ended
+  | { k: "say"; id: string; cacheKey: string; text: string } // not sent: Grok speech stays on the laptop
+  | { k: "stopSay"; id?: string } // not sent: nothing on the phone is speaking Grok
+  | { k: "said"; id: string } // legacy phone acknowledgement; laptop speech does not wait on it
   | { k: "listen" }
   | { k: "stopListen" } // laptop → phone: start / stop the phone mic
   | { k: "heard"; text: string } // phone → laptop: what the visitor said
-  | { k: "listenError"; reason: ListenErrorReason }; // phone → laptop
+  | { k: "listenError"; reason: ListenErrorReason } // phone → laptop
+  | { k: "status"; word: ShellStatusWord; level: ShellStatusLevel; flash?: boolean } // laptop → phone
+  | { k: "calibrate" }; // laptop → phone: hold upright so the next samples become neutral
 
 // Emissions facts file (13). There is no emissions lens or standalone mode.
 export type EmissionType = "official" | "peer-reviewed" | "estimate";
@@ -520,6 +528,17 @@ export const SOUND_IDS = [
   "music_launch",
 ] as const satisfies readonly SoundId[];
 export const LISTEN_ERROR_REASONS = ["denied", "no-speech", "unsupported", "network"] as const satisfies readonly ListenErrorReason[];
+export const SHELL_STATUS_WORDS = [
+  "HOLD",
+  "ARMED",
+  "LIFTOFF",
+  "CAUTION",
+  "WARNING",
+  "CRASH",
+  "ORBIT",
+  "ABORT",
+] as const satisfies readonly ShellStatusWord[];
+export const SHELL_STATUS_LEVELS = ["ok", "warn", "bad"] as const satisfies readonly ShellStatusLevel[];
 export const ROCKET_MESSAGE_KINDS = [
   "frame",
   "sound",
@@ -532,6 +551,8 @@ export const ROCKET_MESSAGE_KINDS = [
   "stopListen",
   "heard",
   "listenError",
+  "status",
+  "calibrate",
 ] as const satisfies readonly RocketMessage["k"][];
 export const CONTROL_SOURCES = ["local", "phone"] as const satisfies readonly ControlSource[];
 export const CONTROL_AXES = ["pitch", "throttle"] as const satisfies readonly ControlAxis[];
@@ -553,6 +574,8 @@ export type _GesturesComplete = Assert<Complete<Gesture, typeof GESTURES>>;
 export type _CheckpointIdsComplete = Assert<Complete<CheckpointId, typeof CHECKPOINT_IDS>>;
 export type _SoundIdsComplete = Assert<Complete<SoundId, typeof SOUND_IDS>>;
 export type _ListenErrorReasonsComplete = Assert<Complete<ListenErrorReason, typeof LISTEN_ERROR_REASONS>>;
+export type _ShellStatusWordsComplete = Assert<Complete<ShellStatusWord, typeof SHELL_STATUS_WORDS>>;
+export type _ShellStatusLevelsComplete = Assert<Complete<ShellStatusLevel, typeof SHELL_STATUS_LEVELS>>;
 export type _RocketMessageKindsComplete = Assert<Complete<RocketMessage["k"], typeof ROCKET_MESSAGE_KINDS>>;
 export type _ControlSourcesComplete = Assert<Complete<ControlSource, typeof CONTROL_SOURCES>>;
 export type _ControlAxesComplete = Assert<Complete<ControlAxis, typeof CONTROL_AXES>>;

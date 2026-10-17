@@ -133,6 +133,7 @@ body {
   margin: 0;
   min-height: 100vh;
   min-height: 100dvh;
+  overflow-x: clip;
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-body);
@@ -441,8 +442,10 @@ a.chip, button.chip { min-height: var(--target); min-width: var(--target); paddi
   letter-spacing: 0.02em;
   text-transform: none; /* sentences stay sentence case */
   color: var(--text-muted);
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
-.legal a { color: var(--text-90); }
+.legal a { color: var(--text-90); white-space: nowrap; }
 
 /* Motion: reveal on load, attract pulse for the idle screen */
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
@@ -657,7 +660,33 @@ dialog.overlay::backdrop { background: var(--scrim-80); }
 
 /* Narrow screens (SpaceX breakpoint 961px): tighter padding, same 48px targets */
 @media (max-width: 961px) {
-  .btn { padding: 0 var(--sp-5); }
+  .btn:not(.btn-icon) { padding: 0 var(--sp-5); }
   .overlay__panel { padding: var(--sp-5); }
   .hud { padding: var(--sp-3) var(--sp-4); }
+}
+
+/* Exhibit: no page pinch-zoom, and the attract screen is the motto plus one button. */
+body.kiosk { touch-action: pan-x pan-y; }
+body[data-exhibit-phase="attract"] .dock,
+body[data-exhibit-phase="attract"] .nav,
+body[data-exhibit-phase="attract"] [data-slot="pair"],
+body[data-exhibit-phase="attract"] [data-guide] {
+  visibility: hidden;
+}
+
+@media (max-width: 720px) {
+  body[data-pair-open="1"] [data-explore-rail] { visibility: hidden; }
+  body[data-pair-open="1"] .legal { margin-bottom: 46dvh; }
+}
+
+@media (max-width: 720px) {
+  .legal { padding-inline: var(--sp-4); }
+}
+
+@media (min-width: 1280px) {
+  .legal { padding-inline: var(--sp-8); }
+}
+
+@media (min-width: 1920px) {
+  .legal { padding-inline: var(--sp-8); }
 }

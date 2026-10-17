@@ -1,52 +1,36 @@
-// lib/rocket/commands.ts — say / stopSay / said for the phone speaker.
-// Owner: Neel. 11's link hub replaces transport. Speech still ends in speechSynthesis
-// on the phone, and `said` comes back when that utterance ends.
+// lib/rocket/commands.ts — laptop ↔ phone rocket hub.
+// Owner: Neel. Grok speech stays on the laptop, the same machine as the mic.
+// say / stopSay are dropped here: they are not spoken with speechSynthesis and they
+// are not sent to the phone. The phone keeps engine, staging, and abort cues
+// (sound, stop, vibrate) plus status and calibration.
+import { useScene } from "@/lib/store";
+import type { RocketLink } from "@/lib/rocket/link";
 import type { RocketMessage } from "@/lib/types";
+
+// No frame for 2 s = the phone left, slept, or lost Wi-Fi. Frames arrive every ~50 ms, so 2 s
+// is ~40 missed frames: long enough to ride out a Wi-Fi hiccup. Arbitrary: tune on the day. (Plan 11 Task 2.)
+export const DISCONNECT_MS = 2000;
 
 type Listener = (message: RocketMessage) => void;
 
-export interface PhoneSpeech {
-  /** Speak on the phone. Call onEnd once, including when cancel stops the line. */
-  speak(text: string, onEnd: () => void): { cancel: () => void };
-}
-
-let speech: PhoneSpeech | null = null;
-let current: { id: string; cancel: () => void } | null = null;
+let link: RocketLink | null = null;
+let connected = false;
+let lastFrameAt = 0;
 const listeners = new Map<RocketMessage["k"], Set<Listener>>();
 
-/** The phone page attaches this. Tests attach a fake. Null uses speechSynthesis when it exists. */
-export function attachPhoneSpeech(next: PhoneSpeech | null): void {
-  speech = next;
+/** Mirror the link state into the store, keeping whatever pairing code the store already has. */
+function publish(isConnected: boolean): void {
+  connected = isConnected;
+  useScene.getState().setRocket({ connected: isConnected, code: useScene.getState().rocket.code });
 }
 
-/** Browser speech on the phone. In Node the line ends immediately so `said` still resolves. */
-export function browserPhoneSpeech(): PhoneSpeech {
-  return {
-    speak(text, onEnd) {
-      const synthesis = typeof window !== "undefined" ? window.speechSynthesis : undefined;
-      if (!synthesis || typeof SpeechSynthesisUtterance === "undefined") {
-        onEnd();
-        return { cancel() {} };
-      }
-      let ended = false;
-      const end = () => {
-        if (ended) return;
-        ended = true;
-        onEnd();
-      };
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.onend = end;
-      utterance.onerror = end;
-      synthesis.cancel();
-      synthesis.speak(utterance);
-      return {
-        cancel() {
-          synthesis.cancel();
-          end();
-        },
-      };
-    },
-  };
+/** PairRocket calls this with the open link, or null to detach (unmount). Detaching marks the rocket disconnected. */
+export function attachLink(l: RocketLink | null): void {
+  link = l;
+  if (l === null) {
+    lastFrameAt = 0;
+    if (connected) publish(false);
+  }
 }
 
 function emit(message: RocketMessage): void {
@@ -61,41 +45,35 @@ function emit(message: RocketMessage): void {
   }
 }
 
-function finish(id: string): void {
-  if (current?.id === id) current = null;
-  emit({ k: "said", id });
+/**
+ * Feed every validated message from the relay here. A frame proves the phone is alive: the first one flips the
+ * state to connected. Then every listener for that kind runs; a throwing listener never blocks the others.
+ */
+export function receiveRocketMessage(message: RocketMessage, nowMs: number): void {
+  if (message.k === "frame") {
+    lastFrameAt = nowMs;
+    if (!connected) publish(true);
+  }
+  emit(message);
 }
 
-/** Sends a message to the phone. `say` and `stopSay` drive the phone speaker. */
+/** PairRocket calls this every 250 ms. Strictly more than DISCONNECT_MS since the last frame = disconnected. */
+export function checkRocketTimeout(nowMs: number): void {
+  if (connected && nowMs - lastFrameAt > DISCONNECT_MS) publish(false);
+}
+
+/** Sends a message to the phone rocket. Speech lines are ignored so Grok stays on the laptop. */
 export function sendToRocket(message: RocketMessage): void {
-  if (message.k === "say") {
-    const engine = speech ?? browserPhoneSpeech();
-    const previous = current;
-    const id = message.id;
-    let ended = false;
-    const next = { id, cancel: () => {} };
-    current = next;
-    previous?.cancel();
-    const handle = engine.speak(message.text, () => {
-      ended = true;
-      finish(id);
-    });
-    if (ended) {
-      if (current === next) current = null;
-      return;
-    }
-    next.cancel = handle.cancel;
-    return;
-  }
-  if (message.k === "stopSay") {
-    if (!current) return;
-    if (message.id && message.id !== current.id) return;
-    current.cancel();
-    return;
+  if (message.k === "say" || message.k === "stopSay") return;
+  if (!connected || !link) return;
+  try {
+    link.send(message);
+  } catch (err) {
+    console.error("rocket send failed", err);
   }
 }
 
-/** Subscribes to one message kind from the phone ("said", "heard", "listenError"). */
+/** Subscribes to one message kind from the phone ("frame", "said", "heard", "listenError"). Idempotent unsubscribe. */
 export function onRocketMessage(kind: RocketMessage["k"], fn: (message: RocketMessage) => void): () => void {
   let set = listeners.get(kind);
   if (!set) {
@@ -109,13 +87,10 @@ export function onRocketMessage(kind: RocketMessage["k"], fn: (message: RocketMe
 }
 
 export function isRocketConnected(): boolean {
-  return false;
+  return connected && link !== null;
 }
 
-/** Test helper. Drops the speaker, the current line, and every listener. */
+/** Test helper. Drops every listener. The link stays as it is. */
 export function resetRocketCommands(): void {
-  if (current) current.cancel();
-  current = null;
-  speech = null;
   listeners.clear();
 }

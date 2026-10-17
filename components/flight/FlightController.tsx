@@ -7,6 +7,7 @@ import { MISSIONS } from "@/data/missions/index";
 import { MAX_WALL_DELTA_S } from "@/lib/flight.helpers";
 import { useAppMode } from "@/lib/flight/app-mode";
 import { shouldAdvanceFlight } from "@/lib/flight/integrate";
+import { resumeFlightExplicit } from "@/lib/flight/phone-pitch";
 import {
   clearHeldAxes,
   heldAxes,
@@ -16,6 +17,7 @@ import {
   type AppMode,
 } from "@/lib/flight/local-controls";
 import { narrationEvents, replayDuration, tickReplay } from "@/lib/replay";
+import { useExhibit } from "@/lib/viewer/exhibit";
 import { useScene } from "@/lib/store";
 import type { FlightAxisCommand } from "@/lib/types";
 import { speakLine } from "@/lib/voice/speak";
@@ -57,6 +59,7 @@ export function FlightController() {
       clearHeldAxes();
     };
     const onKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented) return;
       const typing = isTypingTarget(event.target);
       const mode = useAppMode.getState().mode;
       const status = useScene.getState().flight.status;
@@ -89,17 +92,17 @@ export function FlightController() {
       if (action === "launch") {
         release();
         useScene.getState().launchFlight();
-        useScene.getState().markActivity(Date.now());
+        useScene.getState().markActivity(performance.now());
       }
       if (action === "pause") {
         release();
         useScene.getState().pauseFlight();
       }
-      if (action === "resume") useScene.getState().resumeFlight();
+      if (action === "resume") resumeFlightExplicit();
       if (action === "retry") {
         release();
         useScene.getState().retryFlight();
-        useScene.getState().markActivity(Date.now());
+        useScene.getState().markActivity(performance.now());
       }
       if (action === "exit") useAppMode.getState().openExplore();
       if (action === "toggle-replay") {
@@ -157,7 +160,7 @@ export function FlightController() {
       if (owned.throttle !== 0) command.throttle = next.throttle;
       if (command.pitchRad !== undefined || command.throttle !== undefined) {
         scene.setFlightInput(command, "local", flight.runId);
-        scene.markActivity(Date.now());
+        scene.markActivity(performance.now());
       }
     }
     if (shouldAdvanceFlight(useScene.getState().flight.status, false)) {
@@ -178,8 +181,9 @@ function playReplay(wall: number) {
   const duration = replayDuration(mission);
   const from = scene.replay.t;
   const next = tickReplay({ t: from, playing: true, arm: 0 }, wall, duration);
+  const silent = useExhibit.getState().phase === "attract";
   const heard = useAppMode.getState().heardUntil;
-  const events = narrationEvents(mission, heard, next.t, false);
+  const events = silent ? [] : narrationEvents(mission, heard, next.t, false);
   for (const event of events) {
     speakLine(event.say, { queue: true }).catch(() => {});
   }

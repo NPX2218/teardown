@@ -1,7 +1,7 @@
-// lib/rocket/voice.ts — the rocket talks (and optionally listens) (10 Task 6). Owner: Neel.
+// lib/rocket/voice.ts — phone mic, plus a silent speech seam (10 Task 6). Owner: Neel.
+// Grok lines play on the laptop. say / stopSay do not fetch audio or use speechSynthesis.
 // Core classes take their browser pieces as deps so they can be tested in node; the browser deps are at the bottom.
 import type { ListenErrorReason, RocketMessage } from "@/lib/types";
-import { SPEAK_BASE_MS, SPEAK_MS_PER_CHAR } from "@/lib/voice/speak"; // 01 seam: same speech time cap as the laptop
 import { duckSounds, getAudioContext, setAudioSessionType } from "@/lib/rocket/sound";
 
 // Cached file + /api/voice must have produced audio within this long after `say` arrives, else the phone's
@@ -56,19 +56,14 @@ export class RocketVoice {
     return this.cur?.id ?? null;
   }
 
-  /** One line at a time: a new say stops the current one (which still gets its `said`). */
+  /** Grok speech is on the laptop. A say that arrives here does not play and does not answer `said`. */
   say(m: { id: string; cacheKey: string; text: string }): void {
-    this.stopCurrent();
-    const line: Line = { id: m.id, abort: new AbortController(), playback: null, finished: false };
-    this.cur = line;
-    this.deps.duck(true);
-    void this.run(line, m);
+    void m;
   }
 
-  /** No id = stop whatever is speaking. An id that isn't current is ignored (its `said` was already sent). */
+  /** Nothing on the phone is speaking, so there is nothing to stop. */
   stopSay(id?: string): void {
-    if (!this.cur || (id !== undefined && id !== this.cur.id)) return;
-    this.stopCurrent();
+    void id;
   }
 
   private live(line: Line): boolean {
@@ -294,32 +289,13 @@ async function playBytes(bytes: ArrayBuffer): Promise<Playback> {
   return { done, stop };
 }
 
-function canSpeak(): boolean {
-  return typeof window !== "undefined" && "speechSynthesis" in window;
-}
-
 function speakText(text: string): Playback {
-  if (!canSpeak() || text.trim() === "") return { done: Promise.resolve(), stop: () => {} };
-  let finish: () => void = () => {};
-  const done = new Promise<void>((resolve) => { finish = resolve; });
-  let ended = false;
-  const end = () => { if (!ended) { ended = true; clearTimeout(cap); finish(); } };
-  const cap = setTimeout(() => { window.speechSynthesis.cancel(); end(); }, SPEAK_BASE_MS + SPEAK_MS_PER_CHAR * text.length);
-  const u = new SpeechSynthesisUtterance(text);
-  u.onend = end;
-  u.onerror = end;
-  window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(u);
-  return { done, stop: () => { if (!ended) window.speechSynthesis.cancel(); end(); } };
+  void text;
+  return { done: Promise.resolve(), stop() {} };
 }
 
-/** Call inside the start tap: iPhone only lets a page speak later if it spoke once during a tap. */
-export function primeSpeech(): void {
-  if (!canSpeak()) return;
-  const u = new SpeechSynthesisUtterance(" ");
-  u.volume = 0;
-  window.speechSynthesis.speak(u);
-}
+/** Kept for the start-tap call. Grok speech is on the laptop, so this does not speak. */
+export function primeSpeech(): void {}
 
 export function browserVoiceDeps(send: (m: RocketMessage) => void): VoiceDeps {
   return {
