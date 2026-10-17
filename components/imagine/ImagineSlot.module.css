@@ -1,0 +1,190 @@
+/* Show in action. SpaceXAI tokens, with literals so this branch stands alone. */
+
+.slot { display: contents; }
+
+.trigger {
+  position: absolute;
+  z-index: var(--z-hud, 10);
+  right: 24px;
+  bottom: 88px;
+  top: auto;
+  left: auto;
+}
+
+.trigger:global(.btn) {
+  min-height: 44px;
+  min-width: 0;
+  padding: 0 18px;
+  border: 0;
+  border-radius: var(--radius-pill, 9999px);
+  background: var(--accent, #fff);
+  color: var(--accent-ink, #0a0a0a);
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1;
+  text-transform: none;
+  box-shadow: none;
+}
+
+.trigger:global(.btn):hover {
+  background: var(--accent, #fff);
+  border-color: transparent;
+  color: var(--accent-ink, #0a0a0a);
+}
+
+:global(body:has(details[data-slot="voice"][open])) .trigger {
+  visibility: hidden;
+}
+
+.dialog:global(.overlay) {
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.panel {
+  position: relative;
+  display: grid;
+  gap: 16px;
+}
+
+.panel:global(.overlay__panel) {
+  width: min(100%, 40rem);
+  max-height: min(86dvh, 40rem);
+  padding: 28px 28px 24px;
+  background: var(--surface-3, #1a1a1a);
+  border: 1px solid var(--hairline-2, rgba(255, 255, 255, 0.08));
+  border-radius: 16px;
+  box-shadow: none;
+  color: var(--text, #fff);
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+}
+
+.title {
+  margin: 0;
+  padding-right: 48px;
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: var(--text, #fff);
+}
+
+.close:global(.btn) {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0;
+  border: 1px solid var(--hairline-2, rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-pill, 9999px);
+  background: var(--surface-2, #202020);
+  color: var(--text, #fff);
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  box-shadow: none;
+}
+
+.close:global(.btn):hover {
+  background: var(--surface-2-hover, #2a2a2a);
+  border-color: var(--hairline-2, rgba(255, 255, 255, 0.08));
+  color: var(--text, #fff);
+}
+
+.status { display: grid; gap: 12px; }
+
+.copy {
+  margin: 0;
+  max-width: 36rem;
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-2, rgba(255, 255, 255, 0.6));
+}
+
+.meter:global(.meter) {
+  height: 2px;
+  border: 0;
+  border-radius: var(--radius-pill, 9999px);
+  background: var(--hairline-3, rgba(255, 255, 255, 0.1));
+  overflow: hidden;
+}
+
+.fill:global(.meter__fill) {
+  background: var(--text, #fff);
+  border-radius: var(--radius-pill, 9999px);
+}
+
+.retry:global(.btn) {
+  justify-self: start;
+  min-height: 44px;
+  min-width: 0;
+  padding: 0 18px;
+  border: 0;
+  border-radius: var(--radius-pill, 9999px);
+  background: var(--accent, #fff);
+  color: var(--accent-ink, #0a0a0a);
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  box-shadow: none;
+}
+
+.retry:global(.btn):hover {
+  background: var(--accent, #fff);
+  border-color: transparent;
+  color: var(--accent-ink, #0a0a0a);
+}
+
+.chip:global(.chip) {
+  min-height: 28px;
+  margin-right: 8px;
+  padding: 0 10px;
+  border: 1px solid var(--hairline-2, rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-pill, 9999px);
+  background: transparent;
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  vertical-align: middle;
+}
+
+.figure { margin: 0; display: grid; gap: 12px; }
+
+.picture {
+  width: 100%;
+  height: auto;
+  max-height: min(60vh, 60dvh);
+  object-fit: contain;
+  border-radius: 12px;
+  background: #000;
+}
+
+.caption:global(.caption) {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.45;
+  letter-spacing: 0;
+  text-align: left;
+  text-transform: none;
+  color: var(--text-2, rgba(255, 255, 255, 0.6));
+}
