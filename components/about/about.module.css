@@ -1,9 +1,5 @@
 /* About overlay. Tokens only. The rocket or Earth stays the picture beside this column. */
 
-.entry {
-  margin-right: 8px;
-}
-
 :global(.nav__link).entry {
   min-height: 48px;
   min-width: 48px;

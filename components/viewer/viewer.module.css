@@ -198,7 +198,7 @@
   flex: none;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-4);
 }
 
 .flightChrome {
@@ -225,10 +225,19 @@
   .wordmark { font-size: 15px; }
   .modeNav { flex: 0 0 auto; }
   .modeNav button { white-space: nowrap; }
-  /* About plus the level switch need their own row. The three modes stay on the first. */
+  /* About, the level switch, and Settings wrap onto their own row. The modes stay on the first. */
   .barEnd {
     flex: 1 0 100%;
     margin-left: 0;
     justify-content: flex-start;
+  }
+}
+
+/* The cluster is wider than a phone. Wrap it and keep Settings at the end of the bar. */
+@media (max-width: 440px) {
+  .barEnd {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    row-gap: var(--sp-4);
   }
 }
