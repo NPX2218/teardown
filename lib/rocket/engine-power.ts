@@ -5,12 +5,6 @@ export interface EngineLinkState {
   power: number;
   connected: boolean;
   exploring: boolean;
-  /** Phone engine rumble. Defaults on. */
-  engineSound?: boolean;
-  /** 0..1 scale for every sound. Defaults to full. */
-  master?: number;
-  /** Phone vibration. Defaults on. */
-  vibrate?: boolean;
 }
 
 /** 0..1, or null when the slider handed us something that is not a power. */
@@ -37,14 +31,8 @@ export function engineBroadcast(
   previousKey: string,
 ): { message: RocketMessage | null; key: string } {
   const power = clampEnginePower(next.power) ?? 0;
-  const master = clampEnginePower(next.master ?? 1) ?? 1;
-  const sound = next.engineSound !== false;
-  const vibrate = next.vibrate !== false;
   const live = next.connected && next.exploring;
-  const key = !next.connected ? "off" : `${live ? "on" : "silent"}:${power}:${sound}:${master}:${vibrate}`;
+  const key = !next.connected ? "off" : live ? `on:${power}` : "silent";
   if (key === previousKey || !next.connected) return { message: null, key };
-  return {
-    message: { k: "engine", power: live ? power : 0, sound, master, vibrate },
-    key,
-  };
+  return { message: { k: "engine", power: live ? power : 0 }, key };
 }

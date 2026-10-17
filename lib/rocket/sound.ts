@@ -107,24 +107,11 @@ export class SoundBank {
     set.clear();
   }
 
-  private output = 1;
-
-  /** Master level for every phone sound file. Ducking still multiplies this. */
-  setOutput(level: number): void {
-    const next = typeof level === "number" && Number.isFinite(level) ? Math.min(1, Math.max(0, level)) : 0;
-    this.output = next;
-    this.applyGain();
-  }
-
   duck(key: string, on: boolean): void {
     if (on) this.ducks.add(key);
     else this.ducks.delete(key);
-    this.applyGain();
-  }
-
-  private applyGain(): void {
-    const duck = this.ducks.size > 0 ? DUCK_LEVEL : 1;
-    this.master.gain.setTargetAtTime(this.output * duck, this.ctx.currentTime, DUCK_TIME_S);
+    const level = this.ducks.size > 0 ? DUCK_LEVEL : 1;
+    this.master.gain.setTargetAtTime(level, this.ctx.currentTime, DUCK_TIME_S);
   }
 
   looping(): SoundId[] {
@@ -194,11 +181,6 @@ export function stopSound(id?: SoundId): void {
 
 export function duckSounds(key: "voice" | "ear", on: boolean): void {
   bank?.duck(key, on);
-}
-
-/** Scales the phone's sound-file bus. Engine rumble has its own gain. */
-export function setSoundOutput(level: number): void {
-  bank?.setOutput(level);
 }
 
 export function loopingNow(): SoundId[] {

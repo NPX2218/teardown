@@ -1,6 +1,5 @@
 // lib/voice/browser-audio.ts — browser adapters for SpeakerDeps (05 Task 1). Owner: Anders.
 // No browser (node, tests, SSR): nothing plays and nothing hangs.
-import { masterLevel, trackMaster } from "@/lib/audio/level";
 import { clearOutputNode, setOutputNode } from "@/lib/voice/activity";
 import { AUDIO_MS_PER_CHAR, SPEAK_BASE_MS, SPEAK_MS_PER_CHAR } from "@/lib/voice/format";
 import type { Playback, PlaybackResult } from "@/lib/voice/speaker";
@@ -26,7 +25,6 @@ function playElement(src: string, text: string, release?: () => void): Playback 
     return settled("failed");
   }
   const audio = new Audio(src);
-  const releaseMaster = trackMaster(audio);
   setOutputNode(audio);
   let timer: ReturnType<typeof setTimeout> | undefined;
   let finish: (r: PlaybackResult) => void = () => {};
@@ -41,7 +39,6 @@ function playElement(src: string, text: string, release?: () => void): Playback 
       audio.onloadedmetadata = null;
       try { audio.pause(); } catch { /* ignore */ }
       clearOutputNode(audio);
-      releaseMaster();
       release?.();
       resolve(r);
     };
@@ -99,7 +96,6 @@ export function browserSpeak(text: string): Playback {
   };
   pending.timer = setTimeout(stop, playCapMs(text));
   const u = new SpeechSynthesisUtterance(text);
-  u.volume = masterLevel();
   u.onend = finish;
   u.onerror = finish;
   if (synth.speaking || synth.pending) synth.cancel();

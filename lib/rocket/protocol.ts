@@ -123,15 +123,8 @@ export function decodeMessage(raw: unknown): RocketMessage | null {
     case "engine": {
       const power = raw.power;
       if (typeof power !== "number" || !Number.isFinite(power) || power < 0 || power > 1) return null;
-      const sound = raw.sound === undefined ? true : raw.sound;
-      const master = raw.master === undefined ? 1 : raw.master;
-      const vibrate = raw.vibrate === undefined ? true : raw.vibrate;
-      if (typeof sound !== "boolean" || typeof vibrate !== "boolean") return null;
-      if (typeof master !== "number" || !Number.isFinite(master) || master < 0 || master > 1) return null;
-      return { k: "engine", power, sound, master, vibrate };
+      return { k: "engine", power };
     }
-    case "caps":
-      return typeof raw.vibrate === "boolean" ? { k: "caps", vibrate: raw.vibrate } : null;
     default:
       return null;
   }

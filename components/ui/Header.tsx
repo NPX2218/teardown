@@ -5,7 +5,6 @@ import { useScene } from "@/lib/store";
 import { vehicleStats } from "@/lib/viewer/stats";
 import styles from "@/components/viewer/viewer.module.css";
 import { AboutButton } from "@/components/about/AboutButton";
-import { SettingsButton } from "@/components/settings/SettingsButton";
 import { motionPresets } from "@/lib/ui/motion";
 import { LevelSwitch } from "./LevelSwitch";
 
@@ -55,7 +54,6 @@ export function Header() {
           </ul>
         )}
         <div className={styles.barEnd}>
-          <SettingsButton />
           <AboutButton />
           {mode === "explore" && <LevelSwitch />}
         </div>
