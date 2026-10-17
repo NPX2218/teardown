@@ -24,26 +24,28 @@ export function PartCard() {
   }, [openTerm]);
 
   const group = parts?.groups.find((g) => g.id === selectedId);
-  if (!parts || !group) return null;
   const close = () => {
     const st = useScene.getState();
     if (st.tour.active) st.stopTour();
     st.selectPart(null);
     st.flyTo("home");
   };
-  const segments = splitGlossary(group.role, parts.glossary);
-  const definition = openTerm === null ? null : parts.glossary[openTerm] ?? null;
+  const segments = parts && group ? splitGlossary(group.role, parts.glossary) : [];
+  const definition = openTerm === null || !parts ? null : parts.glossary[openTerm] ?? null;
 
   return (
     <div className="dock dock--br">
-      <AnimatePresence>
+      {/* Presence stays mounted when nothing is selected, so Close plays the exit. "wait" lets the old part leave
+          before the next one arrives, so two cards never stack in the dock. */}
+      <AnimatePresence mode="wait">
+      {parts && group && (
       <motion.section
         key={group.id}
         className={`card sheet ${styles.card}`}
         aria-labelledby={`${baseId}-name`}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 8 }}
+        exit={{ opacity: 0, y: 8, transition: motionPresets.ui }}
         transition={motionPresets.out}
       >
         {tourSay && <p className={styles.cardSay}>{tourSay}</p>}
@@ -85,6 +87,7 @@ export function PartCard() {
           <button type="button" className="btn btn-outline" onClick={close}>Close</button>
         </div>
       </motion.section>
+      )}
       </AnimatePresence>
     </div>
   );

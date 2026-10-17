@@ -1,9 +1,11 @@
 "use client";
+import { motion } from "motion/react";
 import { useAppMode } from "@/lib/flight/app-mode";
 import { useScene } from "@/lib/store";
 import { vehicleStats } from "@/lib/viewer/stats";
 import styles from "@/components/viewer/viewer.module.css";
 import { AboutButton } from "@/components/about/AboutButton";
+import { motionPresets } from "@/lib/ui/motion";
 import { LevelSwitch } from "./LevelSwitch";
 
 const MODES = [
@@ -34,7 +36,9 @@ export function Header() {
               aria-current={mode === item.id ? "page" : undefined}
               onClick={() => open(item.id)}
             >
-              {item.label}
+              {/* One pill slides to the active mode. A small layout animation in the header, nothing in the scene. */}
+              {mode === item.id && <motion.span layoutId="mode-pill" className="slide-pill slide-pill--soft" transition={motionPresets.out} aria-hidden="true" />}
+              <span className="slide-label">{item.label}</span>
             </button>
           ))}
         </nav>

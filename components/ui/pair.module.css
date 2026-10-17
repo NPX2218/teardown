@@ -10,6 +10,7 @@
   overflow: auto;
   overscroll-behavior: contain;
   pointer-events: none;
+  transform-origin: top right;
 }
 
 .center > * { pointer-events: auto; }
@@ -42,6 +43,7 @@
   justify-items: end;
   pointer-events: auto;
   width: min(18rem, calc(100% - 48px));
+  transform-origin: top right;
 }
 
 .linkBtn {
@@ -64,6 +66,7 @@
     width: auto;
     max-height: 46dvh;
     padding: 0;
+    transform-origin: bottom center;
   }
   .card { border-radius: 16px 16px 0 0; }
   .chipWrap { top: 128px; right: 12px; }

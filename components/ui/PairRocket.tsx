@@ -1,7 +1,8 @@
 "use client";
 // components/ui/PairRocket.tsx — pairing card, QR and connection status for the phone rocket (11 Task 2). Owner: Neel.
 // Rendered by PairSlot. Calls useRocket() once (the mount point of the Task 3/5 hook).
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { attachLink, checkRocketTimeout, receiveRocketMessage } from "@/lib/rocket/commands";
 import { openLink } from "@/lib/rocket/link";
 import type { RocketLink } from "@/lib/rocket/link";
@@ -11,6 +12,7 @@ import { qrSvgPath, rocketUrl } from "@/lib/rocket/qr";
 import { useRocket, zeroRocket } from "@/lib/rocket/useRocket";
 import { useAppMode } from "@/lib/flight/app-mode";
 import { useScene } from "@/lib/store";
+import { motionPresets } from "@/lib/ui/motion";
 import styles from "./pair.module.css";
 
 // Retry the relay this often while it is unreachable, always with the SAME code. Arbitrary: tune on the day.
@@ -136,47 +138,40 @@ export function PairRocket() {
     </p>
   );
 
-  if (rocket.connected) {
-    return (
-      <div className={styles.chipWrap}>
-        {live}
-        {justConnected ? (
-          <div className="card card--solid">
-            <p className="lead">Rocket connected</p>
-          </div>
-        ) : (
-          <div className="card">
-            <span className="chip chip--ok">Rocket on</span>
-            <button type="button" className="btn" onClick={zeroRocket}>
-              Calibrate
-            </button>
-            <p className="small">Hold the rocket upright for 2 seconds, then tap Calibrate</p>
-          </div>
-        )}
+  // One surface per state. Each grows out of the top-right corner where the "Connect rocket" button sits
+  // (bottom edge on phones, see pair.module.css). Opacity and scale only: no layout work, the 3D scene never re-renders.
+  const view = rocket.connected ? (justConnected ? "toast" : "status") : showCard ? "card" : "button";
+  let surface: ReactNode;
+  if (view === "toast") {
+    surface = (
+      <div className="card card--solid">
+        <p className="lead">Rocket connected</p>
       </div>
     );
-  }
-
-  if (!showCard) {
-    return (
-      <div className={styles.chipWrap}>
-        {live}
-        <button type="button" className={`btn btn-icon ${styles.linkBtn}`} aria-label="Connect rocket" onClick={() => { setPinned(true); setOpen(true); }}>
-          <svg className={styles.linkIcon} viewBox="0 0 24 24" aria-hidden="true">
-            <rect x="4" y="4" width="6" height="6" fill="none" stroke="currentColor" strokeWidth="2" />
-            <rect x="14" y="4" width="6" height="6" fill="none" stroke="currentColor" strokeWidth="2" />
-            <rect x="4" y="14" width="6" height="6" fill="none" stroke="currentColor" strokeWidth="2" />
-            <path d="M14 16h2v2h-2zM18 14h2v6h-6v-2h4z" fill="currentColor" />
-          </svg>
-          <span className={styles.linkLabel}>Connect rocket</span>
+  } else if (view === "status") {
+    surface = (
+      <div className="card">
+        <span className="chip chip--ok">Rocket on</span>
+        <button type="button" className="btn" onClick={zeroRocket}>
+          Calibrate
         </button>
+        <p className="small">Hold the rocket upright for 2 seconds, then tap Calibrate</p>
       </div>
     );
-  }
-
-  return (
-    <div className={styles.center}>
-      {live}
+  } else if (view === "button") {
+    surface = (
+      <button type="button" className={`btn btn-icon ${styles.linkBtn}`} aria-label="Connect rocket" onClick={() => { setPinned(true); setOpen(true); }}>
+        <svg className={styles.linkIcon} viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="4" y="4" width="6" height="6" fill="none" stroke="currentColor" strokeWidth="2" />
+          <rect x="14" y="4" width="6" height="6" fill="none" stroke="currentColor" strokeWidth="2" />
+          <rect x="4" y="14" width="6" height="6" fill="none" stroke="currentColor" strokeWidth="2" />
+          <path d="M14 16h2v2h-2zM18 14h2v6h-6v-2h4z" fill="currentColor" />
+        </svg>
+        <span className={styles.linkLabel}>Connect rocket</span>
+      </button>
+    );
+  } else {
+    surface = (
       <div className={`card card--solid ${styles.card}`}>
         <p className="eyebrow">Pair your rocket</p>
         <p className="lead">Slide your phone into the rocket. Scan to connect.</p>
@@ -189,7 +184,7 @@ export function PairRocket() {
             </button>
           </div>
         ) : qr && code ? (
-          <>
+          <motion.div initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} transition={{ ...motionPresets.out, delay: 0.06 }}>
             <div style={PAPER}>
               <svg
                 className="fit"
@@ -205,7 +200,7 @@ export function PairRocket() {
             <p className={styles.code} aria-hidden="true">
               {code}
             </p>
-          </>
+          </motion.div>
         ) : null}
         {localhostOnly && !relayDown && (
           <div>
@@ -217,7 +212,24 @@ export function PairRocket() {
           Hide
         </button>
       </div>
-    </div>
+    );
+  }
+
+  return (
+    <>
+      {live}
+      <AnimatePresence initial={false}>
+        <motion.div
+          key={view}
+          className={view === "card" ? styles.center : styles.chipWrap}
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1, transition: motionPresets.out }}
+          exit={{ opacity: 0, scale: 0.98, transition: motionPresets.ui }}
+        >
+          {surface}
+        </motion.div>
+      </AnimatePresence>
+    </>
   );
 }
 

@@ -1,4 +1,6 @@
 "use client";
+import { motion } from "motion/react";
+import { motionPresets } from "@/lib/ui/motion";
 import { useSyncExternalStore } from "react";
 import { MISSIONS } from "@/data/missions/index";
 import { SENTINEL_REFERENCE_UNAVAILABLE } from "@/lib/flight/classroom";
@@ -95,7 +97,7 @@ export function FlightHud() {
   return (
     <>
       {warningLevel === "warning" && <div className={styles.vignette} aria-hidden="true" />}
-      <section id="flight-status" className={`hud ${styles.readout}`} data-status={status} data-warning={warningLevel} data-sim-time={flight.simulatedTimeS} aria-label="Flight readout">
+      <motion.section initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={motionPresets.out} id="flight-status" className={`hud ${styles.readout}`} data-status={status} data-warning={warningLevel} data-sim-time={flight.simulatedTimeS} aria-label="Flight readout">
         {status === "ready" && (
           <div className={styles.stack}>
             <p className="hud__k">Your mission</p>
@@ -177,7 +179,7 @@ export function FlightHud() {
           </div>
         )}
         <EmissionsPlacement />
-      </section>
+      </motion.section>
       <section className={`hud ${styles.controls}`} aria-label="Flight controls">
         <div className={styles.stack}>
           {status === "ready" && (
