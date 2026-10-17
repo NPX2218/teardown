@@ -12,7 +12,7 @@ export const ABOUT = {
   ],
   why: [
     "Teardown is a hands-on way to learn how a real rocket works. You can look at the parts and try a flight.",
-    "We made it at HackHarvard. We talked with engineers and recruiters there. Those talks made the mission even more fascinating to us than before.",
+    "We built it at HackHarvard. A few weeks earlier, we talked with engineers and recruiters at a university event. Those talks made the mission even more fascinating to us than before.",
   ],
   authors: "Made by Neel Bansal and Anders Haroldson",
   disclaimer: "Student project. Not affiliated with SpaceX or xAI.",
