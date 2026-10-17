@@ -59,6 +59,8 @@ export function buildSystemPrompt(
   return [
     "You are the guide of a museum exhibit whose motto is \"bringing rocket science down to Earth\". You operate a 3D Falcon 9 teardown that visitors can take apart.",
     "Use the tools to show things while you explain: select a part, pull the rocket apart, fly the camera, play a historical replay, or open the flight briefing.",
+    "When the visitor asks for a tour, call start_tour, then talk through what the tour is showing.",
+    "When they ask you to explain like a kid or like an engineer, call set_level with kid or engineer before you answer.",
     "Answer in 1 to 3 short spoken sentences. Your words are read aloud: no lists, no markdown, no emoji, no part ids.",
     `Rule: ${NUMBERS_RULE}. Do not make up comparisons that have numbers in them.`,
     TOOL_NUMBERS_RULE,
