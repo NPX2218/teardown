@@ -3,6 +3,10 @@
  * On-screen lines are short and plain. Notes are the speaker script.
  * Every technical number here is read from the code on main; the file and
  * constant are named in the notes so a judge's follow-up can be answered.
+ *
+ * Shape follows past HackHarvard winners (2023 to 2025 Devpost galleries)
+ * and fits a 3-minute slot: seven short core slides built around one live
+ * run, with demo backups and deep dives in the appendix for Q&A.
  */
 
 export const MOTTO = "Bringing rocket science down to Earth.";
@@ -18,45 +22,31 @@ export const CREDIT = {
     "https://sketchfab.com/3d-models/falcon-9-spacex-394f7cf52d124bbd9db69f24d1ff2f08",
 } as const;
 
-/** What is honestly still open. Keep in step with the README status section. */
-export const OPEN_ITEMS = [
-  "The phone rocket has run against the phone simulator and the paired smoke test, not yet on a real handset over HTTPS.",
-  "Sentinel-6 has published milestone times but no public altitude or speed series, so the replay draws no corridor.",
+/** AI tool usage captures for the team slide, in public/presentation/media/. */
+export const USAGE_SHOTS = [
+  { file: "usage-grok.jpg", tool: "Grok Bot", alt: "Grok Bot Usage and Billing: weekly usage limit 100% used, Premium plan." },
 ] as const;
 
 export type SlideId =
   | "title"
   | "problem"
-  | "motto"
+  | "team"
+  | "demo"
   | "explore"
-  | "replay"
   | "mission"
   | "hardware"
-  | "sensors"
-  | "gestures"
-  | "physics"
-  | "grok"
   | "how"
-  | "challenge"
-  | "close"
-  | "numbers"
-  | "open";
+  | "challenge";
 
 export type FigureKind =
   | "hero"
   | "scattered"
-  | "stats"
+  | "team"
+  | "demo"
   | "shot"
   | "phone"
-  | "pipeline"
-  | "gestures"
-  | "physics"
-  | "grok"
   | "store"
-  | "challenge"
-  | "close"
-  | "rules"
-  | "open";
+  | "challenge";
 
 export interface Beat {
   id: string;
@@ -75,8 +65,11 @@ export interface Slide {
   beats: Beat[];
   notes: string[];
   figure: FigureKind;
-  /** Real app capture in public/presentation/media/, for figure "shot". */
-  shot?: { file: string; alt: string; caption: string };
+  /**
+   * Real app capture in public/presentation/media/, for figure "shot".
+   * motion: optional GIF of the same moment, played on screen; print and reduced motion keep the still.
+   */
+  shot?: { file: string; motion?: string; alt: string; caption: string };
 }
 
 export const SLIDES: readonly Slide[] = [
@@ -92,176 +85,70 @@ export const SLIDES: readonly Slide[] = [
       { id: "authors", text: "Neel Bansal · Anders Haroldson" },
     ],
     notes: [
-      "Open with the motto, not the stack: “Teardown. Bringing rocket science down to Earth.”",
-      "Say your names. The background is the real Earth from our flight view, NASA Blue Marble imagery.",
+      "0:00 to 0:10. Say: “Hi, we’re Neel and Anders. This is Teardown: bringing rocket science down to Earth.”",
+      "The whole pitch is 3 minutes: 50 s of slides, 85 s of live demo, then 45 s to close. Watch the clock on the demo, not the slides.",
     ],
   },
   {
     id: "problem",
     part: "core",
     kicker: "The problem",
-    title: "Millions watch Falcon 9 launch. Almost nobody can explain what they saw.",
+    title: "Kids watch rockets launch. They never get to fly one.",
     titleCase: "sentence",
     figure: "scattered",
     beats: [
       {
         id: "public",
-        text: "The facts are all public. They are scattered across spec sheets, webcast timestamps and launch databases.",
+        text: "The facts are public, but they are scattered, and a webcast only lets you watch.",
       },
       {
-        id: "passive",
-        text: "A webcast is something you watch. You can't pull it apart, ask it a question, or try to fly it yourself.",
-      },
-      {
-        id: "kid",
-        text: "So rocket science stays something other people understand.",
-      },
-    ],
-    notes: [
-      "This is the hook. Slow down. The point is not that information is missing, it is that it is scattered and passive.",
-      "If you want the audience line: if a 10-year-old can’t follow a screen, we rewrite the screen.",
-    ],
-  },
-  {
-    id: "motto",
-    part: "core",
-    kicker: "Our motto",
-    title: "Bringing rocket science down to Earth",
-    titleCase: "display",
-    figure: "stats",
-    beats: [
-      {
-        id: "one",
-        text: "Teardown puts a real Falcon 9 in one place you can touch.",
-      },
-      {
-        id: "three",
-        text: "Take it apart. Watch a real launch. Then slide a phone into a cardboard rocket and fly your own flight to orbit.",
-      },
-      {
-        id: "grok",
-        text: "Grok explains every moment, in words a 10-year-old understands.",
-      },
-    ],
-    notes: [
-      "The motto has two meanings and both are the product: down to Earth as in plain words, and down to Earth as in a rocket you hold in your hands.",
-      "The four numbers: 3 ways to play, 10 real parts, 3 reading levels, 1 phone for a rocket.",
-    ],
-  },
-  {
-    id: "explore",
-    part: "core",
-    kicker: "01 · Explore",
-    title: "Take it apart",
-    titleCase: "display",
-    figure: "shot",
-    shot: {
-      file: "part-card.jpg",
-      alt: "Explore mode exploded, with the Merlin 1D engines selected. The card says thrust 845 kN each, count 9, fuel RP-1 and liquid oxygen.",
-      caption: "The running app. Exploded, Merlin 1D engines selected.",
-    },
-    beats: [
-      {
-        id: "turn",
-        text: "Drag to turn a Falcon 9. Slide Explode and it splits into its 10 real parts, from the fairing to the landing legs.",
-      },
-      {
-        id: "tap",
-        text: "Tap a part: the camera flies to it, and a card explains it with real specs and a source link.",
-      },
-      {
-        id: "levels",
-        text: "Kid, Curious, Engineer. Same facts, more depth.",
-      },
-    ],
-    notes: [
-      "Every number on the card is read from data/parts/falcon9.json, which cites spacex.com. Grok is told never to make one up.",
-      "The 3D model is “Falcon 9 - SpaceX” by Stanley Creative, CC BY 4.0.",
-    ],
-  },
-  {
-    id: "replay",
-    part: "core",
-    kicker: "02 · Flight replay",
-    title: "Watch a real launch",
-    titleCase: "display",
-    figure: "shot",
-    shot: {
-      file: "replay.jpg",
-      alt: "Flight replay: a photographic Earth with clouds and city lights, and a panel to choose Sentinel-6 Michael Freilich or a practice sample.",
-      caption: "The running app. NASA Blue Marble Earth, Sentinel-6 picker.",
-    },
-    beats: [
-      {
-        id: "pick",
-        text: "Pick Sentinel-6 Michael Freilich, Falcon 9, 21 November 2020.",
-      },
-      {
-        id: "times",
-        text: "The rocket flies around a NASA Blue Marble Earth and hits each milestone at its published time.",
-      },
-      {
-        id: "honest",
-        text: "It says plainly what it is: illustrated motion, not a recording, and which numbers the public sources leave out.",
-      },
-    ],
-    notes: [
-      "Milestones come from the ESA timeline plus Launch Library 2 metadata, in data/missions/sentinel-6-michael-freilich.json.",
-      "There is no public altitude or speed series for Sentinel-6, so the screen says “Reference trajectory unavailable” instead of inventing one. Judges like that we don’t fake data.",
-    ],
-  },
-  {
-    id: "mission",
-    part: "core",
-    kicker: "03 · Your mission",
-    title: "Fly it to orbit",
-    titleCase: "display",
-    figure: "shot",
-    shot: {
-      file: "mission.jpg",
-      alt: "Your mission in flight: height 10.3 km, sideways speed 1.55 km/s, first stage, fuel 41%, engine power 100%, tilt 60 degrees.",
-      caption: "The running app. Height, sideways speed, stage, fuel, lowest and highest point, live.",
-    },
-    beats: [
-      {
-        id: "you",
-        text: "You control tilt and engine power. Real physics does the rest, and nothing types in a win.",
-      },
-      {
-        id: "lesson",
-        text: "Go straight up and you fall back. Turn too hard and you hit the ground. That is the lesson of orbit, learned by failing.",
+        id: "who",
+        text: "So kids never feel how one lean changes where a rocket ends up.",
         strong: true,
       },
+    ],
+    notes: [
+      "0:10 to 0:25. Say: “Millions of people watch Falcon 9 launch, and almost nobody can explain what they saw. Kids especially. They can watch, but they can’t pull the rocket apart or try to fly it. So we built Teardown for them.”",
+    ],
+  },
+  {
+    id: "team",
+    part: "core",
+    kicker: "The team",
+    title: "Neel and Anders + Cursor and Grok",
+    titleCase: "display",
+    figure: "team",
+    beats: [
       {
-        id: "goal",
-        text: "Win: lowest point at least 200 km up, highest no more than 2,000 km, engines off for ten seconds.",
+        id: "together",
+        text: "The two of us built every part of it together, side by side.",
+      },
+      {
+        id: "tools",
+        text: "We used Cursor and Grok as hard as we could. That is our real usage.",
+        strong: true,
       },
     ],
     notes: [
-      "LIVE DEMO here if the build is up: fly once at 8×. Crash once on purpose if time allows, then press Try again.",
-      "Altitude alone never wins. Orbit is going sideways fast enough that you keep missing the Earth. That’s the insight we want a kid to feel.",
-      "The 200 km / 2,000 km / 10 s window is our classroom goal (lib/flight/classroom.ts), not a Falcon 9 rating.",
+      "0:25 to 0:35. Say: “We’re Neel and Anders, and we built all of this together.” Then point at the usage screenshot: “We used Cursor and Grok as hard as we could. We used up the whole weekly Grok limit.”",
+      "Our code meets in one shared store, which is how two people could work on it at the same time without stepping on each other.",
     ],
   },
   {
     id: "hardware",
     part: "core",
-    kicker: "04 · Hardware for Good",
+    kicker: "Hardware for Good",
     title: "Your phone is the rocket",
     titleCase: "display",
     figure: "phone",
     beats: [
       {
+        id: "why",
+        text: "We planned to solder our own sensor board, but Micro Center and the other stores nearby didn’t have the parts. Every phone already has them.",
+      },
+      {
         id: "shell",
-        text: "A phone slides into a cardboard rocket and becomes its motion sensor and its speaker. No app to install, just a web page.",
-      },
-      {
-        id: "steps",
-        text: "Scan the QR on the laptop. Tap Start. Hold it upright to zero. Then lean the rocket to steer.",
-      },
-      {
-        id: "sensors",
-        text: "It uses the phone’s accelerometer and gyroscope for motion, and its speaker and vibration motor for engine sound and rumble.",
+        text: "So a phone slides into a cardboard rocket and becomes its motion sensor, its speaker and its rumble. It runs in a web page, so there is no app to install.",
       },
       {
         id: "codirector",
@@ -270,160 +157,59 @@ export const SLIDES: readonly Slide[] = [
       },
     ],
     notes: [
-      "Hardware for Good: every classroom already has phones and cardboard. No kit to buy, nothing to install.",
+      "0:35 to 0:50. Say: “We wanted to solder our own sensor board, but Micro Center didn’t have the parts. Then we realised every phone already has them. So the phone is the rocket.” Hold up the cardboard rocket while you say it. The demo shows the rest.",
+      "Hardware for Good: every classroom already has phones and cardboard, so a teacher has no kit to buy and nothing to install.",
+      "The demo phone (Galaxy S24 FE) sits landscape, so its +x edge points at the nose (S24FE_MOUNT in lib/rocket/mount.ts). Portrait and either landscape work too.",
       "Say the co-director line clearly. We asked before we built it, and were told the accelerometer and speaker qualify as the hardware component.",
-      "If the phone disconnects, the flight pauses. Mouse, touch and keyboard can fly the whole mission with no phone, so the exhibit never blocks on hardware.",
+      "Settings on the laptop (engine sound, master volume, vibration) are sent to the paired phone. The buzz pulses every 200 ms with a duty that follows engine power (lib/settings/vibrate.ts).",
+      "If the phone disconnects mid-flight, the flight pauses until it is back.",
+      "Sensors: lib/rocket/usePhoneSensors.ts (FRAME_MS = 50), lib/rocket/sensors.ts (GRAVITY_LOWPASS = 0.8), and the complementary filter in lib/rocket/mount.ts (0.92 gyro, 0.08 gravity). Without a gyro it falls back to gravity alone.",
+      "Calibrate: lib/rocket/calibrate.ts (CALIBRATE_DELAY_S = 3). It snaps to upright within 20° (UPRIGHT_SNAP_DEG). Steering: PHONE_STEERING in lib/flight/phone-steering.helpers.ts, a 2° dead zone, a gentle response up to 60°, and a 12°/s turn limit.",
+      "Gestures: lib/rocket/shell-gestures.ts. Lift is 2.5 m/s² up the nose for 180 ms, refused if already leaning past 35°. A flick is a sideways jolt of at least 12 m/s² lasting 40 to 220 ms; longer is a lean. Abort is nose down past 150° for 2 s.",
+      "Disconnect: DISCONNECT_MS = 2000 in lib/rocket/commands.ts. Inputs carry a run id and each control has one owner, so old wiggles from a previous run are rejected.",
+      "Why gravity and gyro, not the compass: the magnetometer drifts indoors near laptops. The phone only streams sensors and the laptop decides everything, so a phone can never cheat a win.",
     ],
   },
   {
-    id: "sensors",
+    id: "demo",
     part: "core",
-    kicker: "In depth · Sensors",
-    title: "From raw motion to a steering angle",
-    titleCase: "sentence",
-    figure: "pipeline",
-    beats: [
-      {
-        id: "read",
-        text: "The phone reads devicemotion and deviceorientation, and sends a frame at most every 50 ms, about 20 Hz.",
-      },
-      {
-        id: "gravity",
-        text: "It splits acceleration into gravity and your movement. Gravity is low-passed, so a shaky hand doesn’t jerk the rocket.",
-      },
-      {
-        id: "zero",
-        text: "Zero: hold it still for 2 seconds. That averaged gravity becomes “straight up”, so any phone in any mount works.",
-      },
-      {
-        id: "pitch",
-        text: "Tilt is gravity in the rocket’s frame: pitch = atan2(g_z, √(g_x² + g_y²)), clamped to ±90°.",
-      },
-    ],
-    notes: [
-      "Files: lib/rocket/usePhoneSensors.ts (FRAME_MS = 50), lib/rocket/sensors.ts (GRAVITY_LOWPASS = 0.8), lib/rocket/mount.ts (snapUprightBasis, attitudeFromGravity).",
-      "Zero needs 2,000 ms of stillness: movement under 0.6 m/s², gravity between 8 and 12 m/s², samples within 8° of each other. It builds a rocket basis where +y is the nose, so landscape, portrait or upside-down mounts all work.",
-      "Why gravity and not the compass: the magnetometer drifts indoors near laptops. Gravity is always there and always points down.",
-      "The phone only streams sensors. The laptop decides everything, so a phone can never cheat a win.",
-      "If asked: there is a complementary filter (0.92 gyro, 0.08 gravity) in lib/rocket/useRocket.ts, but the phone frame doesn’t carry the gyro rate yet, so on a real phone it runs on gravity pitch alone.",
-    ],
-  },
-  {
-    id: "gestures",
-    part: "core",
-    kicker: "In depth · Motion controls",
-    title: "The cardboard rocket is the controller",
-    titleCase: "sentence",
-    figure: "gestures",
-    beats: [
-      {
-        id: "rocket-frame",
-        text: "Every gesture is measured in the rocket’s own frame, along the calibrated nose, not the phone’s screen.",
-      },
-      {
-        id: "noise",
-        text: "Each one needs a sustained or shaped signal, so a table bump or one noisy sample never launches.",
-      },
-      {
-        id: "safety",
-        text: "If no frame arrives for 2 seconds, the phone gives up control and the flight pauses. Stale input is thrown out.",
-      },
-    ],
-    notes: [
-      "Thresholds are in lib/rocket/shell-gestures.ts (SHELL_GESTURE).",
-      "Lift: 2.5 m/s² up the nose for 180 ms, refused if already leaning past 35°. Flick to stage: a sideways jolt of at least 12 m/s² that lasts 40 to 220 ms; longer is a lean, not a flick. Abort: nose down past 150° for 2 s.",
-      "Disconnect is DISCONNECT_MS = 2000 in lib/rocket/commands.ts, about 40 missed frames. Inputs carry a run id, and each control has one owner, so old wiggles from a previous run or the other device are rejected.",
-      "Messages are validated on arrival: finite numbers, a unit quaternion, gravity between 5 and 15 m/s².",
-    ],
-  },
-  {
-    id: "physics",
-    part: "core",
-    kicker: "In depth · Physics",
-    title: "How we compute where the rocket is",
-    titleCase: "sentence",
-    figure: "physics",
-    beats: [
-      {
-        id: "step",
-        text: "Every 1/60 of a second we add up the forces: gravity toward Earth’s centre, engine thrust along your tilt, and air drag.",
-      },
-      {
-        id: "integrate",
-        text: "Then update speed, then position. Mass drops as fuel burns, so the rocket speeds up as it gets lighter.",
-      },
-      {
-        id: "orbit",
-        text: "From position and speed we compute the whole orbit live: its energy, its shape, its lowest and highest points.",
-      },
-      {
-        id: "judge",
-        text: "The win is checked on that orbit, never typed in. Time warp at 4× or 8× just runs more steps per frame.",
-      },
-    ],
-    notes: [
-      "File: lib/flight.helpers.ts. Semi-implicit Euler: v += a·dt, then x += v·dt, with dt = 1/60 s, up to 48 steps per frame for 8× warp.",
-      "Gravity is μ/r² with μ = 398,600 km³/s² from the NASA Earth fact sheet. Thrust direction is cos(tilt)·up + sin(tilt)·downrange. Drag is ½·Cd·A·ρ·v² with ρ = 1.225·e^(−h/8500), applied below 120 km.",
-      "Orbit: energy ε = v²/2 − μ/r, angular momentum h = x·v_y − y·v_x, eccentricity e = √(1 + 2εh²/μ²), a = −μ/2ε. Lowest point a(1−e), highest a(1+e), minus Earth’s radius.",
-      "The two-stage rocket is a classroom tune (lib/flight/classroom.ts), not Falcon 9 data: 7.6 MN booster, 0.9 MN upper stage, liftoff thrust about 2.3 times its weight. The real Falcon 9 numbers live in Explore.",
-      "CO₂ estimate: kerosene actually burned × 3.15 kg CO₂ per kg, sourced in data/emissions/falcon9.json, labelled as an estimate.",
-    ],
-  },
-  {
-    id: "grok",
-    part: "core",
-    kicker: "05 · Grok inside",
-    title: "Ask it anything",
+    kicker: "Live demo",
+    title: "One run, start to finish",
     titleCase: "display",
-    figure: "grok",
+    figure: "demo",
     beats: [
-      {
-        id: "agent",
-        text: "Grok can select parts, explode the rocket and fly the camera by calling the same actions the buttons use.",
-      },
-      {
-        id: "voice",
-        text: "Grok Voice on the mascot can start the tour and set the explanation level. It can't launch or steer.",
-      },
-      {
-        id: "limits",
-        text: "Grok can explain a flight. It can’t steer one or award a win.",
-      },
+      { id: "explore", text: "Explode the rocket and push engine power. The cardboard rocket in your hands roars and shakes." },
+      { id: "fly", text: "Calibrate, launch, lean to steer. At 8× the Earth curves away in under a minute." },
+      { id: "end", text: "Reach orbit, or crash. Either way Grok Imagine draws a postcard of your flight to download." },
     ],
     notes: [
-      "Nine tools in lib/agent/tools.ts. A test (lib/__tests__/tools.test.ts, A1) keeps the tool list and the store actions in sync.",
-      "The xAI key stays on the server (app/api/*). Routes are rate-limited. If Grok can’t be reached, the exhibit keeps running and says so in a sentence.",
-      "Imagine: “Show in action” turns the selected part into a Grok Imagine picture grounded in the part’s data. Voice and Imagine are on the home page; check the xAI key answers before you demo them live.",
+      "0:50 to 2:15. Switch to the app. One person talks, the other drives. Pair and calibrate the phone before the slot starts.",
+      "Explore, 25 s: slide Explode to 100%, tap Merlin 1D engines (real specs on the card), then push Engine power and hand a judge the cardboard rocket so they feel it roar and buzz. Mention that Grok Voice narrates every part on the tour, but don’t play the tour. It takes too long.",
+      "Fly, 40 s: Your mission, Custom flight, Presentation 8×, Calibrate phone, Launch, push power up, lean gently. While it climbs, say: “You steer, real physics does the rest. Go straight up and you fall back.”",
+      "Postcard, 20 s: don’t wait for orbit. If time is short, lean hard and crash on purpose; the postcard still appears. Talk over it while Grok Imagine draws, then press Download PNG.",
+      "If the phone won’t pair, run npm run sim:phone with the code on screen. If the app itself fails, use the demo backup slides at the end of the deck.",
     ],
   },
   {
     id: "how",
     part: "core",
-    kicker: "How it works",
-    title: "One store. Three ways in.",
+    kicker: "Under the hood",
+    title: "One store, three ways in",
     titleCase: "display",
     figure: "store",
     beats: [
       {
         id: "store",
-        text: "Nothing moves the scene except store actions. The phone, the mouse and Grok all call the same ones.",
+        text: "The phone, the mouse and Grok all drive one store, so Grok uses the same actions as the buttons.",
       },
       {
-        id: "tools",
-        text: "Store actions are Grok’s tools. A test keeps the two lists in sync.",
-      },
-      {
-        id: "data",
-        text: "Facts live in data files. Every number on screen or spoken aloud is read from data/.",
-      },
-      {
-        id: "tests",
-        text: "About 700 unit tests, plus a smoke run that pairs a real laptop page with a phone page and flies.",
+        id: "proof",
+        text: "Real orbital physics, 60 steps a second. 1,103 unit tests, plus a flight test with a simulated phone.",
       },
     ],
     notes: [
-      "Stack: Next.js 14, TypeScript strict, three.js with React Three Fiber, Zustand, a local WebSocket relay behind a cloudflared tunnel for the phone link, xAI Grok.",
-      "docs/SMOKE.md, 17 October: vitest 703 passed, 1 skipped. The Playwright smoke covers calibrate, lift to launch, tilt steering, flick to stage, nose-down abort, a crash, a mission drift warning, Sentinel-6 milestones and the mascot voice states.",
+      "2:15 to 2:35. Say: “Everything goes through one store. The phone, the mouse and Grok call the same actions, so Grok can’t do anything a button can’t. The flight is real orbital physics, and we have over a thousand tests.”",
+      "If asked: semi-implicit Euler at 1/60 s, gyro plus gravity steering, swept collisions against the Earth and the launch tower. The phone slide’s notes have the sensor constants.",
     ],
   },
   {
@@ -436,58 +222,94 @@ export const SLIDES: readonly Slide[] = [
     beats: [
       {
         id: "fit",
-        text: "Every requirement is met in the running app, not on a roadmap.",
+        text: "The running app meets every requirement, and you just saw each one in the demo.",
       },
     ],
     notes: [
-      "Walk the table top to bottom, one breath each. End on Hardware for Good: the co-director confirmed the phone sensors count.",
+      "2:35 to 3:00. Read only the left column: real space data, Grok Voice and Imagine, built in Cursor, and a phone as the hardware. Then: “The HackHarvard co-director confirmed the phone’s sensors and speaker count as hardware.” Finish on the motto, “Bringing rocket science down to Earth. Thank you.”",
     ],
   },
   {
-    id: "close",
-    part: "core",
-    kicker: "Try it",
-    title: "Take one apart. Watch one. Fly one.",
-    titleCase: "sentence",
-    figure: "close",
-    beats: [
-      { id: "motto", text: MOTTO },
-      { id: "ask", text: "Come fly the cardboard rocket. Thank you." },
-    ],
-    notes: [
-      "Stop on the motto. Hand the cardboard rocket to a judge if you can.",
-      "Invite questions. The appendix has where every number comes from and what is still open.",
-    ],
-  },
-  {
-    id: "numbers",
+    id: "explore",
     part: "appendix",
-    kicker: "Numbers",
-    title: "Where every number comes from",
-    titleCase: "sentence",
-    figure: "rules",
+    kicker: "Demo backup · Explore and Grok",
+    title: "Take it apart",
+    titleCase: "display",
+    figure: "shot",
+    shot: {
+      file: "explore.jpg",
+      motion: "explore.gif",
+      alt: "Explore mode with the Falcon 9 exploded into its parts, engine power at 100% and nine engine plumes under the booster.",
+      caption: "The running app. Exploded, engine power at 100%.",
+    },
     beats: [
-      { id: "fact", text: "A published fact wears its source: spacex.com, ESA, NASA, Launch Library 2." },
-      { id: "sim", text: "A simulated readout comes from the physics and your inputs." },
-      { id: "estimate", text: "An estimate wears that word and its assumptions, like the CO₂ factor." },
-      { id: "missing", text: "Missing data stays missing. We never fill a gap with a made-up flight." },
+      {
+        id: "turn",
+        text: "Slide Explode and the Falcon 9 splits into its 10 real parts. Tap one for a card with real specs and a source link.",
+      },
+      {
+        id: "power",
+        text: "Push Engine power and nine Merlin plumes grow. The phone inside the cardboard rocket roars and vibrates with them, so a kid feels every burn in the rocket they are holding.",
+        strong: true,
+      },
+      {
+        id: "voice",
+        text: "Press Start tour and Grok Voice flies to each part and explains it out loud, at Kid, Curious or Engineer level. Press Voice to talk back live.",
+      },
+      {
+        id: "agent",
+        text: "Or type or tap a question chip: Grok selects parts, explodes the rocket and flies the camera with the same actions the buttons use.",
+      },
     ],
     notes: [
-      "Use this if a judge asks what is real. Sources are in data/missions/SOURCES.md and inside each data file.",
+      "Backup: show this only if the live demo fails.",
+      "Every number on the card is read from data/parts/falcon9.json, which cites spacex.com. Grok is told never to make one up.",
+      "The tour lines are each part’s say line in the data file, spoken with Grok text-to-speech and cached in public/audio (scripts/cache-narration.ts, components/viewer/TourDirector.tsx).",
+      "The rumble is synthesized on the phone (lib/rocket/engine-rumble.ts); the laptop only sends a power value between 0 and 1. At 0 both the plume and the rumble are silent, and reduced motion holds the plume still.",
+      "The 3D model is “Falcon 9 - SpaceX” by Stanley Creative, CC BY 4.0.",
+      "Grok can explain a flight, but it can’t launch, steer or award one.",
+      "Text agent: nine tools in lib/agent/tools.ts. A test (lib/__tests__/tools.test.ts, A1) keeps the tool list and the store actions in sync.",
+      "Voice: the browser gets an ephemeral token from /api/voice/session and opens the Grok realtime voice socket with only two tools, start_tour and set_level (lib/voice/realtime-guide.ts).",
+      "The xAI key stays on the server (app/api/*), and routes are rate-limited. If Grok can’t be reached, the exhibit keeps running and says so in a sentence.",
     ],
   },
   {
-    id: "open",
+    id: "mission",
     part: "appendix",
-    kicker: "Status",
-    title: "What is still open",
-    titleCase: "sentence",
-    figure: "open",
+    kicker: "Demo backup · Your mission",
+    title: "Fly it to orbit",
+    titleCase: "display",
+    figure: "shot",
+    shot: {
+      file: "mission.jpg",
+      motion: "flight.gif",
+      alt: "Your mission in flight at 8 times speed: the rocket climbing with a bright plume over a curved blue Earth, the CO2 so far at about 258 tonnes.",
+      caption: "The running app at Presentation 8×. Earth curvature, live CO₂.",
+    },
     beats: [
-      { id: "honest", text: "As of 17 October 2026, Explore, Flight replay, Your mission and the phone link run on main." },
+      {
+        id: "you",
+        text: "You steer and set engine power. Real physics does the rest, and the game never hands you a win.",
+      },
+      {
+        id: "lesson",
+        text: "Go straight up and you fall back. Turn too hard and you hit the ground. Kids work out what orbit is by getting it wrong a few times.",
+        strong: true,
+      },
+      {
+        id: "postcard",
+        text: "Orbit or crash, Grok Imagine draws a postcard of your flight, with your numbers on it, to download and keep.",
+      },
     ],
     notes: [
-      "Only show this if asked. Same list as the README status section.",
+      "Backup: show this only if the live demo fails.",
+      "Fly free, or follow an optional guide: Sentinel-6’s published milestones or a practice route. The guide never steers or scores.",
+      "Postcard: one Imagine image per flight plus highest point, how it ended, flight number and CO₂; Download PNG makes a 1080×1350 card (lib/imagine/patch-png.ts). The app calls it the mission patch.",
+      "The postcard is one Imagine call per flight, cached so See mission patch reopens it for free.",
+      "Win: lowest point at least 200 km up, highest no more than 2,000 km, engines off for ten seconds. That window is our classroom goal (lib/flight/classroom.ts), not a Falcon 9 rating.",
+      "Only physical outcomes end a flight: hitting the ground or the launch tower, breaking up, running out of fuel, escaping, or a stable orbit. Leaving the guide path never warns or fails you.",
+      "Presentation 8× is the default so a judge sees the Earth curve inside a minute; Realistic 1× is one tap away. It only changes the clock, not the physics steps.",
+      "CO₂ so far = kerosene the simulation actually burned × 3.15 kg CO₂ per kg (data/emissions/falcon9.json), labelled as an estimate.",
     ],
   },
 ];
@@ -495,18 +317,11 @@ export const SLIDES: readonly Slide[] = [
 export const CORE_SLIDE_IDS = [
   "title",
   "problem",
-  "motto",
-  "explore",
-  "replay",
-  "mission",
+  "team",
   "hardware",
-  "sensors",
-  "gestures",
-  "physics",
-  "grok",
+  "demo",
   "how",
   "challenge",
-  "close",
 ] as const;
 
 export function slideIndex(id: string): number {

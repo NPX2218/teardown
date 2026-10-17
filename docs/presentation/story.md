@@ -1,4 +1,4 @@
-# Teardown — speaker notes
+# Teardown speaker notes
 
 **Bringing rocket science down to Earth.**
 
@@ -15,16 +15,18 @@ Model credit: “Falcon 9 - SpaceX” by Stanley Creative, CC BY 4.0.
 - With the app running: `/presentation`. Arrow keys or Space step through each line, `N` opens these notes, `F` is full screen.
 - Offline: open `public/presentation/index.html`.
 - Still backup: `docs/presentation/teardown.pdf`, one slide per page, every line shown.
+- After editing the deck: `ESBUILD=node_modules/.bin/esbuild node components/presentation/build-preview.mjs`, then reprint the PDF from the offline page.
 
-Direct links: `#title` `#problem` `#motto` `#explore` `#replay` `#mission` `#hardware` `#sensors` `#gestures` `#physics` `#grok` `#how` `#challenge` `#close` `#numbers` `#open`.
+Direct links: `#title` `#problem` `#team` `#hardware` `#demo` `#how` `#challenge` `#explore` `#mission`.
 
 ## Before you go on stage
 
-- Fly the phone rocket once on a real handset over HTTPS on the venue Wi-Fi. It has only run against the simulator so far.
-- Check the xAI key answers (ask Grok one question) before demoing Voice or Imagine live.
-- Have the laptop already paired and zeroed before you start talking.
+- Run `npm run tunnel`, wait for READY, and pair the real phone on the venue Wi-Fi. Calibrate it once.
+- Keep `npm run sim:phone` ready in a second terminal as the backup controller.
+- Check the xAI key and the Imagine model answer (ask Grok one question, and fly one short hop to see a patch).
+- One person talks, the other drives the demo.
 
-## Slide 1 — Teardown
+## Slide 1: Teardown
 
 On screen:
 
@@ -33,208 +35,128 @@ On screen:
 
 Say:
 
-- Open with the motto, not the stack: “Teardown. Bringing rocket science down to Earth.”
-- Say your names. The background is the real Earth from our flight view, NASA Blue Marble imagery.
+- 0:00 to 0:10. Say: “Hi, we’re Neel and Anders. This is Teardown: bringing rocket science down to Earth.”
+- The whole pitch is 3 minutes: 50 s of slides, 85 s of live demo, then 45 s to close. Watch the clock on the demo, not the slides.
 
-## Slide 2 — Millions watch Falcon 9 launch. Almost nobody can explain what they saw.
+## Slide 2: Kids watch rockets launch. They never get to fly one.
 
 On screen:
 
-- The facts are all public. They are scattered across spec sheets, webcast timestamps and launch databases.
-- A webcast is something you watch. You can't pull it apart, ask it a question, or try to fly it yourself.
-- So rocket science stays something other people understand.
+- The facts are public, but they are scattered, and a webcast only lets you watch.
+- So kids never feel how one lean changes where a rocket ends up.
 
 Say:
 
-- This is the hook. Slow down. The point is not that information is missing, it is that it is scattered and passive.
-- If you want the audience line: if a 10-year-old can’t follow a screen, we rewrite the screen.
+- 0:10 to 0:25. Say: “Millions of people watch Falcon 9 launch, and almost nobody can explain what they saw. Kids especially. They can watch, but they can’t pull the rocket apart or try to fly it. So we built Teardown for them.”
 
-## Slide 3 — Bringing rocket science down to Earth
+## Slide 3: Neel and Anders + Cursor and Grok
 
 On screen:
 
-- Teardown puts a real Falcon 9 in one place you can touch.
-- Take it apart. Watch a real launch. Then slide a phone into a cardboard rocket and fly your own flight to orbit.
-- Grok explains every moment, in words a 10-year-old understands.
+- The two of us built every part of it together, side by side.
+- We used Cursor and Grok as hard as we could. That is our real usage.
 
 Say:
 
-- The motto has two meanings and both are the product: down to Earth as in plain words, and down to Earth as in a rocket you hold in your hands.
-- The four numbers: 3 ways to play, 10 real parts, 3 reading levels, 1 phone for a rocket.
+- 0:25 to 0:35. Say: “We’re Neel and Anders, and we built all of this together.” Then point at the usage screenshot: “We used Cursor and Grok as hard as we could. We used up the whole weekly Grok limit.”
+- Our code meets in one shared store, which is how two people could work on it at the same time without stepping on each other.
 
-## Slide 4 — Take it apart
-
-On screen:
-
-- Drag to turn a Falcon 9. Slide Explode and it splits into its 10 real parts, from the fairing to the landing legs.
-- Tap a part: the camera flies to it, and a card explains it with real specs and a source link.
-- Kid, Curious, Engineer. Same facts, more depth.
-
-Say:
-
-- Every number on the card is read from data/parts/falcon9.json, which cites spacex.com. Grok is told never to make one up.
-- The 3D model is “Falcon 9 - SpaceX” by Stanley Creative, CC BY 4.0.
-
-## Slide 5 — Watch a real launch
+## Slide 4: Your phone is the rocket
 
 On screen:
 
-- Pick Sentinel-6 Michael Freilich, Falcon 9, 21 November 2020.
-- The rocket flies around a NASA Blue Marble Earth and hits each milestone at its published time.
-- It says plainly what it is: illustrated motion, not a recording, and which numbers the public sources leave out.
-
-Say:
-
-- Milestones come from the ESA timeline plus Launch Library 2 metadata, in data/missions/sentinel-6-michael-freilich.json.
-- There is no public altitude or speed series for Sentinel-6, so the screen says “Reference trajectory unavailable” instead of inventing one. Judges like that we don’t fake data.
-
-## Slide 6 — Fly it to orbit
-
-On screen:
-
-- You control tilt and engine power. Real physics does the rest, and nothing types in a win.
-- Go straight up and you fall back. Turn too hard and you hit the ground. That is the lesson of orbit, learned by failing.
-- Win: lowest point at least 200 km up, highest no more than 2,000 km, engines off for ten seconds.
-
-Say:
-
-- LIVE DEMO here if the build is up: fly once at 8×. Crash once on purpose if time allows, then press Try again.
-- Altitude alone never wins. Orbit is going sideways fast enough that you keep missing the Earth. That’s the insight we want a kid to feel.
-- The 200 km / 2,000 km / 10 s window is our classroom goal (lib/flight/classroom.ts), not a Falcon 9 rating.
-
-## Slide 7 — Your phone is the rocket
-
-On screen:
-
-- A phone slides into a cardboard rocket and becomes its motion sensor and its speaker. No app to install, just a web page.
-- Scan the QR on the laptop. Tap Start. Hold it upright to zero. Then lean the rocket to steer.
-- It uses the phone’s accelerometer and gyroscope for motion, and its speaker and vibration motor for engine sound and rumble.
+- We planned to solder our own sensor board, but Micro Center and the other stores nearby didn’t have the parts. Every phone already has them.
+- So a phone slides into a cardboard rocket and becomes its motion sensor, its speaker and its rumble. It runs in a web page, so there is no app to install.
 - We checked with the HackHarvard co-director: the phone’s accelerometer and speaker count as hardware for this track.
 
 Say:
 
-- Hardware for Good: every classroom already has phones and cardboard. No kit to buy, nothing to install.
+- 0:35 to 0:50. Say: “We wanted to solder our own sensor board, but Micro Center didn’t have the parts. Then we realised every phone already has them. So the phone is the rocket.” Hold up the cardboard rocket while you say it. The demo shows the rest.
+- Hardware for Good: every classroom already has phones and cardboard, so a teacher has no kit to buy and nothing to install.
+- The demo phone (Galaxy S24 FE) sits landscape, so its +x edge points at the nose (S24FE_MOUNT in lib/rocket/mount.ts). Portrait and either landscape work too.
 - Say the co-director line clearly. We asked before we built it, and were told the accelerometer and speaker qualify as the hardware component.
-- If the phone disconnects, the flight pauses. Mouse, touch and keyboard can fly the whole mission with no phone, so the exhibit never blocks on hardware.
+- Settings on the laptop (engine sound, master volume, vibration) are sent to the paired phone. The buzz pulses every 200 ms with a duty that follows engine power (lib/settings/vibrate.ts).
+- If the phone disconnects mid-flight, the flight pauses until it is back.
+- Sensors: lib/rocket/usePhoneSensors.ts (FRAME_MS = 50), lib/rocket/sensors.ts (GRAVITY_LOWPASS = 0.8), and the complementary filter in lib/rocket/mount.ts (0.92 gyro, 0.08 gravity). Without a gyro it falls back to gravity alone.
+- Calibrate: lib/rocket/calibrate.ts (CALIBRATE_DELAY_S = 3). It snaps to upright within 20° (UPRIGHT_SNAP_DEG). Steering: PHONE_STEERING in lib/flight/phone-steering.helpers.ts, a 2° dead zone, a gentle response up to 60°, and a 12°/s turn limit.
+- Gestures: lib/rocket/shell-gestures.ts. Lift is 2.5 m/s² up the nose for 180 ms, refused if already leaning past 35°. A flick is a sideways jolt of at least 12 m/s² lasting 40 to 220 ms; longer is a lean. Abort is nose down past 150° for 2 s.
+- Disconnect: DISCONNECT_MS = 2000 in lib/rocket/commands.ts. Inputs carry a run id and each control has one owner, so old wiggles from a previous run are rejected.
+- Why gravity and gyro, not the compass: the magnetometer drifts indoors near laptops. The phone only streams sensors and the laptop decides everything, so a phone can never cheat a win.
 
-## Slide 8 — From raw motion to a steering angle
-
-On screen:
-
-- The phone reads devicemotion and deviceorientation, and sends a frame at most every 50 ms, about 20 Hz.
-- It splits acceleration into gravity and your movement. Gravity is low-passed, so a shaky hand doesn’t jerk the rocket.
-- Zero: hold it still for 2 seconds. That averaged gravity becomes “straight up”, so any phone in any mount works.
-- Tilt is gravity in the rocket’s frame: pitch = atan2(g_z, √(g_x² + g_y²)), clamped to ±90°.
-
-Say:
-
-- Files: lib/rocket/usePhoneSensors.ts (FRAME_MS = 50), lib/rocket/sensors.ts (GRAVITY_LOWPASS = 0.8), lib/rocket/mount.ts (UprightCalibrator, attitudeFromGravity).
-- Zero needs 2,000 ms of stillness: movement under 0.6 m/s², gravity between 8 and 12 m/s², samples within 8° of each other. It builds a rocket basis where +y is the nose, so landscape, portrait or upside-down mounts all work.
-- Why gravity and not the compass: the magnetometer drifts indoors near laptops. Gravity is always there and always points down.
-- The phone only streams sensors. The laptop decides everything, so a phone can never cheat a win.
-- If asked: there is a complementary filter (0.92 gyro, 0.08 gravity) in lib/rocket/useRocket.ts, but the phone frame doesn’t carry the gyro rate yet, so on a real phone it runs on gravity pitch alone.
-
-## Slide 9 — The cardboard rocket is the controller
+## Slide 5: One run, start to finish
 
 On screen:
 
-- Every gesture is measured in the rocket’s own frame, along the calibrated nose, not the phone’s screen.
-- Each one needs a sustained or shaped signal, so a table bump or one noisy sample never launches.
-- If no frame arrives for 2 seconds, the phone gives up control and the flight pauses. Stale input is thrown out.
+- Explode the rocket and push engine power. The cardboard rocket in your hands roars and shakes.
+- Calibrate, launch, lean to steer. At 8× the Earth curves away in under a minute.
+- Reach orbit, or crash. Either way Grok Imagine draws a postcard of your flight to download.
 
 Say:
 
-- Thresholds are in lib/rocket/shell-gestures.ts (SHELL_GESTURE).
-- Lift: 2.5 m/s² up the nose for 180 ms, refused if already leaning past 35°. Flick to stage: a sideways jolt of at least 12 m/s² that lasts 40 to 220 ms; longer is a lean, not a flick. Abort: nose down past 150° for 2 s.
-- Disconnect is DISCONNECT_MS = 2000 in lib/rocket/commands.ts, about 40 missed frames. Inputs carry a run id, and each control has one owner, so old wiggles from a previous run or the other device are rejected.
-- Messages are validated on arrival: finite numbers, a unit quaternion, gravity between 5 and 15 m/s².
+- 0:50 to 2:15. Switch to the app. One person talks, the other drives. Pair and calibrate the phone before the slot starts.
+- Explore, 25 s: slide Explode to 100%, tap Merlin 1D engines (real specs on the card), then push Engine power and hand a judge the cardboard rocket so they feel it roar and buzz. Mention that Grok Voice narrates every part on the tour, but don’t play the tour. It takes too long.
+- Fly, 40 s: Your mission, Custom flight, Presentation 8×, Calibrate phone, Launch, push power up, lean gently. While it climbs, say: “You steer, real physics does the rest. Go straight up and you fall back.”
+- Postcard, 20 s: don’t wait for orbit. If time is short, lean hard and crash on purpose; the postcard still appears. Talk over it while Grok Imagine draws, then press Download PNG.
+- If the phone won’t pair, run npm run sim:phone with the code on screen. If the app itself fails, use the demo backup slides at the end of the deck.
 
-## Slide 10 — How we compute where the rocket is
+## Slide 6: One store, three ways in
 
 On screen:
 
-- Every 1/60 of a second we add up the forces: gravity toward Earth’s centre, engine thrust along your tilt, and air drag.
-- Then update speed, then position. Mass drops as fuel burns, so the rocket speeds up as it gets lighter.
-- From position and speed we compute the whole orbit live: its energy, its shape, its lowest and highest points.
-- The win is checked on that orbit, never typed in. Time warp at 4× or 8× just runs more steps per frame.
+- The phone, the mouse and Grok all drive one store, so Grok uses the same actions as the buttons.
+- Real orbital physics, 60 steps a second. 1,103 unit tests, plus a flight test with a simulated phone.
 
 Say:
 
-- File: lib/flight.helpers.ts. Semi-implicit Euler: v += a·dt, then x += v·dt, with dt = 1/60 s, up to 48 steps per frame for 8× warp.
-- Gravity is μ/r² with μ = 398,600 km³/s² from the NASA Earth fact sheet. Thrust direction is cos(tilt)·up + sin(tilt)·downrange. Drag is ½·Cd·A·ρ·v² with ρ = 1.225·e^(−h/8500), applied below 120 km.
-- Orbit: energy ε = v²/2 − μ/r, angular momentum h = x·v_y − y·v_x, eccentricity e = √(1 + 2εh²/μ²), a = −μ/2ε. Lowest point a(1−e), highest a(1+e), minus Earth’s radius.
-- The two-stage rocket is a classroom tune (lib/flight/classroom.ts), not Falcon 9 data: 7.6 MN booster, 0.9 MN upper stage, liftoff thrust about 2.3 times its weight. The real Falcon 9 numbers live in Explore.
-- CO₂ estimate: kerosene actually burned × 3.15 kg CO₂ per kg, sourced in data/emissions/falcon9.json, labelled as an estimate.
+- 2:15 to 2:35. Say: “Everything goes through one store. The phone, the mouse and Grok call the same actions, so Grok can’t do anything a button can’t. The flight is real orbital physics, and we have over a thousand tests.”
+- If asked: semi-implicit Euler at 1/60 s, gyro plus gravity steering, swept collisions against the Earth and the launch tower. The phone slide’s notes have the sensor constants.
 
-## Slide 11 — Ask it anything
+## Slide 7: Built for this track
 
 On screen:
 
-- Grok can select parts, explode the rocket and fly the camera by calling the same actions the buttons use.
-- Grok Voice on the mascot can start the tour and set the explanation level. It can't launch or steer.
-- Grok can explain a flight. It can’t steer one or award a win.
+- The running app meets every requirement, and you just saw each one in the demo.
 
 Say:
 
-- Nine tools in lib/agent/tools.ts. A test (lib/__tests__/tools.test.ts, A1) keeps the tool list and the store actions in sync.
-- The xAI key stays on the server (app/api/*). Routes are rate-limited. If Grok can’t be reached, the exhibit keeps running and says so in a sentence.
-- Imagine: “Show in action” turns the selected part into a Grok Imagine picture grounded in the part’s data. Voice and Imagine are on the home page; check the xAI key answers before you demo them live.
+- 2:35 to 3:00. Read only the left column: real space data, Grok Voice and Imagine, built in Cursor, and a phone as the hardware. Then: “The HackHarvard co-director confirmed the phone’s sensors and speaker count as hardware.” Finish on the motto, “Bringing rocket science down to Earth. Thank you.”
 
-## Slide 12 — One store. Three ways in.
+## Appendix: Take it apart
 
 On screen:
 
-- Nothing moves the scene except store actions. The phone, the mouse and Grok all call the same ones.
-- Store actions are Grok’s tools. A test keeps the two lists in sync.
-- Facts live in data files. Every number on screen or spoken aloud is read from data/.
-- About 700 unit tests, plus a smoke run that pairs a real laptop page with a phone page and flies.
+- Slide Explode and the Falcon 9 splits into its 10 real parts. Tap one for a card with real specs and a source link.
+- Push Engine power and nine Merlin plumes grow. The phone inside the cardboard rocket roars and vibrates with them, so a kid feels every burn in the rocket they are holding.
+- Press Start tour and Grok Voice flies to each part and explains it out loud, at Kid, Curious or Engineer level. Press Voice to talk back live.
+- Or type or tap a question chip: Grok selects parts, explodes the rocket and flies the camera with the same actions the buttons use.
 
 Say:
 
-- Stack: Next.js 14, TypeScript strict, three.js with React Three Fiber, Zustand, a local WebSocket relay behind a cloudflared tunnel for the phone link, xAI Grok.
-- docs/SMOKE.md, 17 October: vitest 703 passed, 1 skipped. The Playwright smoke covers calibrate, lift to launch, tilt steering, flick to stage, nose-down abort, a crash, a mission drift warning, Sentinel-6 milestones and the mascot voice states.
+- Backup: show this only if the live demo fails.
+- Every number on the card is read from data/parts/falcon9.json, which cites spacex.com. Grok is told never to make one up.
+- The tour lines are each part’s say line in the data file, spoken with Grok text-to-speech and cached in public/audio (scripts/cache-narration.ts, components/viewer/TourDirector.tsx).
+- The rumble is synthesized on the phone (lib/rocket/engine-rumble.ts); the laptop only sends a power value between 0 and 1. At 0 both the plume and the rumble are silent, and reduced motion holds the plume still.
+- The 3D model is “Falcon 9 - SpaceX” by Stanley Creative, CC BY 4.0.
+- Grok can explain a flight, but it can’t launch, steer or award one.
+- Text agent: nine tools in lib/agent/tools.ts. A test (lib/__tests__/tools.test.ts, A1) keeps the tool list and the store actions in sync.
+- Voice: the browser gets an ephemeral token from /api/voice/session and opens the Grok realtime voice socket with only two tools, start_tour and set_level (lib/voice/realtime-guide.ts).
+- The xAI key stays on the server (app/api/*), and routes are rate-limited. If Grok can’t be reached, the exhibit keeps running and says so in a sentence.
 
-## Slide 13 — Built for this track
+## Appendix: Fly it to orbit
 
 On screen:
 
-- Every requirement is met in the running app, not on a roadmap.
+- You steer and set engine power. Real physics does the rest, and the game never hands you a win.
+- Go straight up and you fall back. Turn too hard and you hit the ground. Kids work out what orbit is by getting it wrong a few times.
+- Orbit or crash, Grok Imagine draws a postcard of your flight, with your numbers on it, to download and keep.
 
 Say:
 
-- Walk the table top to bottom, one breath each. End on Hardware for Good: the co-director confirmed the phone sensors count.
-
-## Slide 14 — Take one apart. Watch one. Fly one.
-
-On screen:
-
-- Bringing rocket science down to Earth.
-- Come fly the cardboard rocket. Thank you.
-
-Say:
-
-- Stop on the motto. Hand the cardboard rocket to a judge if you can.
-- Invite questions. The appendix has where every number comes from and what is still open.
-
-## Appendix — Where every number comes from
-
-On screen:
-
-- A published fact wears its source: spacex.com, ESA, NASA, Launch Library 2.
-- A simulated readout comes from the physics and your inputs.
-- An estimate wears that word and its assumptions, like the CO₂ factor.
-- Missing data stays missing. We never fill a gap with a made-up flight.
-
-Say:
-
-- Use this if a judge asks what is real. Sources are in data/missions/SOURCES.md and inside each data file.
-
-## Appendix — What is still open
-
-On screen:
-
-- As of 17 October 2026, Explore, Flight replay, Your mission and the phone link run on main.
-
-Say:
-
-- Only show this if asked. Same list as the README status section.
+- Backup: show this only if the live demo fails.
+- Fly free, or follow an optional guide: Sentinel-6’s published milestones or a practice route. The guide never steers or scores.
+- Postcard: one Imagine image per flight plus highest point, how it ended, flight number and CO₂; Download PNG makes a 1080×1350 card (lib/imagine/patch-png.ts). The app calls it the mission patch.
+- The postcard is one Imagine call per flight, cached so See mission patch reopens it for free.
+- Win: lowest point at least 200 km up, highest no more than 2,000 km, engines off for ten seconds. That window is our classroom goal (lib/flight/classroom.ts), not a Falcon 9 rating.
+- Only physical outcomes end a flight: hitting the ground or the launch tower, breaking up, running out of fuel, escaping, or a stable orbit. Leaving the guide path never warns or fails you.
+- Presentation 8× is the default so a judge sees the Earth curve inside a minute; Realistic 1× is one tap away. It only changes the clock, not the physics steps.
+- CO₂ so far = kerosene the simulation actually burned × 3.15 kg CO₂ per kg (data/emissions/falcon9.json), labelled as an estimate.

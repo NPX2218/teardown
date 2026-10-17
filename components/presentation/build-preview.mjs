@@ -3,8 +3,9 @@
  * Does not touch package.json. From a checkout that already has the bundle,
  * opening public/presentation/index.html does not need this script.
  *
- *   npm install --prefix /tmp/teardown-deck esbuild react@18.3.1 react-dom@18.3.1
- *   NODE_PATH=/tmp/teardown-deck/node_modules node components/presentation/build-preview.mjs
+ *   ESBUILD=node_modules/.bin/esbuild node components/presentation/build-preview.mjs
+ *
+ * esbuild is already installed through tsx and vitest, so no extra install is needed.
  */
 import { spawnSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
