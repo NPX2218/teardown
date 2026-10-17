@@ -1,13 +1,13 @@
 "use client";
 // Nine Merlin flames in the explorer. They follow engine power and the explode slider.
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { merlinNozzles, viewerMetresPerUnit } from "@/components/flight/fx/falcon";
 import { useReducedMotion } from "@/components/ui/useReducedMotion";
 import { ease } from "@/lib/explode";
 import { useScene } from "@/lib/store";
-import { explorePlumeScale } from "@/lib/viewer/engine-plume";
+import { disposeExplorePlumeResources, explorePlumeScale } from "@/lib/viewer/engine-plume";
 import { FLIGHT_SCENE } from "@/lib/viewer/colors";
 import { DISPLAY_HEIGHT } from "@/lib/viewer/prepareModel";
 
@@ -35,6 +35,10 @@ export function ExplorePlumes() {
     depthWrite: false,
     toneMapped: false,
   }), []);
+
+  useEffect(() => () => {
+    disposeExplorePlumeResources(geo, flameMat, coreMat);
+  }, [geo, flameMat, coreMat]);
 
   useFrame(({ clock }) => {
     const scene = useScene.getState();

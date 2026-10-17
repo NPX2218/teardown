@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, type Ref } from "react";
+import { useEffect, useRef, useState, type Ref } from "react";
 import { motion } from "motion/react";
 import { useReducedMotion } from "@/components/ui/useReducedMotion";
 import { MOTION_EASE } from "@/lib/ui/motion";
+import { finishSheetIfReduced } from "@/lib/ui/sheet-close";
 import { ABOUT } from "./copy";
 import styles from "./about.module.css";
 
@@ -22,8 +23,14 @@ export function AboutSheet({
   onClosed?: () => void;
 }) {
   const reduce = useReducedMotion();
+  const onClosedRef = useRef(onClosed);
+  onClosedRef.current = onClosed;
   // Slides in from the left edge like the rest of the app's wipes; on phones it is a bottom sheet, so it rises.
   const [phone] = useState(() => typeof window !== "undefined" && window.matchMedia("(max-width: 720px)").matches);
+
+  useEffect(() => {
+    finishSheetIfReduced(reduce, closing, () => onClosedRef.current?.());
+  }, [reduce, closing]);
   const hidden = phone ? { y: "100%" } : { x: "-100%" };
   const shown = phone ? { y: 0 } : { x: 0 };
 

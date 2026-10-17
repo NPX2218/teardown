@@ -15,6 +15,17 @@ export interface PlumeScale {
   radius: number;
 }
 
+/** Drop the cone and the two additive materials ExplorePlumes allocates. */
+export function disposeExplorePlumeResources(
+  geometry: { dispose(): void },
+  flame: { dispose(): void },
+  core: { dispose(): void },
+): void {
+  geometry.dispose();
+  flame.dispose();
+  core.dispose();
+}
+
 export function explorePlumeScale(power: number, reducedMotion: boolean): PlumeScale {
   const p = typeof power === "number" && Number.isFinite(power) ? Math.min(1, Math.max(0, power)) : 0;
   return {
