@@ -83,13 +83,17 @@ void main() {
   float t0 = max(atmo.x, 0.0);
   float t1 = atmo.y;
   vec2 planet = raySphere(roKm, rd, planetKm);
-  if (planet.x > 0.001) t1 = min(t1, planet.x);
+  // A hit means this pixel is the planet itself. Leave it clear so the Earth
+  // skin (and the launch-site mesh, while it is still covered) shows through
+  // the transparent sky shell. Only rays that miss the planet draw the limb.
+  bool hitsPlanet = planet.x > 0.05 && planet.x < planet.y;
+  if (planet.x > 0.001 && planet.x < planet.y) t1 = min(t1, planet.x);
 
   vec3 raw = vec3(0.0);
   float odR = 0.0;
   float odM = 0.0;
   float viewEl = dot(rd, up);
-  if (altitudeKm >= ${glslFloat(SCATTER.blackKm)} && viewEl > 0.0) {
+  if ((altitudeKm >= ${glslFloat(SCATTER.blackKm)} && viewEl > 0.0) || hitsPlanet) {
     gl_FragColor = vec4(0.0);
     #include <logdepthbuf_fragment>
     return;
@@ -181,6 +185,7 @@ uniform float shoreM;
 uniform float hasCoast;
 uniform float marsh;
 uniform float roads;
+uniform float coverage;
 ${logFragment}
 
 float hash12(vec2 p) {
@@ -245,7 +250,7 @@ void main() {
   lit += vec3(0.15, 0.12, 0.08) * water * ndl;
   float dist = length(vLocal);
   lit = mix(lit, fogColor, smoothstep(900.0, 8500.0, dist) * 0.72);
-  float alpha = 1.0 - smoothstep(${GROUND_FADE_START_M.toFixed(1)}, ${GROUND_FADE_END_M.toFixed(1)}, dist);
+  float alpha = (1.0 - smoothstep(${GROUND_FADE_START_M.toFixed(1)}, ${GROUND_FADE_END_M.toFixed(1)}, dist)) * coverage;
   gl_FragColor = vec4(lit, alpha);
   #include <logdepthbuf_fragment>
   #include <colorspace_fragment>
@@ -283,11 +288,12 @@ varying vec3 vNormalW;
 varying vec3 vColor;
 uniform vec3 sunDir;
 uniform vec3 sunColor;
+uniform float coverage;
 ${logFragment}
 void main() {
   float ndl = clamp(dot(normalize(vNormalW), normalize(sunDir)), 0.0, 1.0);
   vec3 color = vColor * sunColor * (0.32 + 0.68 * ndl);
-  gl_FragColor = vec4(color, 1.0);
+  gl_FragColor = vec4(color, coverage);
   #include <logdepthbuf_fragment>
   #include <colorspace_fragment>
 }

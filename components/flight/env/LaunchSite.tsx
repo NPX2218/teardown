@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { EARTH_SUN_DIRECTION } from "@/components/flight/earthShaders";
-import { METRES_TO_EARTH_RADII, sitePlacement, sunElevationDeg, sunFromHorizon } from "./frame";
+import { EARTH_RADIUS, METRES_TO_EARTH_RADII, SCENE_TO_KM, sitePlacement, sunElevationDeg, sunFromHorizon } from "./frame";
 import { buildGroundGeometry } from "./groundGeometry";
 import { kitFor, siteKind, type Instance } from "./kit";
 import { coastFor } from "./sites";
@@ -85,6 +85,8 @@ export function LaunchSite({ site, sunDirection, launchCloudIntensity = 0 }: Lau
   const cylinderGeometry = useMemo(() => new THREE.CylinderGeometry(1, 1, 1, 12), []);
   const boxes = useRef<THREE.InstancedMesh>(null);
   const cylinders = useRef<THREE.InstancedMesh>(null);
+  const anchor = useRef<THREE.Group>(null);
+  const scratch = useMemo(() => ({ origin: new THREE.Vector3(), axis: new THREE.Vector3() }), []);
   const sunRef = useRef(sun);
   sunRef.current = sun;
 
@@ -99,6 +101,7 @@ export function LaunchSite({ site, sunDirection, launchCloudIntensity = 0 }: Lau
       hasCoast: { value: coast ? 1 : 0 },
       marsh: { value: kind === "starbase" ? 1 : 0.35 },
       roads: { value: kind === "starbase" ? 1 : 0 },
+      coverage: { value: 1 },
     },
     vertexShader: groundVertexShader,
     fragmentShader: groundFragmentShader(),
@@ -113,9 +116,12 @@ export function LaunchSite({ site, sunDirection, launchCloudIntensity = 0 }: Lau
     uniforms: {
       sunDir: { value: new THREE.Vector3(...sun) },
       sunColor: { value: light.clone() },
+      coverage: { value: 1 },
     },
     vertexShader: structureVertexShader,
     fragmentShader: structureFragmentShader,
+    transparent: true,
+    depthWrite: true,
   }), [sun, light]);
 
   useLayoutEffect(() => {
@@ -134,15 +140,29 @@ export function LaunchSite({ site, sunDirection, launchCloudIntensity = 0 }: Lau
     structureMaterial.dispose();
   }, [groundMaterial, structureMaterial]);
 
-  useFrame(() => {
+  useFrame(({ camera }) => {
     const dir = sunRef.current;
     groundMaterial.uniforms.sunDir.value.set(dir[0], dir[1], dir[2]);
     structureMaterial.uniforms.sunDir.value.set(dir[0], dir[1], dir[2]);
+    let radius = EARTH_RADIUS;
+    const parent = anchor.current?.parent;
+    if (parent) {
+      parent.updateWorldMatrix(true, false);
+      scratch.origin.setFromMatrixPosition(parent.matrixWorld);
+      scratch.axis.set(1, 0, 0).applyMatrix4(parent.matrixWorld);
+      radius = Math.max(scratch.axis.distanceTo(scratch.origin), 1e-4);
+    }
+    const altKm = Math.max(camera.position.length() - radius, 0) * SCENE_TO_KM;
+    const coverage = 1 - THREE.MathUtils.smoothstep(altKm, 5, 28);
+    groundMaterial.uniforms.coverage.value = coverage;
+    structureMaterial.uniforms.coverage.value = coverage;
+    structureMaterial.depthWrite = coverage > 0.85;
   });
 
   const intensity = clamp01(launchCloudIntensity);
   return (
     <group
+      ref={anchor}
       name={site.name}
       position={placement.position}
       quaternion={placement.quaternion}
