@@ -28,6 +28,7 @@ export function idleFlight(): FlightSession {
     fuel: null,
     emissions: null,
     frameAccumulatorS: 0,
+    guide: null,
   };
 }
 
@@ -55,6 +56,8 @@ export function createPadSession(scenario: FlightScenario, runId: string): Fligh
     payloadKg: scenario.payloadKg.value,
     positionM: null,
     velocityMps: null,
+    thrustOffS: 0,
+    airborne: false,
   };
   const readout: FlightReadout = {
     altitudeM: null,
@@ -92,5 +95,6 @@ export function createPadSession(scenario: FlightScenario, runId: string): Fligh
       estimated: true,
     },
     frameAccumulatorS: 0,
+    guide: null,
   };
 }

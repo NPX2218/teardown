@@ -1,4 +1,4 @@
-// lib/store.ts — scene store, shared contract 2026-10-17.1.
+// lib/store.ts — scene store, shared contract 2026-10-17.2.
 // Owner: Neel (integration). Actions are the only way to change the scene.
 // Player flight and historical replay are separate. Checkpoint stars, the
 // engine-out tool, and the emissions lens are not part of this contract.
@@ -8,22 +8,32 @@ import type {
   ControlSource,
   EmissionsReadout,
   ExplainLevel,
+  FlightAccuracy,
   FlightAxisCommand,
+  FlightImpact,
+  FlightScenario,
   FlightSession,
   FlightWarp,
   PartId,
   PartsFile,
+  PlayMode,
   Quat,
   ToolResult,
+  WarningLevel,
 } from "@/lib/types";
 import { DEFAULT_SCENARIO_ID, isControlAxis, isControlSource, isExplainLevel, isFlightWarp } from "@/lib/types";
 import { MISSIONS } from "@/data/missions/index";
 import { FLIGHT_SCENARIOS } from "@/data/flight/index";
+import { CLASSROOM_SCENARIOS } from "@/lib/flight/classroom";
 import { loadParts } from "@/lib/parts-source";
 import { assignAxisOwner, mixFlightInput, NEUTRAL_FLIGHT_INPUT } from "@/lib/flight/input-mixer";
-import { clampFlightWallDelta, holdFlightStep } from "@/lib/flight/hold-step";
+import { clampFlightWallDelta } from "@/lib/flight/hold-step";
+import { integrateSession } from "@/lib/flight/integrate";
+import { playFlightCue } from "@/lib/flight/cues";
+import { milestoneEvents, missionById, referenceFor } from "@/lib/flight/mission-select";
 import { validateFlightScenario } from "@/lib/flight/scenario";
 import { createPadSession, idleFlight } from "@/lib/flight/session";
+import { sendToRocket } from "@/lib/rocket/commands";
 
 export interface SceneState {
   parts: PartsFile | null;
@@ -37,6 +47,16 @@ export interface SceneState {
   orientation: Quat | null; // explore mode only; ignored while a flight session exists
   rocket: { connected: boolean; code: string | null };
   flight: FlightSession;
+  /** Sandbox unless the visitor picks Mission. Not a mission object. */
+  playMode: PlayMode;
+  /** Registry id followed in mission mode. Null until one is chosen. */
+  missionTrackId: string | null;
+  warningLevel: WarningLevel;
+  failureReason: string | null;
+  impact: FlightImpact | null;
+  accuracy: FlightAccuracy | null;
+  /** "Reference trajectory unavailable" when mission mode has no kinematic path. */
+  guidanceNote: string | null;
   level: ExplainLevel;
   lastActivityAt: number;
   imageUrl: string | null;
@@ -68,6 +88,8 @@ export interface SceneState {
   resumeFlight(): ToolResult;
   retryFlight(): ToolResult;
   stopFlight(): void;
+  setPlayMode(mode: PlayMode): ToolResult;
+  setMissionTrack(missionId: string | null): ToolResult;
   applyExhibitReset(): void;
   markActivity(nowMs: number): void;
   setLevel(level: ExplainLevel): ToolResult;
@@ -87,12 +109,18 @@ function nextRunId(): string {
   return `run-${flightRunSerial}`;
 }
 
+function clearedGuidance(): Pick<SceneState, "warningLevel" | "failureReason" | "impact" | "accuracy" | "guidanceNote"> {
+  return { warningLevel: "nominal", failureReason: null, impact: null, accuracy: null, guidanceNote: null };
+}
+
 function hasMission(id: unknown): id is string {
   return typeof id === "string" && Object.prototype.hasOwnProperty.call(MISSIONS, id);
 }
 
-function hasScenario(id: unknown): id is string {
-  return typeof id === "string" && Object.prototype.hasOwnProperty.call(FLIGHT_SCENARIOS, id);
+function scenarioById(id: string): FlightScenario | undefined {
+  if (Object.prototype.hasOwnProperty.call(FLIGHT_SCENARIOS, id)) return FLIGHT_SCENARIOS[id];
+  if (Object.prototype.hasOwnProperty.call(CLASSROOM_SCENARIOS, id)) return CLASSROOM_SCENARIOS[id];
+  return undefined;
 }
 
 function clearHeldInput(flight: FlightSession, status: FlightSession["status"] = flight.status): FlightSession {
@@ -146,6 +174,13 @@ export const useScene = create<SceneState>()((set, get) => {
     orientation: null,
     rocket: { connected: false, code: null },
     flight: idleFlight(),
+    playMode: "free",
+    missionTrackId: null,
+    warningLevel: "nominal",
+    failureReason: null,
+    impact: null,
+    accuracy: null,
+    guidanceNote: null,
     level: "kid",
     lastActivityAt: 0,
     imageUrl: null,
@@ -243,8 +278,8 @@ export const useScene = create<SceneState>()((set, get) => {
     },
 
     startFlight: (scenarioId = DEFAULT_SCENARIO_ID) => {
-      if (!hasScenario(scenarioId)) return { ok: false, error: `unknown scenario: ${String(scenarioId)}` };
-      const scenario = FLIGHT_SCENARIOS[scenarioId];
+      const scenario = typeof scenarioId === "string" ? scenarioById(scenarioId) : undefined;
+      if (!scenario) return { ok: false, error: `unknown scenario: ${String(scenarioId)}` };
       const errors = validateFlightScenario(scenario);
       if (errors.length > 0) return { ok: false, error: `invalid scenario: ${errors[0]}` };
       const runId = nextRunId();
@@ -254,6 +289,7 @@ export const useScene = create<SceneState>()((set, get) => {
         tour: { ...NO_TOUR },
         historicalEmissions: null,
         explode: 0,
+        ...clearedGuidance(),
       });
       return { ok: true, data: { scenarioId, status: "ready", runId } };
     },
@@ -299,12 +335,36 @@ export const useScene = create<SceneState>()((set, get) => {
 
     advanceFlight: (wallDelta) => {
       const flight = get().flight;
-      if (flight.status !== "flying") return;
+      if (flight.status !== "flying" || !flight.scenarioId) return;
       const dt = clampFlightWallDelta(wallDelta);
       if (dt === null) return;
-      const stepped = holdFlightStep(flight, dt);
+      const scenario = scenarioById(flight.scenarioId);
+      if (!scenario) return;
+      const playMode = get().playMode;
+      const tracked = playMode === "mission" ? missionById(MISSIONS, get().missionTrackId) : null;
+      const stepped = integrateSession(flight, scenario, dt, {
+        playMode,
+        reference: referenceFor(tracked),
+        events: milestoneEvents(tracked),
+        phoneConnected: get().rocket.connected,
+      });
       if (stepped.runId !== flight.runId) return;
-      set({ flight: stepped });
+      const cue = stepped.guide?.cue ?? null;
+      const saved = stepped.guide && cue
+        ? { ...stepped, guide: { ...stepped.guide, cue: null } }
+        : stepped;
+      if (cue === "vibrate" || cue === "boom") {
+        sendToRocket({ k: "vibrate", pattern: cue === "boom" ? [600, 200, 600, 200, 600] : [180, 80, 180] });
+      }
+      playFlightCue(cue);
+      set({
+        flight: saved,
+        warningLevel: saved.guide?.warningLevel ?? "nominal",
+        failureReason: saved.guide?.failureReason ?? null,
+        impact: saved.guide?.impact ?? null,
+        accuracy: saved.guide?.accuracy ?? null,
+        guidanceNote: saved.guide?.note ?? null,
+      });
     },
 
     pauseFlight: () => {
@@ -325,16 +385,32 @@ export const useScene = create<SceneState>()((set, get) => {
     retryFlight: () => {
       const flight = get().flight;
       if (flight.status === "idle" || flight.scenarioId === null) return { ok: false, error: "no flight to retry" };
-      if (!hasScenario(flight.scenarioId)) return { ok: false, error: `unknown scenario: ${flight.scenarioId}` };
-      const scenario = FLIGHT_SCENARIOS[flight.scenarioId];
+      const scenario = scenarioById(flight.scenarioId);
+      if (!scenario) return { ok: false, error: `unknown scenario: ${flight.scenarioId}` };
       const errors = validateFlightScenario(scenario);
       if (errors.length > 0) return { ok: false, error: `invalid scenario: ${errors[0]}` };
       const runId = nextRunId();
-      set({ flight: createPadSession(scenario, runId), historicalEmissions: null });
+      set({ flight: createPadSession(scenario, runId), historicalEmissions: null, ...clearedGuidance() });
       return { ok: true, data: { runId } };
     },
 
-    stopFlight: () => set({ flight: idleFlight() }),
+    stopFlight: () => set({ flight: idleFlight(), playMode: "free", missionTrackId: null, ...clearedGuidance() }),
+
+    setPlayMode: (mode) => {
+      if (mode !== "free" && mode !== "mission") return { ok: false, error: `unknown play mode: ${String(mode)}` };
+      set({ playMode: mode });
+      return { ok: true };
+    },
+
+    setMissionTrack: (missionId) => {
+      if (missionId === null) {
+        set({ missionTrackId: null });
+        return { ok: true };
+      }
+      if (!hasMission(missionId)) return { ok: false, error: `unknown mission: ${missionId}` };
+      set({ missionTrackId: missionId, playMode: "mission" });
+      return { ok: true };
+    },
 
     applyExhibitReset: () =>
       set({
@@ -349,6 +425,9 @@ export const useScene = create<SceneState>()((set, get) => {
         camera: { focus: "home" },
         level: "kid",
         snapshot: null,
+        playMode: "free",
+        missionTrackId: null,
+        ...clearedGuidance(),
       }),
 
     markActivity: (nowMs) => {

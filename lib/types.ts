@@ -1,4 +1,4 @@
-// lib/types.ts — shared contract 2026-10-17.1. Owner: Neel (integration).
+// lib/types.ts — shared contract 2026-10-17.2. Owner: Neel (integration).
 // Later slices pin SHARED_CONTRACT_VERSION. Announce changes before editing.
 //
 // 07 §6 replaces the checkpoint MissionState, star lifecycle, engine-out tool
@@ -18,7 +18,7 @@
 // - Mission is the historical record (booster object or null, LandingKind).
 // - Scenario ids are open registry keys. Only an omitted startFlight() uses "reference".
 
-export const SHARED_CONTRACT_VERSION = "2026-10-17.1" as const;
+export const SHARED_CONTRACT_VERSION = "2026-10-17.2" as const;
 
 export type PartId = string;
 
@@ -103,6 +103,83 @@ export interface Mission {
   label?: string;
   /** Historical and practice records must not claim a continuous trajectory. */
   continuousTelemetry?: boolean;
+  /**
+   * Optional kinematic or milestone reference. Null altitude or velocity means
+   * the record is timing-only. Callers must not invent the missing path.
+   */
+  reference?: MissionReference;
+}
+
+/** One published reference row. Null kinematics are a timing mark, not a gap to fill. */
+export interface MissionReferenceSample {
+  t: number;
+  altKm: number | null;
+  downrangeKm: number | null;
+  velMs: number | null;
+  pitchDeg?: number | null;
+  event?: string | null;
+}
+
+/** Reference attached to a mission. `interpolated: false` must not be turned into a smooth path. */
+export interface MissionReference {
+  id: string;
+  label: string;
+  interpolated: boolean;
+  samples: MissionReferenceSample[];
+}
+
+export type PlayMode = "free" | "mission";
+export type WarningLevel = "nominal" | "caution" | "warning" | "failed";
+
+export interface FlightDeviation {
+  altM: number | null;
+  velMs: number | null;
+  pitchDeg: number | null;
+  band: "green" | "amber" | "red" | "none";
+  /** Short steer cue. Null when there is no corridor. */
+  correction: string | null;
+}
+
+export interface FlightAccuracy {
+  /** Fraction of mission-mode samples inside the corridor. 0..1. */
+  insideFraction: number;
+  /** Root-mean-square of the largest normalised corridor error. */
+  rms: number;
+}
+
+export interface FlightImpact {
+  x: number;
+  y: number;
+  t: number;
+}
+
+export type FlightCue = "beep" | "alarm" | "vibrate" | "boom";
+
+/** Loop state for drift, milestones, and the end-screen score. Not a mission object. */
+export interface FlightGuide {
+  playMode: PlayMode;
+  warningLevel: WarningLevel;
+  failureReason: string | null;
+  note: string | null;
+  banner: string | null;
+  countdownS: number | null;
+  corridor: boolean;
+  deviation: FlightDeviation | null;
+  targetPitchRad: number | null;
+  milestones: string[];
+  accuracy: FlightAccuracy | null;
+  impact: FlightImpact | null;
+  trail: { t: number; x: number; y: number }[];
+  outsideS: number;
+  beeped: boolean;
+  lastAlarmT: number;
+  insideS: number;
+  errorSumSq: number;
+  samples: number;
+  prevPitchRad: number | null;
+  stableCoastS: number;
+  peakAltM: number;
+  cue: FlightCue | null;
 }
 
 export type Quat = [number, number, number, number]; // w, x, y, z
@@ -314,8 +391,8 @@ export interface StageFuelSnapshot {
 }
 
 /**
- * Quantities a later stepper may commit. Position and velocity stay null until
- * the physics helper exists. No action other than advanceFlight may write them.
+ * Physical quantities. Position and velocity stay null on the pad.
+ * Only advanceFlight may write them, the coast timer, or `airborne`.
  */
 export interface FlightState {
   pitchRad: number;
@@ -326,6 +403,10 @@ export interface FlightState {
   payloadKg: number;
   positionM: { x: number; y: number } | null;
   velocityMps: { x: number; y: number } | null;
+  /** Consecutive simulated seconds inside the orbit goal with thrust off. */
+  thrustOffS: number;
+  /** True after liftoff. Falling back to Earth is a crash. */
+  airborne: boolean;
 }
 
 export interface FlightReadout {
@@ -389,6 +470,8 @@ export interface FlightSession {
   emissions: EmissionsReadout | null;
   /** Cleared on pause and resume. The hold stepper records a clamped delta; it does not integrate. */
   frameAccumulatorS: number;
+  /** Drift, milestones, and score. Null before the first flying step. */
+  guide: FlightGuide | null;
 }
 
 // ---------------------------------------------------------------------------

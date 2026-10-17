@@ -1,19 +1,17 @@
-// app/page.tsx — FROZEN after 01. Each slot is filled by its owner inside its own folder.
+// app/page.tsx — slots stay here. The emissions fixture now mounts inside the
+// flight and replay HUD (07 §6: embedded readout, no emissions destination).
+// Voice and Imagine fixtures stay until those PRs land.
 //
-// Voice, Imagine, and Emissions are temporary fixtures in components/seams/.
-// Anders's open PRs add the real components at these paths, so this branch
-// does not create them:
+// Voice, Imagine, and Emissions real components arrive on Anders's branches:
 //   components/voice/VoiceSlot.tsx
 //   components/imagine/ImagineSlot.tsx
 //   components/emissions/EmissionsSlot.tsx
-// After those PRs merge, switch the three imports below back to those paths.
 import type { CSSProperties } from "react";
 import { ViewerSlot } from "@/components/viewer/ViewerSlot";
 import { MissionSlot } from "@/components/replay/MissionSlot";
 import { PairSlot } from "@/components/ui/PairSlot";
 import { VoiceSlot } from "@/components/seams/VoiceSlotFixture";
 import { ImagineSlot } from "@/components/seams/ImagineSlotFixture";
-import { EmissionsSlot } from "@/components/seams/EmissionsSlotFixture";
 
 // Full-viewport stage. Colours and layers come from docs/specs/00-theme.spec.md tokens (app/globals.css);
 // nothing here is a hard-coded colour.
@@ -35,7 +33,6 @@ export default function Home() {
       <PairSlot />
       <VoiceSlot />
       <ImagineSlot />
-      <EmissionsSlot />
     </main>
   );
 }

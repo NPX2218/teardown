@@ -83,6 +83,25 @@
 .stats { display: flex; flex-wrap: wrap; gap: var(--sp-5); margin: var(--sp-2) 0 0; padding: 0; list-style: none; }
 .stats :global(.stat__value) { font-size: var(--fs-h3); }
 .headerControls { pointer-events: auto; margin-top: var(--sp-2); }
+.modeNav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  pointer-events: auto;
+}
+.modeNav button {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+.flightChrome {
+  z-index: var(--z-chrome);
+  pointer-events: none;
+}
 @media (max-width: 720px) {
   .stats { display: none; }
   .headerText h1 { font-size: var(--fs-h2); }
