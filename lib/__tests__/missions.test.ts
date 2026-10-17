@@ -1,7 +1,8 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { HISTORICAL_MISSIONS, MISSIONS, replayCatalog } from "@/data/missions/index";
+import { HISTORICAL_EVIDENCE, MISSIONS, registeredHistoricalMissionId, replayCatalog } from "@/data/missions/index";
+import { validateMissionRecord } from "@/lib/flight/historical";
 import {
   CORE_EVENT_IDS,
   PUBLIC_MOTION_LABEL,
@@ -110,26 +111,23 @@ describe("06 mission data", () => {
     expect(slugify("A | ***")).toBe("mission");
   });
 
-  it("M3: the practice sample validates and is the only legacy registration", () => {
-    const ids = Object.keys(MISSIONS);
-    expect(ids).toEqual(["practice"]);
-    expect(ids).not.toContain(PUBLIC_REPLAY_ID);
-    for (const id of ids) {
-      const m = MISSIONS[id];
-      expect(validateMission(m, extraAllowed()), id).toEqual([]);
-      expect(m.id, id).toBe(id);
-    }
+  it("M3: practice still validates, and it is not the only registration", () => {
+    expect(Object.keys(MISSIONS)).toEqual([PUBLIC_REPLAY_ID, "practice"]);
+    expect(validateMission(MISSIONS.practice as unknown as Mission, extraAllowed())).toEqual([]);
+    expect(MISSIONS.practice.id).toBe("practice");
+    expect(registeredHistoricalMissionId()).toBe(PUBLIC_REPLAY_ID);
+    expect(registeredHistoricalMissionId()).not.toBe("practice");
   });
 
   it("M3b: practice keeps its sample booster and the legacy core list is not the historical gate", () => {
-    expect(MISSIONS.practice.booster.serial).toBe("SAMPLE");
+    expect(MISSIONS.practice.booster?.serial).toBe("SAMPLE");
     expect(MISSIONS.practice.events.find((e) => e.id === "fairing_sep")?.t).toBe(190);
     expect(MISSIONS.practice.events.find((e) => e.id === "entry_burn")).toMatchObject({
       t: 419,
       say: "Entry burn complete! The booster has slowed down for landing.",
     });
     expect(CORE_EVENT_IDS).toHaveLength(6);
-    const historical = HISTORICAL_MISSIONS[PUBLIC_REPLAY_ID];
+    const historical = HISTORICAL_EVIDENCE[PUBLIC_REPLAY_ID];
     expect(missingCoreEvents({ events: historical.events } as unknown as Mission)).not.toEqual([]);
     expect(validateHistoricalMission(historical)).toEqual([]);
   });
@@ -251,12 +249,19 @@ describe("06 mission data", () => {
 });
 
 describe("Sentinel-6 historical evidence", () => {
-  const real = HISTORICAL_MISSIONS[PUBLIC_REPLAY_ID];
+  const real = HISTORICAL_EVIDENCE[PUBLIC_REPLAY_ID];
   const ll2 = readFixture("ll2-launch.json") as { timeline?: unknown; net?: string };
 
   it("H1: the public record is Sentinel-6 and not the practice sample", () => {
     expect(PUBLIC_REPLAY_ID).toBe(EXPECTED.id);
-    expect(Object.keys(HISTORICAL_MISSIONS)).toEqual([PUBLIC_REPLAY_ID]);
+    expect(Object.keys(HISTORICAL_EVIDENCE)).toEqual([PUBLIC_REPLAY_ID]);
+    expect(Object.keys(MISSIONS)).toEqual([PUBLIC_REPLAY_ID, "practice"]);
+    expect(MISSIONS[PUBLIC_REPLAY_ID]?.kind).toBe("historical");
+    expect(MISSIONS[PUBLIC_REPLAY_ID]?.landing).toBe("landing_zone");
+    expect(MISSIONS[PUBLIC_REPLAY_ID]?.continuousTelemetry).toBe(false);
+    expect(validateMissionRecord(MISSIONS[PUBLIC_REPLAY_ID])).toEqual([]);
+    expect(validateMissionRecord(MISSIONS.practice)).toEqual([]);
+    expect(MISSIONS.practice.kind).toBe("practice");
     expect(real.id).toBe(PUBLIC_REPLAY_ID);
     expect(real.name).toBe("Sentinel-6 Michael Freilich");
     expect(real.date).toBe("2020-11-21");

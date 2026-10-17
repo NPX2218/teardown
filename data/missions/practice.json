@@ -4,7 +4,26 @@
   "date": "2020-03-18",
   "booster": { "serial": "SAMPLE", "flight": 1 },
   "landing": "droneship",
+  "kind": "practice",
+  "label": "Practice sample. Not a real flight.",
+  "continuousTelemetry": false,
   "source": "https://spaceflightnow.com/2020/03/15/timeline-for-falcon-9-launch-of-starlink-satellites-3/",
+  "reference": {
+    "id": "practice-sample",
+    "label": "Practice sample. Not Sentinel-6. Not a measured path. Kinematics are null on purpose.",
+    "interpolated": false,
+    "samples": [
+      { "t": 0, "altKm": null, "downrangeKm": null, "velMs": null, "pitchDeg": null, "event": "liftoff", "source": "practice-starlink-sfn", "quality": "practice-placeholder" },
+      { "t": 72, "altKm": null, "downrangeKm": null, "velMs": null, "pitchDeg": null, "event": "max-Q", "source": "practice-starlink-sfn", "quality": "practice-placeholder" },
+      { "t": 152, "altKm": null, "downrangeKm": null, "velMs": null, "pitchDeg": null, "event": "MECO", "source": "practice-starlink-sfn", "quality": "practice-placeholder" },
+      { "t": 156, "altKm": null, "downrangeKm": null, "velMs": null, "pitchDeg": null, "event": "stage sep", "source": "practice-starlink-sfn", "quality": "practice-placeholder" },
+      { "t": 163, "altKm": null, "downrangeKm": null, "velMs": null, "pitchDeg": null, "event": "SECO-start", "source": "practice-starlink-sfn", "quality": "practice-placeholder" },
+      { "t": 190, "altKm": null, "downrangeKm": null, "velMs": null, "pitchDeg": null, "event": "fairing", "source": "practice-starlink-sfn", "quality": "practice-placeholder" },
+      { "t": 419, "altKm": null, "downrangeKm": null, "velMs": null, "pitchDeg": null, "event": "entry", "source": "practice-starlink-sfn", "quality": "practice-placeholder" },
+      { "t": 515, "altKm": null, "downrangeKm": null, "velMs": null, "pitchDeg": null, "event": "landing", "source": "practice-starlink-sfn", "quality": "practice-placeholder" },
+      { "t": 532, "altKm": null, "downrangeKm": null, "velMs": null, "pitchDeg": null, "event": "insertion", "source": "practice-starlink-sfn", "quality": "practice-placeholder" }
+    ]
+  },
   "events": [
     { "t": 0, "id": "liftoff", "say": "Liftoff! We're entering the first phase of flight." },
     { "t": 72, "id": "maxq", "say": "Max-Q! This is when the air pushes hardest on the rocket." },
