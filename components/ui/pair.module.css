@@ -202,3 +202,20 @@
   .panel { border-radius: 16px 16px 0 0; border-bottom: 0; }
   .chipWrap { top: 128px; right: 12px; }
 }
+
+/* "Calibration successful": a quiet confirmation right under the Calibrate button. */
+.calOk {
+  margin: var(--sp-5) 0 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: 14px;
+  color: var(--text);
+}
+.calOk::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--ok);
+}

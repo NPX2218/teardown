@@ -10,6 +10,7 @@ import { newPairCode } from "@/lib/rocket/protocol";
 import { demoPairCode, parseFlags } from "@/lib/viewer/exhibit";
 import { qrSvgPath, rocketUrl } from "@/lib/rocket/qr";
 import { useRocket, zeroRocket } from "@/lib/rocket/useRocket";
+import { startCalibration } from "@/lib/rocket/calibrate";
 import { useAppMode } from "@/lib/flight/app-mode";
 import { useScene } from "@/lib/store";
 import { motionPresets } from "@/lib/ui/motion";
@@ -38,6 +39,30 @@ export function PairRocket() {
   const [code, setCode] = useState<string | null>(null);
   const [origin, setOrigin] = useState<string | null>(null);
   const [localhostOnly, setLocalhostOnly] = useState(false);
+  // Calibrate: seconds left (3..1) while counting down, then a short "Calibration successful" line.
+  const [calLeft, setCalLeft] = useState<number | null>(null);
+  const [calOk, setCalOk] = useState(false);
+  const cancelCal = useRef<(() => void) | null>(null);
+  const calibrate = useCallback(() => {
+    cancelCal.current?.();
+    setCalOk(false);
+    cancelCal.current = startCalibration({
+      tick: setCalLeft,
+      calibrate: () => {
+        setCalLeft(null);
+        zeroRocket();
+      },
+      success: setCalOk,
+    });
+  }, []);
+  // A disconnect or unmount mid-countdown must not calibrate a rocket that is gone.
+  useEffect(() => {
+    if (rocket.connected) return;
+    cancelCal.current?.();
+    setCalLeft(null);
+    setCalOk(false);
+  }, [rocket.connected]);
+  useEffect(() => () => cancelCal.current?.(), []);
   const [relayDown, setRelayDown] = useState(false);
   const [open, setOpen] = useState(true); // false = collapsed to the "Connect rocket" chip
   const [pinned, setPinned] = useState(false);
@@ -152,10 +177,24 @@ export function PairRocket() {
     surface = (
       <div className="card">
         <span className="chip chip--ok">Rocket on</span>
-        <button type="button" className="btn" onClick={zeroRocket}>
-          Calibrate
+        <button type="button" className="btn" onClick={calibrate} disabled={calLeft !== null}>
+          {calLeft !== null ? `Calibrating in ${calLeft}` : "Calibrate"}
         </button>
-        <p className="small">Tap Calibrate, then stand the rocket upright</p>
+        <AnimatePresence>
+          {calOk && (
+            <motion.p
+              key="cal-ok"
+              className={styles.calOk}
+              role="status"
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0, transition: motionPresets.out }}
+              exit={{ opacity: 0, y: -4, transition: motionPresets.ui }}
+            >
+              Calibration successful
+            </motion.p>
+          )}
+        </AnimatePresence>
+        <p className="small">Tap Calibrate, then stand the rocket upright within 3 seconds</p>
       </div>
     );
   } else if (view === "button") {
