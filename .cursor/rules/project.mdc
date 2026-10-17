@@ -1,0 +1,45 @@
+---
+description: Teardown project rules (HackHarvard 2026)
+alwaysApply: true
+---
+
+# Teardown
+
+Slide your phone into a model rocket and fly a Falcon 9: explore the real model, replay a sourced historical mission, or fly your own Earth launch to orbit.
+Motto: "Bringing rocket science down to Earth."
+
+## How to work
+
+- Before working on stage NN, read `docs/plans/00-index.md`, `docs/plans/NN-*.md` and `docs/specs/NN-*.spec.md`.
+- Current scope notices and `docs/specs/07-replay.spec.md` §6 win over older checkpoint, coach, star, engine-out, and standalone emissions snippets.
+- The store actions (`lib/store.ts`) are the agent's tools. Never change scene state any other way.
+- Shared contract: `lib/types.ts` (`SHARED_CONTRACT_VERSION`), `lib/store.ts`, `lib/engines.ts`, and the 01 seams. Never redefine their types; import them. A seam's signature never changes; only its owner replaces its body.
+- Only edit files you own (table below). Need something from the other lane that doesn't exist? Add a placeholder with the final signature, tell your teammate, keep going.
+
+## Global constraints
+
+- Stack: Next.js (App Router) + TypeScript (strict), three, @react-three/fiber, @react-three/drei, zustand, vitest. Use the pinned versions in `docs/specs/01-setup-contract.spec.md` and commit the lockfile.
+- Secrets: `XAI_API_KEY` lives in `.env.local`, read only in server-only modules called by `app/api/*` or an operator-run cache script. Never `NEXT_PUBLIC_*`, never sent to the browser, never committed.
+- Audience: every word on screen and every spoken line must make sense to a 10-year-old. Short sentences, everyday words, jargon explained in the same sentence. Engineer level adds depth; it never replaces the plain version.
+- Facts: published facts come from sourced data. Simulated flight readouts come from validated `data/flight` inputs and the flight helper. Estimated emissions are labelled separately. Grok's system prompt forbids inventing numbers.
+- Exhibit-ready: touch targets at least 48 px, no step needs a keyboard, an idle screen invites the next visitor.
+- Model: `public/models/falcon9.glb` is "Falcon 9 - SpaceX" by Stanley Creative, CC BY 4.0. Credit it in the UI footer and README.
+- Theme: colours, type, spacing, z-layers and buttons come from the tokens in `docs/specs/00-theme.spec.md` (`app/globals.css`). Never hard-code a colour. Primary controls are off-white. Amber is named caution or pending status only.
+- Branding: black `#000`, text `#F0F0FA`, accent `#F0F0FA`. No SpaceX logo or wordmark. App name "Teardown". Footer, as separate items: "Made by Neel Bansal and Anders Haroldson", "Student project. Not affiliated with SpaceX or xAI.", and the Falcon 9 model licence.
+- Navigation: Explore, Flight replay, and Your mission only. No engine-out sandbox and no standalone emissions mode.
+- Devices: exhibit screen is Chrome on the laptop. The phone rocket runs `/rocket` in current Android Chrome or iPhone Safari over HTTPS only. Mouse, touch and keyboard work with no phone connected.
+- Phone rocket sounds: CC0 / public-domain only, credited in `public/sounds/CREDITS.md`.
+- Node names: look up GLB nodes with `THREE.PropertyBinding.sanitizeNodeName(name)`.
+- Network timeouts: xAI text and voice calls abort after 8,000 ms; the agent client allows 9,000 ms per route round and 15,000 ms for the complete tool loop. Image calls abort after 30,000 ms. Each falls back (cached audio, cached image, or a spoken "I couldn't reach Grok"). Launch Library is only called by a script, never live.
+- Flight: one owner per axis. Phone pitch may coexist with local throttle. Disconnect pauses a phone-controlled flight. Resume is explicit. No checkpoint gesture awards orbit.
+- Commits: small, one task each, under the developer's own identity, without tool attribution or co-author trailers.
+
+## File ownership
+
+| Owner | Files |
+|---|---|
+| Neel · 3D + rocket | `app/rocket/*`, `components/viewer/*` (incl. `ViewerSlot`), `components/replay/*` (incl. `MissionSlot`), `components/ui/*` (incl. `PairSlot`, `MotionProvider`), `components/flight/*`, `lib/explode.ts`, `lib/viewer/*`, `lib/replay.ts`, `lib/flight.helpers.ts`, `lib/flight/*`, `lib/gestures.ts`, `lib/rocket/*`, `lib/ui/motion.ts`, `app/layout.tsx`, `app/globals.css` |
+| Anders · AI + data + server | `app/api/*`, `lib/grok.ts`, `lib/timeout.ts`, `lib/agent/*`, `lib/voice/*`, `lib/imagine/*`, `lib/parts.ts`, `lib/missions.ts`, `lib/emissions*.ts`, `components/voice/*` (incl. `VoiceSlot`), `components/imagine/*`, `components/emissions/*`, `data/*`, `scripts/*`, `public/audio/*`, `public/sounds/*`, `public/imagine/*`, `README.md`, `app/presentation/*`, `components/presentation/*`, `docs/presentation/*`, `public/presentation/*`, `docs/media/*` |
+| Shared · Neel integration owner | `lib/types.ts`, `lib/store.ts`, `lib/engines.ts`, `app/page.tsx` (frozen after 01), `.cursor/rules/` |
+
+Each person owns the tests for their own files in `lib/__tests__/`. Neel's code never imports Anders's components and vice versa; the store and the 01 seams are the only meeting points.
