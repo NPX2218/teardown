@@ -38,6 +38,7 @@ export class SoundBank {
   private playing = new Map<SoundId, Set<SourceLike>>();
   private ducks = new Set<string>();
   private listeners = new Set<() => void>();
+  private userGain = 1;
   readonly master: GainLike;
 
   constructor(private ctx: AudioCtxLike, private load: (url: string) => Promise<ArrayBuffer | null>) {
@@ -107,11 +108,21 @@ export class SoundBank {
     set.clear();
   }
 
+  /** Master sound, 0..1. Ducking still multiplies this, so a voice keeps the rumble quieter. */
+  setUserGain(gain: number): void {
+    this.userGain = typeof gain === "number" && Number.isFinite(gain) ? Math.min(1, Math.max(0, gain)) : 0;
+    this.writeMaster();
+  }
+
   duck(key: string, on: boolean): void {
     if (on) this.ducks.add(key);
     else this.ducks.delete(key);
-    const level = this.ducks.size > 0 ? DUCK_LEVEL : 1;
-    this.master.gain.setTargetAtTime(level, this.ctx.currentTime, DUCK_TIME_S);
+    this.writeMaster();
+  }
+
+  private writeMaster(): void {
+    const duck = this.ducks.size > 0 ? DUCK_LEVEL : 1;
+    this.master.gain.setTargetAtTime(duck * this.userGain, this.ctx.currentTime, DUCK_TIME_S);
   }
 
   looping(): SoundId[] {
@@ -138,6 +149,7 @@ export class SoundBank {
 
 let ctx: AudioContext | null = null;
 let bank: SoundBank | null = null;
+let soundMaster = 1;
 let looped: SoundId[] = []; // stable snapshot for useSyncExternalStore
 const outside = new Set<() => void>();
 
@@ -154,6 +166,7 @@ export function unlockAudio(): AudioContext | null {
     if (!Ctor) return null;
     ctx = new Ctor();
     bank = new SoundBank(ctx as unknown as AudioCtxLike, fetchBytes);
+    bank.setUserGain(soundMaster);
     bank.subscribe(() => {
       looped = bank ? bank.looping() : [];
       outside.forEach((fn) => fn());
@@ -181,6 +194,12 @@ export function stopSound(id?: SoundId): void {
 
 export function duckSounds(key: "voice" | "ear", on: boolean): void {
   bank?.duck(key, on);
+}
+
+/** Master sound for the phone's clips. Remembered even before the start tap builds the bank. */
+export function setSoundMaster(gain: number): void {
+  soundMaster = typeof gain === "number" && Number.isFinite(gain) ? Math.min(1, Math.max(0, gain)) : 0;
+  bank?.setUserGain(soundMaster);
 }
 
 export function loopingNow(): SoundId[] {

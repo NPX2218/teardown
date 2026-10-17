@@ -90,6 +90,10 @@ describe("rocket sounds (10 Task 3)", () => {
     b.duck("voice", false);
     b.duck("ear", false);
     expect(gainCalls).toEqual([DUCK_LEVEL, DUCK_LEVEL, DUCK_LEVEL, 1]);
+    b.setUserGain(0.5);
+    expect(gainCalls.at(-1)).toBe(0.5);
+    b.duck("voice", true);
+    expect(gainCalls.at(-1)).toBeCloseTo(DUCK_LEVEL * 0.5);
     b.play("success");
     expect(fn).toHaveBeenCalled();
   });

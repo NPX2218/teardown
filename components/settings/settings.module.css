@@ -1,0 +1,113 @@
+/* Settings sheet. Colour, type, and the 1px line come from the theme tokens. */
+
+.entry {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  min-width: 48px;
+  margin-right: 4px;
+  padding: 0 14px;
+}
+
+.gear {
+  display: block;
+  flex: none;
+}
+
+.dialog {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 16px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  overflow: auto;
+}
+
+.dialog[open] {
+  display: grid;
+  align-items: center;
+  justify-items: center;
+}
+
+.dialog::backdrop {
+  background: var(--scrim-80);
+}
+
+.dismiss {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.panel:global(.card) {
+  position: relative;
+  z-index: 1;
+  width: min(32rem, calc(100vw - 32px));
+  margin: 0;
+  display: grid;
+  gap: 16px;
+  border: 1px solid var(--hairline-3);
+  background: var(--bg-app);
+  pointer-events: auto;
+}
+
+.panel:global(.sheet) {
+  max-height: min(40rem, calc(100dvh - 48px));
+}
+
+.panel:global(.card) > * + * {
+  margin-top: 0;
+}
+
+.block {
+  display: grid;
+  gap: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--hairline-3);
+}
+
+.block h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.choices > button {
+  min-height: 48px;
+  min-width: 48px;
+  padding: 0 20px;
+}
+
+.slider {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 8px;
+  border-top: 1px solid var(--hairline-3);
+}
+
+.actions > button {
+  min-height: 48px;
+  min-width: 48px;
+}

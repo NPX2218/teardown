@@ -5,9 +5,13 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "
 import { SOUND_IDS, type RocketFrame, type RocketMessage, type ShellStatusLevel, type ShellStatusWord, type SoundId } from "@/lib/types";
 import { cameraInsetSide } from "@/lib/rocket/mount";
 import { isIOS, requestMotionPermission, usePhoneSensors, type SensorDebug } from "@/lib/rocket/usePhoneSensors";
+import { setEnabled, setEngineVibrationHook, setMasterGain } from "@/lib/rocket/engine-audio";
 import { holdEngineRumble, resumeEngineRumble, setEngineRumble, stopEngineRumble } from "@/lib/rocket/engine-rumble";
+import { pushPhoneSettings, pushWireSettings, syncVibrationHook } from "@/lib/settings/link";
+import { loadSettings, saveSettings } from "@/lib/settings/prefs";
+import { createEngineVibration, vibrationSupported, VIBRATION_UNSUPPORTED_NOTE, type EngineVibration } from "@/lib/settings/vibrate";
 import {
-  getAudioContext, loopingNow, playSound, preloadSounds, setPlaybackSession, stopSound, subscribeSounds, unlockAudio,
+  getAudioContext, loopingNow, playSound, preloadSounds, setPlaybackSession, setSoundMaster, stopSound, subscribeSounds, unlockAudio,
   vibrate,
 } from "@/lib/rocket/sound";
 import {
@@ -59,14 +63,35 @@ export default function RocketPage() {
   const [shellLevel, setShellLevel] = useState<ShellStatusLevel>("ok");
   const [flashing, setFlashing] = useState(false);
   const [orientAngle, setOrientAngle] = useState(0);
+  const [vibrateOk, setVibrateOk] = useState<boolean | null>(null);
   const flashTimer = useRef<number | null>(null);
+  const vibrationRef = useRef<EngineVibration | null>(null);
 
   const linkRef = useRef<RocketLink | null>(null);
   const wakeRef = useRef<WakeLockSentinel | null>(null);
   const openingRef = useRef(false);
   const aliveRef = useRef(true);
+  const buzzOn = useRef(true);
 
   const send = useCallback((m: RocketMessage) => linkRef.current?.send(m), []);
+  const vibration = useCallback(() => {
+    if (!vibrationRef.current) {
+      vibrationRef.current = createEngineVibration({
+        vibrate,
+        schedule(fn, ms) {
+          const id = window.setInterval(fn, ms);
+          return () => window.clearInterval(id);
+        },
+      });
+    }
+    return vibrationRef.current;
+  }, []);
+  const phoneAudio = useCallback(() => ({
+    setEnabled,
+    setMasterGain,
+    setSoundMaster,
+    setVibrationEnabled: (on: boolean) => syncVibrationHook(on, vibration),
+  }), [vibration]);
   // Made once (lazy state), and they send through whatever link is current.
   const [voice] = useState(() => new RocketVoice(browserVoiceDeps(send)));
   const [ear] = useState(() => new RocketEar(browserEarDeps(send, setListening)));
@@ -82,6 +107,10 @@ export default function RocketPage() {
     setDebugOn(q.get("debug") === "1");
     setIos(isIOS());
     setNoSession(isIOS() && !("audioSession" in navigator));
+    setVibrateOk(vibrationSupported(navigator));
+    const saved = loadSettings(window.localStorage);
+    buzzOn.current = saved.vibration;
+    pushPhoneSettings(saved, phoneAudio());
     if (!window.isSecureContext) setPhase("insecure");
     document.body.classList.add("kiosk");
     const readAngle = () => setOrientAngle(screen.orientation?.angle ?? 0);
@@ -92,7 +121,7 @@ export default function RocketPage() {
       screen.orientation?.removeEventListener("change", readAngle);
       if (flashTimer.current) window.clearTimeout(flashTimer.current);
     };
-  }, []);
+  }, [phoneAudio]);
 
   const onMessage = useCallback((m: RocketMessage) => {
     // Hidden page: ignore new work (the visibility handler already stopped everything); stop commands still run.
@@ -109,8 +138,8 @@ export default function RocketPage() {
         setShellWord(word);
         setShellLevel(level);
         // Vibration is muffled inside the shell and missing on iOS. The colour flash is the backup.
-        if (level === "bad") vibrate([200, 80, 200, 80, 600]);
-        else if (level === "warn" && word !== "HOLD") vibrate([120]);
+        if (buzzOn.current && level === "bad") vibrate([200, 80, 200, 80, 600]);
+        else if (buzzOn.current && level === "warn" && word !== "HOLD") vibrate([120]);
         if (flash) {
           setFlashing(true);
           if (flashTimer.current) window.clearTimeout(flashTimer.current);
@@ -122,8 +151,13 @@ export default function RocketPage() {
         setShellLevel("warn");
       },
       setEngine: (power) => setEngineRumble(power),
+      applySettings: (message) => {
+        const settings = pushWireSettings(message, phoneAudio());
+        buzzOn.current = settings.vibration;
+        saveSettings(window.localStorage, settings);
+      },
     });
-  }, [ear]);
+  }, [ear, phoneAudio]);
 
   /** Close any old link and join the exhibit's channel again. Safe to call often. */
   const connect = useCallback(async () => {
@@ -224,6 +258,8 @@ export default function RocketPage() {
       ear.stopListen();
       stopSound();
       stopEngineRumble();
+      setEngineVibrationHook(null);
+      vibrationRef.current?.stop();
       linkRef.current?.close();
       linkRef.current = null;
       void wakeRef.current?.release().catch(() => {});
@@ -300,6 +336,7 @@ export default function RocketPage() {
           {noSession && (
             <p className="card"><span className="chip chip--warn">Turn off silent mode so the rocket can talk</span></p>
           )}
+          <VibrationNote supported={vibrateOk} />
         </section>
         <Credits />
       </main>
@@ -332,6 +369,7 @@ export default function RocketPage() {
         {linkState === "nocode" && <span className="chip chip--warn">Scan the QR code on the exhibit screen to connect.</span>}
         {!wakeOk && <span className="chip chip--warn">Set Auto-Lock to Never</span>}
         {silentHint && <span className="chip chip--warn">Turn off silent mode</span>}
+        <VibrationNote supported={vibrateOk} />
       </header>
 
       <section className={`phone__status ${css.band}`}>
@@ -366,6 +404,11 @@ export default function RocketPage() {
       )}
     </main>
   );
+}
+
+function VibrationNote({ supported }: { supported: boolean | null }) {
+  if (supported !== false) return null;
+  return <p className="chip chip--warn" role="note">{VIBRATION_UNSUPPORTED_NOTE}</p>;
 }
 
 function Flame({ rumbling, reduce }: { rumbling: boolean; reduce: boolean }) {

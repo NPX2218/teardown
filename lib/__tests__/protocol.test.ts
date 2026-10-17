@@ -151,6 +151,7 @@ describe("protocol (11 Task 1)", () => {
       status: { k: "status", word: "ARMED", level: "ok" },
       calibrate: { k: "calibrate" },
       engine: { k: "engine", power: 0.5 },
+      settings: { k: "settings", engineSound: true, master: 0.5, vibrate: false },
     };
     for (const k of ROCKET_MESSAGE_KINDS) expect(decodeMessage(samples[k])?.k).toBe(k);
   });

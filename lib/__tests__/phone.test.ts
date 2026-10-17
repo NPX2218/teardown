@@ -7,6 +7,7 @@ function handlers() {
   return {
     playSound: vi.fn(), stopSound: vi.fn(), vibrate: vi.fn(), say: vi.fn(), stopSay: vi.fn(),
     listen: vi.fn(), stopListen: vi.fn(), showStatus: vi.fn(), calibrate: vi.fn(), setEngine: vi.fn(),
+    applySettings: vi.fn(),
   } satisfies PhoneHandlers;
 }
 const calls = (h: ReturnType<typeof handlers>) =>
@@ -50,6 +51,12 @@ describe("phone glue (10 Task 4)", () => {
     const h = handlers();
     routePhoneMessage({ k: "engine", power: 0.4 }, h);
     expect(h.setEngine).toHaveBeenCalledWith(0.4);
+  });
+
+  it("PR3c settings reach the phone speaker and buzz", () => {
+    const h = handlers();
+    routePhoneMessage({ k: "settings", engineSound: false, master: 0.25, vibrate: true }, h);
+    expect(h.applySettings).toHaveBeenCalledWith({ k: "settings", engineSound: false, master: 0.25, vibrate: true });
   });
 
   it("PR3 vibrate → vibrate(pattern)", () => {

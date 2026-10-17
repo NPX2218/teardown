@@ -1,5 +1,6 @@
 // lib/flight/cues.ts — short tones from the flight loop. No new audio files.
 // Owner: Neel. Silent when the browser has no audio context.
+import { getPlaybackGain } from "@/lib/settings/playback";
 import type { FlightCue } from "@/lib/types";
 
 let context: AudioContext | null = null;
@@ -11,6 +12,8 @@ function audio(): AudioContext | null {
 }
 
 function tone(frequency: number, durationS: number, gainValue: number): void {
+  const level = gainValue * getPlaybackGain();
+  if (!(level > 0)) return;
   const ctx = audio();
   if (!ctx) return;
   const start = ctx.currentTime;
@@ -18,7 +21,7 @@ function tone(frequency: number, durationS: number, gainValue: number): void {
   const gain = ctx.createGain();
   osc.frequency.value = frequency;
   osc.type = "sine";
-  gain.gain.setValueAtTime(gainValue, start);
+  gain.gain.setValueAtTime(level, start);
   gain.gain.exponentialRampToValueAtTime(0.001, start + durationS);
   osc.connect(gain);
   gain.connect(ctx.destination);
