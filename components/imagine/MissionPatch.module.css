@@ -1,0 +1,132 @@
+.dialog:global(.overlay) {
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-4);
+}
+
+.panel:global(.overlay__panel) {
+  position: relative;
+  width: min(100%, 52rem);
+  max-height: min(86dvh, 48rem);
+  display: grid;
+  gap: var(--sp-4);
+  color: var(--text);
+}
+
+.heading {
+  display: grid;
+  gap: 4px;
+  padding-right: var(--target);
+}
+
+.kicker {
+  margin: 0;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--fs-h3, 1.5rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.body {
+  display: grid;
+  gap: var(--sp-4);
+  align-items: center;
+}
+
+@media (min-width: 720px) {
+  .body {
+    grid-template-columns: minmax(0, 1.1fr) minmax(16rem, 0.9fr);
+  }
+}
+
+.frame {
+  position: relative;
+  aspect-ratio: 1;
+  width: min(100%, 22rem);
+  margin-inline: auto;
+  overflow: hidden;
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  background: var(--bg);
+}
+
+.picture {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: var(--bg);
+}
+
+.shimmer {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(100deg, var(--surface-2) 20%, var(--surface-3) 50%, var(--surface-2) 80%);
+  background-size: 200% 100%;
+  animation: patch-shimmer var(--dur) var(--ease-ui) infinite;
+}
+
+@keyframes patch-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
+.fallback {
+  width: 70%;
+  height: 70%;
+  margin: 15%;
+  color: var(--text);
+}
+
+.status {
+  position: absolute;
+  left: var(--sp-4);
+  right: var(--sp-4);
+  bottom: var(--sp-4);
+  margin: 0;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-4);
+  margin: 0;
+}
+
+.reason {
+  margin: 0;
+}
+
+.breakup {
+  margin: 0;
+}
+
+.qrBlock {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+}
+
+.qr {
+  width: 12rem;
+  height: 12rem;
+  padding: var(--sp-4);
+  background: var(--qr-paper);
+  color: var(--bg);
+  box-sizing: border-box;
+}
+
+.qrSvg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-4);
+}
