@@ -1,0 +1,107 @@
+"use client";
+// Falcon 9 in rocket-local metres, parented in the Earth-radii group.
+// The cached explorer scene is cloned so preparing that model cannot move this one.
+import { Suspense, useEffect, useMemo, useRef } from "react";
+import { useFrame } from "@react-three/fiber";
+import { useGLTF } from "@react-three/drei";
+import * as THREE from "three";
+import { EARTH_RADIUS_M } from "@/lib/flight.helpers";
+import { EARTH_RADIUS } from "@/lib/flight/scene-types";
+import { FLIGHT_SCENE } from "@/lib/viewer/colors";
+import { flightDrawNow } from "./flightDraw";
+import { EnginePlume } from "./fx/EnginePlume";
+import { StageSeparation } from "./fx/StageSeparation";
+
+const MODEL = "/models/falcon9.glb";
+const FALCON_HEIGHT_M = 70;
+useGLTF.preload(MODEL);
+
+const scratch = {
+  up: new THREE.Vector3(0, 1, 0),
+  nose: new THREE.Vector3(),
+  radial: new THREE.Vector3(),
+  quat: new THREE.Quaternion(),
+  world: new THREE.Vector3(),
+};
+
+function fitFalcon(source: THREE.Object3D): THREE.Group {
+  const clone = source.clone(true);
+  clone.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(clone);
+  const height = Math.max(box.max.y - box.min.y, 1e-6);
+  const metres = FALCON_HEIGHT_M / height;
+  clone.scale.setScalar(metres);
+  clone.position.y = -box.min.y * metres;
+  const group = new THREE.Group();
+  group.add(clone);
+  return group;
+}
+
+function FalconModel({ stage }: { stage: number }) {
+  const { scene } = useGLTF(MODEL);
+  const fitted = useMemo(() => fitFalcon(scene), [scene]);
+  useEffect(() => {
+    fitted.traverse((node) => {
+      if (node.name === "First Stage") node.visible = stage < 1;
+    });
+  }, [fitted, stage]);
+  return <primitive object={fitted} />;
+}
+
+function FallbackRocket() {
+  return (
+    <mesh position={[0, FALCON_HEIGHT_M / 2, 0]}>
+      <cylinderGeometry args={[1.85, 1.85, FALCON_HEIGHT_M, 12]} />
+      <meshStandardMaterial color={FLIGHT_SCENE.rocket} roughness={0.45} />
+    </mesh>
+  );
+}
+
+export function Vehicle({ stage, throttle, altitudeKm, elapsedS }: {
+  stage: number;
+  throttle: number;
+  altitudeKm: number;
+  elapsedS: number;
+}) {
+  const rig = useRef<THREE.Group>(null);
+  const marker = useRef<THREE.Mesh>(null);
+
+  useFrame(({ camera }) => {
+    const draw = flightDrawNow.current;
+    const node = rig.current;
+    if (!draw || !node) return;
+    scratch.nose.set(draw.nose[0], draw.nose[1], draw.nose[2]);
+    if (scratch.nose.lengthSq() < 1e-8) scratch.nose.set(0, 1, 0);
+    scratch.nose.normalize();
+    scratch.quat.setFromUnitVectors(scratch.up, scratch.nose);
+    node.quaternion.copy(scratch.quat);
+    scratch.radial.set(draw.up[0], draw.up[1], draw.up[2]);
+    node.position.set(draw.position[0], draw.position[1], draw.position[2]);
+    node.position.addScaledVector(scratch.radial, 0.6 / EARTH_RADIUS_M);
+    const mark = marker.current;
+    if (!mark) return;
+    node.getWorldPosition(scratch.world);
+    mark.position.set(draw.position[0], draw.position[1], draw.position[2]);
+    const distance = camera.position.distanceTo(scratch.world);
+    mark.visible = distance > EARTH_RADIUS * 0.25;
+    const worldSize = Math.max(distance * 0.012, EARTH_RADIUS * 0.012);
+    mark.scale.setScalar(worldSize / EARTH_RADIUS);
+    mark.quaternion.copy(camera.quaternion);
+  });
+
+  return (
+    <>
+      <group ref={rig} scale={1 / EARTH_RADIUS_M}>
+        <Suspense fallback={<FallbackRocket />}>
+          <FalconModel stage={stage} />
+        </Suspense>
+        <EnginePlume throttle={throttle} altitudeKm={altitudeKm} />
+        <StageSeparation stage={stage} elapsedS={elapsedS} />
+      </group>
+      <mesh ref={marker} visible={false}>
+        <ringGeometry args={[0.62, 1, 28]} />
+        <meshBasicMaterial color={FLIGHT_SCENE.pad} side={THREE.DoubleSide} depthTest={false} />
+      </mesh>
+    </>
+  );
+}

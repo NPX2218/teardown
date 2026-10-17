@@ -22,6 +22,7 @@ import { useScene } from "@/lib/store";
 import type { FlightAxisCommand } from "@/lib/types";
 import { speakLine } from "@/lib/voice/speak";
 import { cameraNudge, clearCameraNudge } from "./cameraNudge";
+import { resetChaseOrbit } from "./chaseOrbit";
 
 function isTypingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
@@ -65,7 +66,14 @@ export function FlightController() {
       const status = useScene.getState().flight.status;
       if (!typing && event.code === "Home") {
         clearCameraNudge();
+        resetChaseOrbit();
         useAppMode.getState().resetCamera();
+        event.preventDefault();
+        return;
+      }
+      if (!typing && event.code === "KeyM" && (mode === "mission" || mode === "replay")) {
+        const current = useAppMode.getState().view;
+        useAppMode.getState().setView(current === "overview" ? "follow" : "overview");
         event.preventDefault();
         return;
       }

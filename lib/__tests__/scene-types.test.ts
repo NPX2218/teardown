@@ -38,7 +38,7 @@ describe("flight scene contract", () => {
     expect(cape[1]).toBeGreaterThan(0.4);
     expect(cape[2]).toBeGreaterThan(0.7);
     expect(cape[0]).toBeGreaterThan(0);
-    expect(vsfb[2]).toBeGreaterThan(cape[2]);
+    expect(vsfb[0]).toBeLessThan(cape[0]);
     expect(length(cape)).toBeCloseTo(1, 8);
   });
 
@@ -49,7 +49,7 @@ describe("flight scene contract", () => {
     expect(pad[1]).toBeCloseTo(frame.up[1], 8);
     expect(pad[2]).toBeCloseTo(frame.up[2], 8);
     const downrange = physicsMetersToEarthRadii(1_000, EARTH_RADIUS_M, frame);
-    const step = [downrange[0] - pad[0], downrange[1] - pad[1], downrange[2] - pad[2]];
+    const step = [downrange[0] - pad[0], downrange[1] - pad[1], downrange[2] - pad[2]] as const;
     expect(dot(step, frame.downrange)).toBeGreaterThan(0);
     expect(Math.abs(dot(frame.downrange, frame.up))).toBeLessThan(1e-8);
     expect(dot(frame.right, frame.downrange)).toBeCloseTo(0, 8);
