@@ -20,13 +20,24 @@ const MIN_OSC_HZ = 28;
 const MAX_OSC_HZ = 54;
 const MAX_GAIN = 0.72;
 
+function unit(value: number): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) return 0;
+  return Math.min(1, Math.max(0, value));
+}
+
 export function engineTone(power: number): EngineTone {
-  const p = typeof power === "number" && Number.isFinite(power) ? Math.min(1, Math.max(0, power)) : 0;
+  const p = unit(power);
   return {
     gain: MAX_GAIN * p,
     cutoffHz: MIN_CUTOFF_HZ + (MAX_CUTOFF_HZ - MIN_CUTOFF_HZ) * p,
     oscHz: MIN_OSC_HZ + (MAX_OSC_HZ - MIN_OSC_HZ) * p,
   };
+}
+
+/** Engine-power gain times the master level. The engine-sound toggle forces silence. */
+export function engineGain(power: number, master = 1, soundOn = true): number {
+  if (!soundOn) return 0;
+  return engineTone(power).gain * unit(master);
 }
 
 export interface ToneNodes {
@@ -37,9 +48,9 @@ export interface ToneNodes {
 }
 
 /** Smooth parameter write. Callers start the sources before the first non-zero gain. */
-export function applyEngineTone(nodes: ToneNodes, power: number): EngineTone {
+export function applyEngineTone(nodes: ToneNodes, power: number, master = 1, soundOn = true): EngineTone {
   const tone = engineTone(power);
-  nodes.gain.setTargetAtTime(tone.gain, nodes.now, ENGINE_RAMP_S);
+  nodes.gain.setTargetAtTime(engineGain(power, master, soundOn), nodes.now, ENGINE_RAMP_S);
   nodes.cutoff.setTargetAtTime(tone.cutoffHz, nodes.now, ENGINE_RAMP_S);
   nodes.osc?.setTargetAtTime(tone.oscHz, nodes.now, ENGINE_RAMP_S);
   return tone;
@@ -88,10 +99,10 @@ class RumbleVoice {
 
   constructor(private ctx: AudioContextLike) {}
 
-  setPower(power: number): void {
-    const tone = engineTone(power);
+  setPower(power: number, master = 1, soundOn = true): void {
+    const gain = engineGain(power, master, soundOn);
     if (!this.started) {
-      if (tone.gain <= 0) return;
+      if (gain <= 0) return;
       this.start();
     }
     if (!this.gain || !this.filter) return;
@@ -100,7 +111,7 @@ class RumbleVoice {
       gain: this.gain.gain,
       cutoff: this.filter.frequency,
       osc: this.osc ? this.osc.frequency : null,
-    }, power);
+    }, power, master, soundOn);
   }
 
   stop(): void {
@@ -152,6 +163,8 @@ class RumbleVoice {
 
 let voice: RumbleVoice | null = null;
 let lastPower = 0;
+let lastMaster = 1;
+let lastSound = true;
 const holds = new Set<string>();
 
 function live(): RumbleVoice | null {
@@ -162,12 +175,15 @@ function live(): RumbleVoice | null {
 }
 
 function apply(): void {
-  live()?.setPower(holds.size > 0 ? 0 : lastPower);
+  const power = holds.size > 0 ? 0 : lastPower;
+  live()?.setPower(power, lastMaster, lastSound);
 }
 
-/** Remember the laptop's power. Silent until the start tap unlocks audio. */
-export function setEngineRumble(power: number): void {
-  lastPower = typeof power === "number" && Number.isFinite(power) ? Math.min(1, Math.max(0, power)) : 0;
+/** Remember the laptop's power and mix. Silent until the start tap unlocks audio. */
+export function setEngineRumble(power: number, master = 1, soundOn = true): void {
+  lastPower = unit(power);
+  lastMaster = unit(master);
+  lastSound = soundOn;
   apply();
 }
 
@@ -185,6 +201,8 @@ export function resumeEngineRumble(): void {
 
 export function stopEngineRumble(): void {
   lastPower = 0;
+  lastMaster = 1;
+  lastSound = true;
   holds.clear();
   voice?.stop();
   voice = null;

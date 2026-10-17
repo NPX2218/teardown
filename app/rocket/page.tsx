@@ -5,7 +5,8 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "
 import { SOUND_IDS, type RocketFrame, type RocketMessage, type ShellStatusLevel, type ShellStatusWord, type SoundId } from "@/lib/types";
 import { cameraInsetSide } from "@/lib/rocket/mount";
 import { isIOS, requestMotionPermission, usePhoneSensors, type SensorDebug } from "@/lib/rocket/usePhoneSensors";
-import { holdEngineRumble, resumeEngineRumble, setEngineRumble, stopEngineRumble } from "@/lib/rocket/engine-rumble";
+import { applyEngineCommand, holdEngineOutput, resumeEngineFeel, stopEngineFeel } from "@/lib/rocket/engine-feel";
+import { vibrationSupported } from "@/lib/rocket/vibration";
 import {
   getAudioContext, loopingNow, playSound, preloadSounds, setPlaybackSession, stopSound, subscribeSounds, unlockAudio,
   vibrate,
@@ -121,7 +122,7 @@ export default function RocketPage() {
         setShellWord("HOLD");
         setShellLevel("warn");
       },
-      setEngine: (power) => setEngineRumble(power),
+      setEngine: (command) => applyEngineCommand(command),
     });
   }, [ear]);
 
@@ -138,6 +139,7 @@ export default function RocketPage() {
       linkRef.current = l;
       setLastSound(null);
       setLinkState("connected");
+      l.send({ k: "caps", vibrate: vibrationSupported(navigator) });
     } catch {
       if (aliveRef.current) setLinkState("offline"); // swallow: the retry timer below tries again
     } finally {
@@ -150,7 +152,7 @@ export default function RocketPage() {
   // No paired laptop, or the link dropped: the phone speaker goes quiet. The last power is kept.
   useEffect(() => {
     if (!running) return;
-    holdEngineRumble("link", linkState !== "connected");
+    holdEngineOutput("link", linkState !== "connected");
   }, [running, linkState]);
 
   // Join after the start tap; retry while offline.
@@ -192,10 +194,10 @@ export default function RocketPage() {
         voice.stopSay();
         ear.stopListen();
         stopSound();
-        holdEngineRumble("hidden", true);
+        holdEngineOutput("hidden", true);
         return;
       }
-      holdEngineRumble("hidden", false);
+      holdEngineOutput("hidden", false);
       void requestWake();
       // Android usually resumes without a tap; iPhone often needs the wake button.
       void ctx?.resume().catch(() => {}).finally(checkAudio);
@@ -223,7 +225,7 @@ export default function RocketPage() {
       voice.stopSay();   // client navigation must not leave narration, recording or ducking running
       ear.stopListen();
       stopSound();
-      stopEngineRumble();
+      stopEngineFeel();
       linkRef.current?.close();
       linkRef.current = null;
       void wakeRef.current?.release().catch(() => {});
@@ -239,7 +241,7 @@ export default function RocketPage() {
   const start = async () => {
     setPhase("starting");
     unlockAudio();                                    // Web Audio needs a tap
-    resumeEngineRumble();                             // same tap unlocks the synthesized rumble
+    resumeEngineFeel();                               // same tap unlocks the synthesized rumble
     const sessionOk = setPlaybackSession();           // iPhone: play even with the silent switch on
     setSilentHint(ios && !sessionOk);
     primeSpeech();                                    // no-op: Grok speech stays on the laptop
