@@ -6,7 +6,9 @@ import { expect, test, type Browser, type BrowserContext, type Page } from "@pla
 const CODE = "ABCD";
 const APP = resolve(process.env.KERBAL_APP_DIR || process.cwd());
 const ART = process.env.KERBAL_ARTIFACTS || "/opt/cursor/artifacts/kerbal";
+const VIDEO_TMP = "/tmp/teardown-kerbal-video";
 mkdirSync(ART, { recursive: true });
+mkdirSync(VIDEO_TMP, { recursive: true });
 
 const PHONE_UA =
   "Mozilla/5.0 (Linux; Android 14; SM-S721B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36";
@@ -64,7 +66,10 @@ function startSim(): { stop: () => Promise<void> } {
 }
 
 async function pair(browser: Browser): Promise<{ laptop: Page; phone: Page; laptopContext: BrowserContext; phoneContext: BrowserContext }> {
-  const laptopContext = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const laptopContext = await browser.newContext({
+    viewport: { width: 1440, height: 900 },
+    recordVideo: { dir: VIDEO_TMP, size: { width: 1440, height: 900 } },
+  });
   await laptopContext.addInitScript(() => {
     localStorage.setItem("teardown.demoPairCode", "ABCD");
   });
@@ -83,6 +88,16 @@ async function pair(browser: Browser): Promise<{ laptop: Page; phone: Page; lapt
   await phone.getByRole("button", { name: "Tap to start your rocket" }).click();
   await expect(phone.getByText(`Connected to exhibit ${CODE}`)).toBeVisible();
   return { laptop, phone, laptopContext, phoneContext };
+}
+
+async function save(
+  view: { laptop: Page; laptopContext: BrowserContext; phoneContext: BrowserContext },
+  name: string,
+): Promise<void> {
+  const laptopVideo = view.laptop.video();
+  await view.laptopContext.close();
+  await view.phoneContext.close();
+  if (laptopVideo) await laptopVideo.saveAs(resolve(ART, `${name}.webm`));
 }
 
 async function readyMission(laptop: Page): Promise<void> {
@@ -152,8 +167,7 @@ test("phone steers free flight, mission, and replay", async ({ browser }) => {
       await sim.stop();
     }
   } finally {
-    await view.laptopContext.close();
-    await view.phoneContext.close();
+    await save(view, "steer");
   }
 });
 
@@ -200,7 +214,6 @@ test("climb screenshots and a crash", async ({ browser }) => {
     await expect(view.laptop.locator("[data-outcome='crashed']")).toBeVisible({ timeout: 40_000 });
     await view.laptop.screenshot({ path: resolve(ART, "crash.png") });
   } finally {
-    await view.laptopContext.close();
-    await view.phoneContext.close();
+    await save(view, "climb");
   }
 });
