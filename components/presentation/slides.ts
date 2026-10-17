@@ -383,7 +383,7 @@ export const SLIDES: readonly Slide[] = [
       },
       {
         id: "voice",
-        text: "Grok Voice speaks the guide and the mission callouts. Hold to talk and Grok transcribes your question.",
+        text: "Grok Voice on the mascot can start the tour and set the explanation level. It can't launch or steer.",
       },
       {
         id: "limits",
