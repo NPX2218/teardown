@@ -16,12 +16,13 @@ function walk(dir: string, out: string[] = []): string[] {
 }
 
 describe("secrets stay server-only", () => {
-  it("XAI_API_KEY is read only in lib/grok.ts", () => {
+  it("XAI_API_KEY is read only in the server voice and text clients", () => {
     const hits: string[] = [];
     for (const file of [...walk(path.join(root, "lib")), ...walk(path.join(root, "app")), ...walk(path.join(root, "components"))]) {
       const text = readFileSync(file, "utf8");
       if (text.includes("XAI_API_KEY")) hits.push(path.relative(root, file));
+      expect(text, path.relative(root, file)).not.toMatch(/NEXT_PUBLIC_XAI/);
     }
-    expect(hits.sort()).toEqual(["lib/grok.ts"]);
+    expect(hits.sort()).toEqual(["lib/grok.ts", "lib/voice/xai.ts"]);
   });
 });
