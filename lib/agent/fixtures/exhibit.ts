@@ -1,0 +1,158 @@
+// lib/agent/fixtures/exhibit.ts — stand-in parts and practice mission until 01/02/06 land.
+// Vehicle numbers, part ids, names, and glossary terms are the reviewed 02 spec, not a new measurement.
+// The practice mission is a SAMPLE. It is not Sentinel-6 and not a real flight.
+export interface ExhibitPart {
+  id: string;
+  name: string;
+  eyebrow: string;
+  role: string;
+  specs: Record<string, string>;
+  say: string;
+}
+
+export interface ExhibitParts {
+  vehicle: {
+    heightM: number;
+    diameterM: number;
+    liftoffMassKg: number;
+    payloadLeoKg: number;
+    merlinThrustSlKN: number;
+    merlinCount: number;
+  };
+  groups: ExhibitPart[];
+  glossary: Record<string, string>;
+}
+
+export interface ExhibitMission {
+  id: string;
+  name: string;
+  booster: string;
+  landing: string;
+  events: { t: number; id: string; say: string }[];
+}
+
+export const PARTS: ExhibitParts = {
+  vehicle: {
+    heightM: 70,
+    diameterM: 3.7,
+    liftoffMassKg: 549054,
+    payloadLeoKg: 22800,
+    merlinThrustSlKN: 845,
+    merlinCount: 9,
+  },
+  groups: [
+    {
+      id: "fairing",
+      name: "Payload fairing",
+      eyebrow: "Top of vehicle",
+      role: "The fairing is the rocket's nose cone. It protects the satellite from wind and heat on the way up.",
+      specs: { Height: "13.1 m", Diameter: "5.2 m", Halves: "2, recoverable" },
+      say: "This is the fairing, the rocket's nose cone. It is 13.1 meters tall. It keeps the satellite safe, then splits in two.",
+    },
+    {
+      id: "stage2",
+      name: "Second stage",
+      eyebrow: "Upper stage",
+      role: "The second stage takes over after the booster lets go and carries the satellite into orbit, a path around the Earth.",
+      specs: { Engines: "1 Merlin Vacuum", "Vacuum thrust": "981 kN" },
+      say: "This is the second stage. After the booster lets go, it takes over.",
+    },
+    {
+      id: "mvac",
+      name: "Merlin Vacuum engine",
+      eyebrow: "Second-stage engine",
+      role: "This engine works where there is almost no air.",
+      specs: { Thrust: "981 kN (vacuum)", Propellant: "RP-1 / LOX" },
+      say: "This is the Merlin Vacuum engine. It makes 981 kilonewtons of push in space, where there is no air.",
+    },
+    {
+      id: "interstage",
+      name: "Interstage",
+      eyebrow: "Stage connector",
+      role: "The interstage joins the booster to the second stage.",
+      specs: { Structure: "Carbon fiber composite" },
+      say: "This is the interstage. It holds the booster and the second stage together until it is time to split.",
+    },
+    {
+      id: "gridfins",
+      name: "Grid fins",
+      eyebrow: "Steering back to Earth",
+      role: "Grid fins look like waffles. They tilt to steer the booster as it falls home.",
+      specs: { Count: "4", Material: "Titanium" },
+      say: "These are the grid fins. They look like waffles, and they steer the booster as it falls home.",
+    },
+    {
+      id: "rcs",
+      name: "Cold gas thrusters",
+      eyebrow: "Turning the booster",
+      role: "These small jets puff out gas to turn the booster around. No fire, just a puff of gas.",
+      specs: { Gas: "Compressed gas" },
+      say: "These are the cold gas thrusters. They puff gas to flip the booster around, with no fire at all.",
+    },
+    {
+      id: "stage1",
+      name: "First stage",
+      eyebrow: "Reusable booster",
+      role: "The first stage is the big booster. It does the hardest work at liftoff, then it can fly back.",
+      specs: { Engines: "9 Merlin", "Sea-level thrust": "7,607 kN" },
+      say: "This is the first stage, the booster. Its nine engines make 7,607 kilonewtons of push at liftoff.",
+    },
+    {
+      id: "octaweb",
+      name: "Octaweb",
+      eyebrow: "Engine frame",
+      role: "The octaweb holds the engines: eight in a ring and one in the middle.",
+      specs: { Layout: "8 around 1" },
+      say: "This is the octaweb. It holds the engines: eight in a ring, one in the middle.",
+    },
+    {
+      id: "merlins",
+      name: "Merlin 1D engines",
+      eyebrow: "First-stage engines",
+      role: "These engines burn kerosene and liquid oxygen to push the rocket off the ground.",
+      specs: { Count: "9", "Thrust each": "845 kN (sea level)" },
+      say: "These are the nine Merlin engines. Each one makes 845 kilonewtons of push at liftoff.",
+    },
+    {
+      id: "legs",
+      name: "Landing legs",
+      eyebrow: "Landing gear",
+      role: "The landing legs stay folded on the way up and swing out just before touchdown.",
+      specs: { Count: "4", Material: "Carbon fiber + aluminum honeycomb" },
+      say: "These are the landing legs. They stay folded on the way up, then swing out so the booster can land.",
+    },
+  ],
+  glossary: {
+    payload: "The thing the rocket carries to space, like a satellite.",
+    orbit: "Going around the Earth so fast that you keep falling around it instead of down.",
+    thrust: "The push an engine makes to move the rocket.",
+    kilonewton: "A unit for measuring how hard something pushes.",
+    fairing: "The rocket's nose cone that protects the satellite.",
+    stage: "A section of the rocket with its own engines and fuel.",
+    interstage: "The part that holds the stages together.",
+    "stage separation": "The moment the booster lets go of the second stage.",
+    MECO: "Main engine cutoff, when the booster's engines turn off.",
+    "max-Q": "The moment the air pushes hardest on the rocket as it speeds up.",
+    boostback: "A burn that turns the booster around and sends it back toward land.",
+    "entry burn": "A burn that slows the booster down before it hits the thick air.",
+    "grid fins": "Waffle-shaped fins that steer the booster on the way down.",
+    "cold gas thrusters": "Small jets that puff gas to turn the rocket, with no fire.",
+    droneship: "A floating landing pad out in the ocean.",
+    "RP-1": "A very clean kind of kerosene the rocket burns as fuel.",
+    "liquid oxygen (LOX)": "Oxygen made so cold it turns into a liquid, so the fuel can burn.",
+    Merlin: "The name of the engines on this rocket.",
+    octaweb: "The frame at the bottom that holds the engines.",
+  },
+};
+
+export const MISSIONS: Record<string, ExhibitMission> = {
+  practice: {
+    id: "practice",
+    name: "Practice sample (not a real flight)",
+    booster: "SAMPLE",
+    landing: "sample only, not a real landing",
+    events: [
+      { t: 0, id: "liftoff", say: "This practice sample is not a real flight." },
+    ],
+  },
+};
