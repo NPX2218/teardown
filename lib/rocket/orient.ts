@@ -49,3 +49,10 @@ export function quatFromTo(from: Vec3, to: Vec3): Quat {
   const c: Vec3 = [from[1] * to[2] - from[2] * to[1], from[2] * to[0] - from[0] * to[2], from[0] * to[1] - from[1] * to[0]];
   return quatNormalize([1 + d, c[0], c[1], c[2]]);
 }
+
+/** Turns a model rotation about world up so "toward the viewer" means "toward the camera" at this azimuth
+ *  (radians, 0 = camera on +z). The orbit camera can sit anywhere when the phone takes over. */
+export function aimAtCamera(q: Quat, azimuthRad: number): Quat {
+  const yaw: Quat = [Math.cos(azimuthRad / 2), 0, Math.sin(azimuthRad / 2), 0];
+  return quatNormalize(quatMul(quatMul(yaw, q), quatConj(yaw)));
+}

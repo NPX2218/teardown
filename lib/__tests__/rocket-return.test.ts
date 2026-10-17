@@ -3,6 +3,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { FLIGHT_SCENARIOS } from "@/data/flight/index";
 import { getDetector } from "@/lib/gestures";
+import { aimAtCamera } from "@/lib/rocket/orient";
 import { handleRocketMessage, resetRocketState } from "@/lib/rocket/useRocket";
 import { useScene } from "@/lib/store";
 import type { ClassifiedNumber, FlightScenario, Quat, Vec3 } from "@/lib/types";
@@ -98,6 +99,18 @@ describe("rocket returns to the same angle (S24 FE landscape shell)", () => {
     hold(30, 300);
     const nose = modelNose();
     expect(nose[2]).toBeCloseTo(Math.sin(30 * DEG), 2);
+    expect(nose[1]).toBeCloseTo(Math.cos(30 * DEG), 2);
+  });
+});
+
+describe("phone lean follows the camera", () => {
+  it("R4 with the camera a quarter turn round, leaning toward the visitor still tips the nose toward the camera", () => {
+    hold(0, 200);
+    hold(30, 300);
+    const az = Math.PI / 2; // camera on +x
+    const nose = rotate(aimAtCamera(useScene.getState().orientation!, az), [0, 1, 0]);
+    expect(nose[0]).toBeCloseTo(Math.sin(30 * DEG), 2);
+    expect(nose[2]).toBeCloseTo(0, 2);
     expect(nose[1]).toBeCloseTo(Math.cos(30 * DEG), 2);
   });
 });
