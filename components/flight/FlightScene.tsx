@@ -7,6 +7,7 @@ import { Stars } from "@react-three/drei";
 import * as THREE from "three";
 import { useReducedMotion } from "@/components/ui/useReducedMotion";
 import { useAppMode } from "@/lib/flight/app-mode";
+import { useScene } from "@/lib/store";
 import { disposeScene } from "@/lib/flight/dispose";
 import { EARTH_SUN_DIRECTION } from "./earthShaders";
 import { sunFromHorizon } from "./env/frame";
@@ -65,8 +66,19 @@ function SunLight() {
 
 export function FlightScene() {
   const view = useAppMode((s) => s.view);
+  const mode = useAppMode((s) => s.mode);
+  const status = useScene((s) => s.flight.status);
+  const pitch = useScene((s) => s.flight.input.pitchRad);
   return (
-    <div className={styles.stage} tabIndex={0} aria-label="Earth and rocket" data-flight-view={view}>
+    <div
+      className={styles.stage}
+      tabIndex={0}
+      aria-label="Earth and rocket"
+      data-flight-view={view}
+      data-flight-mode={mode}
+      data-flight-status={status}
+      data-flight-pitch={pitch.toFixed(4)}
+    >
       <Canvas
         camera={{ fov: 42, near: 0.02, far: 200, position: [14, 8, 14] }}
         dpr={[1, 1.25]}
