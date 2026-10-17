@@ -1,3 +1,4 @@
+/// <reference path="./css.d.ts" />
 "use client";
 // Compact estimated-CO₂ readout for historical replay and Your mission.
 // It reads a view already computed from the 07 fuel ledger. It has no clock of its own.

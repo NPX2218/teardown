@@ -1,3 +1,4 @@
+/// <reference path="./css.d.ts" />
 "use client";
 // Sources for the embedded readout. Opening it does not change the flight or start a second clock.
 import type { EmissionsFile } from "@/lib/emissions-data";

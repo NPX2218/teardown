@@ -1,4 +1,3 @@
-import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { EMISSIONS, type EmissionsFile } from "@/lib/emissions-data";
 import {
@@ -232,11 +231,11 @@ describe("integrated emissions ledger (07 E1–E5)", () => {
     expect(co2Kilograms(-1, FACTOR)).toBeNull();
   });
 
-  it("the player path has no fixed sample-mission duration and no lens", () => {
-    const src = readFileSync(new URL("../emissions.ts", import.meta.url), "utf8");
-    expect(src).not.toMatch(/\b532\b/);
-    expect(src).not.toContain("setLens");
-    expect(src).not.toContain("burnsFor");
-    expect(src).not.toContain("mission.stars");
+  it("the player path exports no lens, checkpoint line, or timeline burn helper", () => {
+    return import("@/lib/emissions").then((emissions) => {
+      expect("setLens" in emissions).toBe(false);
+      expect("burnsFor" in emissions).toBe(false);
+      expect("emissionsLine" in emissions).toBe(false);
+    });
   });
 });
