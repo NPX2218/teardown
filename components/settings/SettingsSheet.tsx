@@ -36,6 +36,7 @@ export function SettingsSheet({
   closing = false,
   onEngineSound,
   onMaster,
+  onMusic,
   onVibration,
   onClose,
   onClosed,
@@ -46,13 +47,16 @@ export function SettingsSheet({
   closing?: boolean;
   onEngineSound: (on: boolean) => void;
   onMaster: (percent: number) => void;
+  onMusic: (percent: number) => void;
   onVibration: (on: boolean) => void;
   onClose: () => void;
   onClosed?: () => void;
 }) {
   const reduce = useReducedMotion();
   const masterId = useId();
+  const musicId = useId();
   const percent = settings.masterPercent;
+  const music = settings.musicPercent;
 
   return (
     <motion.div
@@ -97,6 +101,32 @@ export function SettingsSheet({
           />
           <output htmlFor={masterId} className="range__value">{percent}%</output>
         </div>
+      </section>
+
+      <section className={styles.block} aria-labelledby="settings-music">
+        <h3 id="settings-music">{SETTINGS_COPY.musicTitle}</h3>
+        <p className="small">{SETTINGS_COPY.musicBody}</p>
+        <div className={`range ${styles.slider}`}>
+          <input
+            id={musicId}
+            type="range"
+            min={0}
+            max={100}
+            step={1}
+            value={music}
+            aria-labelledby="settings-music"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={music}
+            aria-valuetext={`${music} percent`}
+            onChange={(event) => {
+              const next = Number(event.currentTarget.value);
+              if (Number.isFinite(next)) onMusic(next);
+            }}
+          />
+          <output htmlFor={musicId} className="range__value">{music}%</output>
+        </div>
+        <p className="small">{SETTINGS_COPY.musicCredit}</p>
       </section>
 
       <section className={styles.block} aria-labelledby="settings-vibration">

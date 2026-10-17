@@ -146,8 +146,7 @@ export async function requestImagine(
 
 /**
  * The agent's `imagine` tool. Validates arguments without coercing them, then STARTS the picture and returns at once.
- * The agent branch cannot import this file until both fixes are merged. After that, its handler should be:
- *   imagine: (args) => runImagineTool(args)
+ * The part card reads the same status. This stays off the voice listen socket.
  */
 export async function runImagineTool(args: unknown): Promise<ToolResult> {
   const a = typeof args === "object" && args !== null ? (args as Record<string, unknown>) : {};

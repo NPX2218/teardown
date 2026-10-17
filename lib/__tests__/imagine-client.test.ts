@@ -11,6 +11,7 @@ import {
   subscribeImagine,
 } from "@/lib/imagine/client";
 import { getImagineScene, resetImagineScene } from "@/lib/imagine/scene";
+import { IMAGINE_PROMPT_MAX, runTool } from "@/lib/agent/tools";
 
 beforeEach(() => {
   resetImagineScene();
@@ -167,6 +168,40 @@ describe("imagine agent tool (09 Task 3)", () => {
     expect((await runImagineTool({ prompt: 5, part_id: "legs" })).ok).toBe(false);
     expect((await runImagineTool({ prompt: "x", part_id: 5 })).ok).toBe(false);
     expect((await runImagineTool(undefined)).ok).toBe(false);
+  });
+
+  it("IM-T3b a missing server setup is the route sentence and draws nothing", async () => {
+    stubFetch(async () => new Response(null, { status: 404 }), async () => route({ error: "imagine is not set up on the server" }, 503));
+    expect(await requestImagine("x", "legs")).toEqual({ ok: false, error: "imagine is not set up on the server" });
+    expect(getImagineStatus()).toMatchObject({ phase: "error", partId: "legs" });
+    expect(getImagineScene().imageUrl).toBeNull();
+  });
+
+  it("IM-T4 the agent tool starts the same part-card request", async () => {
+    const fetchMock = stubFetch(
+      async () => new Response(null, { status: 404 }),
+      async () => route({ url: "https://img.x/legs.jpg" }),
+    );
+    const started = await runTool("imagine", { prompt: "landing at night", part_id: "legs" });
+    expect(started).toMatchObject({ ok: true, data: { started: true, partId: "legs" } });
+    expect(JSON.stringify(started)).not.toContain("https://img.x");
+    await vi.waitFor(() => expect(getImagineScene().imageUrl).toBe("https://img.x/legs.jpg"));
+    expect(getImagineStatus().phase).toBe("idle");
+    const post = fetchMock.mock.calls.find((call) => (call[1] as RequestInit | undefined)?.method === "POST");
+    expect(post?.[0]).toBe("/api/imagine");
+    expect(JSON.parse(String((post?.[1] as RequestInit).body))).toMatchObject({
+      partId: "legs",
+      prompt: "landing at night",
+    });
+  });
+
+  it("IM-T5 a too-long imagine prompt never calls the network", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const result = await runTool("imagine", { prompt: "a".repeat(IMAGINE_PROMPT_MAX + 1), part_id: "legs" });
+    expect(result.ok).toBe(false);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(getImagineScene().imageUrl).toBeNull();
   });
 
   it("IM-T3 success returns at once without the picture url", async () => {

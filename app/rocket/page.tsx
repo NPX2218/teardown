@@ -8,7 +8,7 @@ import { isIOS, requestMotionPermission, usePhoneSensors, type SensorDebug } fro
 import { setEnabled, setEngineVibrationHook, setMasterGain } from "@/lib/rocket/engine-audio";
 import { holdEngineRumble, resumeEngineRumble, setEngineRumble, stopEngineRumble } from "@/lib/rocket/engine-rumble";
 import { pushPhoneSettings, pushWireSettings, syncVibrationHook } from "@/lib/settings/link";
-import { loadSettings, saveSettings } from "@/lib/settings/prefs";
+import { hydrateSettings, loadSettings, saveSettings, withStoredMusic } from "@/lib/settings/prefs";
 import { createEngineVibration, vibrationSupported, VIBRATION_UNSUPPORTED_NOTE, type EngineVibration } from "@/lib/settings/vibrate";
 import {
   getAudioContext, loopingNow, playSound, preloadSounds, setPlaybackSession, setSoundMaster, stopSound, subscribeSounds, unlockAudio,
@@ -108,6 +108,7 @@ export default function RocketPage() {
     setIos(isIOS());
     setNoSession(isIOS() && !("audioSession" in navigator));
     setVibrateOk(vibrationSupported(navigator));
+    hydrateSettings(window.localStorage);
     const saved = loadSettings(window.localStorage);
     buzzOn.current = saved.vibration;
     pushPhoneSettings(saved, phoneAudio());
@@ -152,7 +153,7 @@ export default function RocketPage() {
       },
       setEngine: (power) => setEngineRumble(power),
       applySettings: (message) => {
-        const settings = pushWireSettings(message, phoneAudio());
+        const settings = withStoredMusic(window.localStorage, pushWireSettings(message, phoneAudio()));
         buzzOn.current = settings.vibration;
         saveSettings(window.localStorage, settings);
       },

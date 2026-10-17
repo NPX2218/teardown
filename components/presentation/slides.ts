@@ -204,7 +204,7 @@ export const SLIDES: readonly Slide[] = [
       },
       {
         id: "proof",
-        text: "Real orbital physics, 60 steps a second. 1,103 unit tests, plus a flight test with a simulated phone.",
+        text: "Real orbital physics, 60 steps a second. 1,116 unit tests, plus a flight test with a simulated phone.",
       },
     ],
     notes: [

@@ -189,9 +189,9 @@ The committed template is `.env.local.example`. The gitignore keeps every other 
 
 | Variable | What it does |
 |:---|:---|
-| `XAI_API_KEY` | Authorizes the voice token (`POST /v1/realtime/client_secrets`) and the text agent. |
+| `XAI_API_KEY` | Authorizes the voice token (`POST /v1/realtime/client_secrets`), the text agent, and Imagine. |
 | `XAI_TEXT_MODEL` | Chat model for the text guide. |
-| `XAI_IMAGE_MODEL` | Imagine model, for the flight postcard. |
+| `XAI_IMAGE_MODEL` | Imagine model, for the flight postcard. Current docs id: `grok-imagine-image-2.0`. |
 | `XAI_VOICE` | Optional TTS voice id. Defaults to `eve`. The live Voice socket uses `eve` as well. |
 
 **Pair a real phone.** The phone needs HTTPS, so run:
@@ -226,7 +226,19 @@ Open `http://localhost:3000/?demo=1` and swap `ABCD` for the code it shows. In t
 | `/rocket` | The page that runs on the phone |
 | `/presentation` | The pitch deck (arrow keys, `N` for notes, `F` for full screen) |
 
-Run `npm test` for the unit tests (1,103 passing), `npm run test:e2e` for the Playwright flight with a simulated phone, and `npm run smoke` for the paired laptop + phone run.
+Run `npm test` for the unit tests (1,116 passing), `npm run test:e2e` for the Playwright flight with a simulated phone, and `npm run smoke` for the paired laptop + phone run.
+
+<br />
+
+## BACKGROUND MUSIC
+
+The laptop plays a quiet loop on every page except `/rocket`. The phone engine rumble is separate. It still follows engine power.
+
+The track is **Mokka - No Copyright Music**, trimmed to the first 2 minutes with a short fade at the end, at [`public/audio/background.mp3`](public/audio/background.mp3). If that file is missing, the player uses [`public/audio/background-placeholder.mp3`](public/audio/background-placeholder.mp3), an original sine pad.
+
+The Music slider in Settings is 0–100%. It starts at 40%. What you hear is that level times the Master sound slider. The choice is saved in this browser with the other settings. Music waits for the first tap or key press, then fades in. Reduced motion makes that fade instant.
+
+Details: [docs/background-music.md](docs/background-music.md).
 
 <br />
 
@@ -279,8 +291,9 @@ The full list is in the [review guide](docs/REVIEW-GUIDE.md#known-gaps).
 - **3D model:** "[Falcon 9 - SpaceX](https://sketchfab.com/3d-models/falcon-9-spacex-394f7cf52d124bbd9db69f24d1ff2f08)" by Stanley Creative, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 - **Earth:** NASA Visible Earth (Blue Marble, Black Marble, clouds, land/water mask), public domain. See [`public/textures/CREDITS.md`](public/textures/CREDITS.md).
 - **Sounds:** original synthesis, CC0. See [`public/sounds/CREDITS.md`](public/sounds/CREDITS.md).
+- **Music:** Mokka - No Copyright Music. The first 2 minutes are in `public/audio/background.mp3`. See [`public/audio/CREDITS.md`](public/audio/CREDITS.md).
 - **Guide avatar:** [bloub](https://github.com/jeremy-prt/bloub) by Jérémy Perret (MIT), an unofficial recreation of the Grok Bot.
-- **Type:** D-DIN, Barlow, Barlow Semi Condensed and Roboto Mono, all under the SIL Open Font License.
+- **Type:** D-DIN, Geist and Geist Mono, all under the SIL Open Font License.
 - **AI:** Grok by xAI.
 
 <br />

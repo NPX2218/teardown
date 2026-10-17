@@ -82,6 +82,7 @@ export function SettingsButton() {
             closing={closing}
             onEngineSound={(on) => patchSettings({ engineSound: on })}
             onMaster={(percent) => patchSettings({ masterPercent: percent })}
+            onMusic={(percent) => patchSettings({ musicPercent: percent })}
             onVibration={(on) => patchSettings({ vibration: on })}
             onClose={close}
             onClosed={finishClose}
