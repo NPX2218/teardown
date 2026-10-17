@@ -17,6 +17,7 @@ import {
 import { shouldImagineOnKey } from "@/lib/imagine/keys";
 import { DEFAULT_IMAGINE_PROMPT, IMAGE_TIMEOUT_MS } from "@/lib/imagine/prompt";
 import { getImagineScene, subscribeImagineScene } from "@/lib/imagine/scene";
+import { MissionPatch } from "@/components/imagine/MissionPatch";
 import styles from "./ImagineSlot.module.css";
 
 const BAR_TICK_MS = 500;
@@ -209,6 +210,7 @@ export function ImagineSlot() {
           )}
         </div>
       </dialog>
+      <MissionPatch />
     </div>
   );
 }
