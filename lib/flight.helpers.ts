@@ -8,6 +8,11 @@
 // Substeps are exactly 1/60 simulated second. A frame may take at most 48
 // of them (lib/flight/integrate.ts). Identical substep inputs match.
 
+import { attitudeReadout, length3, physicalAttitude, physicalNose, radialBasis, transportControlFrame, turnAngle, turnQuaternion, type Vector3 } from "@/lib/flight/attitude.helpers";
+import { validQuaternion } from "@/lib/flight/quaternion.helpers";
+import { quatMul, quatNormalize } from "@/lib/rocket/orient";
+export { noseDirection, physicalAttitude, physicalNose } from "@/lib/flight/attitude.helpers";
+
 import type {
   FlightInput,
   FlightObjective,
@@ -16,6 +21,8 @@ import type {
   FlightScenario,
   FlightState,
   StageFuelSnapshot,
+  Quat,
+  Vec3,
 } from "@/lib/types";
 
 /** NASA fact sheet equatorial radius, metres. A sphere is a simplification. */
@@ -42,6 +49,28 @@ export const MAX_FRAME_STEPS = 48;
 export const FRAME_POSITION_TOLERANCE_M = 1;
 
 /** Sea-level density, scale height, drag coefficient, and area. Model assumptions. */
+/**
+ * Turning the rocket. The input pitch is where the pilot wants the nose; the nose gets there
+ * through engine gimbal torque, like Kerbal's SAS, not by snapping.
+ * Gimbal angular accel for a uniform rod pivoting at its CoM: (T/m) * sin(gimbal) * 12 * lever / L^2.
+ */
+export const ATTITUDE = {
+  /** Merlin gimbal limit, about 5 degrees. */
+  gimbalSin: Math.sin((5 * Math.PI) / 180),
+  /** Engines sit about 0.4 of the stack below the CoM, so 12 * 0.4 / L. */
+  leverOverInertia: 4.8 / 70,
+  /** Real authority turns a 30-degree lean in ~5 s; 3x (Kerbal's reaction wheels) turns it in ~3 s. */
+  gameAuthority: 3,
+  /** Cold-gas thrusters still turn the nose slowly with the engines off. */
+  rcsAccelRadS2: 0.05,
+  /** 20 degrees/s per-axis turn rate keeps a fast hand from whipping the stack around. */
+  maxRateRadS: 0.35,
+  /** Braking uses 80% of authority so the nose settles without overshoot. */
+  brakeMargin: 0.8,
+  /** Last few degrees ease in on this time constant instead of a bang-bang stop. */
+  rateTauS: 0.25,
+} as const;
+
 export const ATMOSPHERE = {
   rho0KgPerM3: 1.225,
   scaleHeightM: 8_500,
@@ -69,7 +98,18 @@ export interface FlightBody {
   y: number;
   vx: number;
   vy: number;
+  z?: number;
+  vz?: number;
+  yawRad?: number;
+  yawRateRadS?: number;
+  /** Fixed physics XYZ orientation and world angular velocity after full pointing is engaged. */
+  attitudeQuat?: Quat;
+  /** Transported local control reference; its up follows radial without a pole heading flip. */
+  controlFrameQuat?: Quat;
+  angularVelocityRadS?: Vec3;
   pitchRad: number;
+  /** Nose turn rate. Missing means 0 (older saved states). */
+  pitchRateRadS?: number;
   throttle: number;
   activeStageIndex: number;
   stages: StageFuelSnapshot[];
@@ -96,6 +136,7 @@ export interface OrbitElements {
 export interface CoastPoint {
   x: number;
   y: number;
+  z?: number;
 }
 
 export interface CoastPreview {
@@ -125,6 +166,10 @@ export function createFlight(scenario: FlightScenario): FlightBody {
     y: EARTH_RADIUS_M,
     vx: 0,
     vy: 0,
+    z: 0,
+    vz: 0,
+    yawRad: 0,
+    yawRateRadS: 0,
     pitchRad: 0,
     throttle: 0,
     activeStageIndex: 0,
@@ -157,36 +202,44 @@ export function propellantKg(state: FlightBody): number {
   return state.stages.reduce((sum, stage) => sum + Math.max(0, stage.propellantRemainingKg), 0);
 }
 
-export function stepFlight(state: FlightBody, input: FlightInput, dt: number): FlightBody {
+export interface FlightStepOptions {
+  /** External callers sweep the complete rendered body; standalone callers keep point contact. */
+  groundCollision?: "point" | "external";
+}
+
+export function stepFlight(state: FlightBody, input: FlightInput, dt: number, options: FlightStepOptions = {}): FlightBody {
   if (state.outcome) return state;
-  if (!Number.isFinite(dt) || dt <= 0 || !Number.isFinite(input.pitchRad) || !Number.isFinite(input.throttle)) {
+  if (!Number.isFinite(dt) || dt <= 0 || !Number.isFinite(input.pitchRad) || !Number.isFinite(input.yawRad ?? 0) || !Number.isFinite(input.throttle) || (input.attitudeQuat !== undefined && !validQuaternion(input.attitudeQuat))) {
     return stop(state, "Simulation stopped.");
   }
   const steps = Math.round(dt / SUBSTEP_S);
   if (steps >= 1 && Math.abs(dt - steps * SUBSTEP_S) < 1e-8) {
     let next = state;
-    for (let i = 0; i < steps && !next.outcome; i += 1) next = stepOnce(next, input, SUBSTEP_S);
+    for (let i = 0; i < steps && !next.outcome; i += 1) next = stepOnce(next, input, SUBSTEP_S, options);
     return next;
   }
   let left = dt;
   let next = state;
   while (left > 1e-9 && !next.outcome) {
     const h = Math.min(SUBSTEP_S, left);
-    next = stepOnce(next, input, h);
+    next = stepOnce(next, input, h, options);
     left -= h;
   }
   return next;
 }
 
-export function orbitFromState(state: Pick<FlightBody, "x" | "y" | "vx" | "vy">): OrbitElements {
+export function orbitFromState(state: Pick<FlightBody, "x" | "y" | "z" | "vx" | "vy" | "vz">): OrbitElements {
   const { x, y, vx, vy } = state;
-  const r = Math.hypot(x, y);
-  const speed2 = vx * vx + vy * vy;
+  const z = state.z ?? 0;
+  const vz = state.vz ?? 0;
+  const r = length3(x, y, z);
+  const speed2 = vx * vx + vy * vy + vz * vz;
   if (!Number.isFinite(r) || r < 1 || !Number.isFinite(speed2)) {
     return emptyOrbit(false);
   }
   const energy = speed2 / 2 - EARTH_MU_M3_S2 / r;
-  const h = x * vy - y * vx;
+  const hz = x * vy - y * vx;
+  const h = z === 0 && vz === 0 ? hz : Math.hypot(y * vz - z * vy, z * vx - x * vz, hz);
   if (!Number.isFinite(energy) || !Number.isFinite(h)) return emptyOrbit(false);
   if (Math.abs(energy) < 1e-6) {
     return {
@@ -227,8 +280,10 @@ export function orbitFromState(state: Pick<FlightBody, "x" | "y" | "vx" | "vy">)
 
 export function readFlight(state: FlightBody): FlightReadout {
   const orbit = orbitFromState(state);
-  const r = Math.hypot(state.x, state.y);
-  const finite = Number.isFinite(r) && r > 1 && Number.isFinite(state.vx) && Number.isFinite(state.vy);
+  const z = state.z ?? 0;
+  const vz = state.vz ?? 0;
+  const r = length3(state.x, state.y, z);
+  const finite = Number.isFinite(r) && r > 1 && Number.isFinite(state.vx) && Number.isFinite(state.vy) && Number.isFinite(vz);
   let radial: number | null = null;
   let tangential: number | null = null;
   let total: number | null = null;
@@ -236,9 +291,11 @@ export function readFlight(state: FlightBody): FlightReadout {
   if (finite) {
     const rx = state.x / r;
     const ry = state.y / r;
-    radial = state.vx * rx + state.vy * ry;
-    tangential = state.vx * ry + state.vy * -rx;
-    total = Math.hypot(state.vx, state.vy);
+    radial = state.vx * rx + state.vy * ry + vz * z / r;
+    total = length3(state.vx, state.vy, vz);
+    tangential = z === 0 && vz === 0
+      ? state.vx * ry + state.vy * -rx
+      : Math.hypot(state.vx - radial * rx, state.vy - radial * ry, vz - radial * z / r);
     altitude = r - EARTH_RADIUS_M;
   }
   return {
@@ -259,13 +316,18 @@ export function readFlight(state: FlightBody): FlightReadout {
 export function toFlightState(state: FlightBody): FlightState {
   return {
     pitchRad: state.pitchRad,
+    pitchRateRadS: state.pitchRateRadS ?? 0,
+    yawRad: state.yawRad ?? 0,
+    yawRateRadS: state.yawRateRadS ?? 0,
+    ...(state.attitudeQuat ? { attitudeQuat: [...state.attitudeQuat] as Quat, angularVelocityRadS: [...(state.angularVelocityRadS ?? [0, 0, 0])] as Vec3 } : {}),
+    ...(state.controlFrameQuat ? { controlFrameQuat: [...state.controlFrameQuat] as Quat } : {}),
     throttle: state.throttle,
     activeStageId: state.stages[state.activeStageIndex]?.id ?? state.stages[0]?.id ?? "",
     simulatedTimeS: state.simulatedTimeS,
     stages: state.stages.map((stage) => ({ ...stage })),
     payloadKg: state.payloadKg,
-    positionM: { x: state.x, y: state.y },
-    velocityMps: { x: state.vx, y: state.vy },
+    positionM: { x: state.x, y: state.y, z: state.z ?? 0 },
+    velocityMps: { x: state.vx, y: state.vy, z: state.vz ?? 0 },
     thrustOffS: state.thrustOffS,
     airborne: state.airborne,
   };
@@ -281,7 +343,14 @@ export function bodyFromFlightState(scenario: FlightScenario, state: FlightState
     y: state.positionM.y,
     vx: state.velocityMps.x,
     vy: state.velocityMps.y,
+    z: state.positionM.z ?? 0,
+    vz: state.velocityMps.z ?? 0,
+    yawRad: state.yawRad ?? 0,
+    yawRateRadS: state.yawRateRadS ?? 0,
+    ...(state.attitudeQuat ? { attitudeQuat: [...state.attitudeQuat] as Quat, angularVelocityRadS: [...(state.angularVelocityRadS ?? [0, 0, 0])] as Vec3 } : {}),
+    ...(state.controlFrameQuat ? { controlFrameQuat: [...state.controlFrameQuat] as Quat } : {}),
     pitchRad: state.pitchRad,
+    pitchRateRadS: state.pitchRateRadS ?? 0,
     throttle: state.throttle,
     activeStageIndex: index >= 0 ? index : 0,
     stages: state.stages.map((stage) => ({ ...stage })),
@@ -306,6 +375,33 @@ export function fuelNotice(state: FlightBody): string | null {
  * the curve meets the ground or the energy is unbound.
  */
 export function coastPreview(state: FlightBody): CoastPreview {
+  const z = state.z ?? 0;
+  const vz = state.vz ?? 0;
+  if (z === 0 && vz === 0) return planarCoastPreview(state);
+  // Express r/v in their instantaneous orbital plane, reuse the planar conic,
+  // then lift every sample back into three dimensions. Radial paths use any
+  // perpendicular tangent because their transverse velocity is zero.
+  const radius = length3(state.x, state.y, z);
+  if (!(radius > 0) || !Number.isFinite(radius)) return { points: [], hitsEarth: false, closed: false, coast: true };
+  const radial = { x: state.x / radius, y: state.y / radius, z: z / radius };
+  const hx = state.y * vz - z * state.vy;
+  const hy = z * state.vx - state.x * vz;
+  const hz = state.x * state.vy - state.y * state.vx;
+  const h = Math.hypot(hx, hy, hz);
+  const tangent = h > 1e-8
+    ? { x: (hy * radial.z - hz * radial.y) / h, y: (hz * radial.x - hx * radial.z) / h, z: (hx * radial.y - hy * radial.x) / h }
+    : physicalNose({ ...state, attitudeQuat: undefined, pitchRad: Math.PI / 2, yawRad: 0 });
+  const vr = state.vx * radial.x + state.vy * radial.y + vz * radial.z;
+  const vt = state.vx * tangent.x + state.vy * tangent.y + vz * tangent.z;
+  const projected = planarCoastPreview({ ...state, x: radius, y: 0, z: 0, vx: vr, vy: vt, vz: 0 });
+  return { ...projected, points: projected.points.map(point => ({
+    x: point.x * radial.x + point.y * tangent.x,
+    y: point.x * radial.y + point.y * tangent.y,
+    z: point.x * radial.z + point.y * tangent.z,
+  })) };
+}
+
+function planarCoastPreview(state: FlightBody): CoastPreview {
   const orbit = orbitFromState(state);
   const h = orbit.angularMomentum ?? 0;
   if (!orbit.finite || orbit.energy === null || Math.abs(h) < 1) {
@@ -431,30 +527,79 @@ function planSlices(state: FlightBody, throttle: number, dt: number): Slice[] {
   return slices;
 }
 
-function stepOnce(state: FlightBody, input: FlightInput, dt: number): FlightBody {
+/** Max nose angular acceleration from the gimbal at this throttle, plus RCS. */
+export function attitudeAuthorityRadS2(state: FlightBody, throttle: number): number {
+  const mass = massKg(state);
+  const plan = state.stagePlan[state.activeStageIndex];
+  const stage = state.stages[state.activeStageIndex];
+  const burning = mass > 0 && plan && stage && stage.propellantRemainingKg > 0;
+  const thrustAccel = burning ? (throttle * plan.thrustN) / mass : 0;
+  return ATTITUDE.rcsAccelRadS2
+    + ATTITUDE.gameAuthority * thrustAccel * ATTITUDE.gimbalSin * ATTITUDE.leverOverInertia;
+}
+
+/** Moves the nose toward the target with limited torque: no snap, no overshoot. Clamps hold it upright on the pad. */
+export function turnNose(state: FlightBody, targetRad: number, throttle: number, dt: number): { pitchRad: number; pitchRateRadS: number } {
+  if (!state.airborne) return { pitchRad: 0, pitchRateRadS: 0 };
+  const turned = turnAngle(state.pitchRad, state.pitchRateRadS ?? 0, targetRad, attitudeAuthorityRadS2(state, throttle), dt, ATTITUDE);
+  return { pitchRad: turned.angle, pitchRateRadS: turned.rate };
+}
+
+function stepOnce(state: FlightBody, input: FlightInput, dt: number, options: FlightStepOptions): FlightBody {
   if (state.outcome) return state;
   if (!finiteBody(state)) return stop(state, "Simulation stopped.");
-  const pitchRad = clamp(input.pitchRad, -Math.PI / 2, Math.PI / 2);
   const throttle = clamp(input.throttle, 0, 1);
-  let cursor: FlightBody = {
-    ...state,
-    pitchRad,
-    throttle,
-    stages: state.stages.map((stage) => ({ ...stage })),
-  };
+  const fullPointing = state.attitudeQuat !== undefined || input.attitudeQuat !== undefined;
+  let cursor: FlightBody;
+  if (fullPointing) {
+    const frame = radialBasis(state);
+    const current = physicalAttitude(state);
+    const controlFrameQuat = state.controlFrameQuat ?? frame.orientation;
+    const localTarget = input.attitudeQuat ?? physicalAttitude({ x: 0, y: 1, pitchRad: clamp(input.pitchRad, -Math.PI / 2, Math.PI / 2), yawRad: clamp(input.yawRad ?? 0, -Math.PI / 2, Math.PI / 2) });
+    const target = quatNormalize(quatMul(controlFrameQuat, quatNormalize(localTarget)));
+    const turned = state.airborne
+      ? turnQuaternion(current, target, state.angularVelocityRadS ?? [0, 0, 0], attitudeAuthorityRadS2(state, throttle), dt, ATTITUDE)
+      : { attitudeQuat: frame.orientation, angularVelocityRadS: [0, 0, 0] as Vec3 };
+    const readout = attitudeReadout(state, turned.attitudeQuat);
+    cursor = {
+      ...state,
+      ...turned,
+      controlFrameQuat,
+      ...readout,
+      // Legacy scalar rates are display-only in quaternion mode. Actual angular
+      // velocity remains the finite fixed-frame vector used by the controller.
+      pitchRateRadS: -(turned.angularVelocityRadS[0] * frame.crossrange[0] + turned.angularVelocityRadS[1] * frame.crossrange[1] + turned.angularVelocityRadS[2] * frame.crossrange[2]),
+      yawRateRadS: turned.angularVelocityRadS[0] * frame.tangent[0] + turned.angularVelocityRadS[1] * frame.tangent[1] + turned.angularVelocityRadS[2] * frame.tangent[2],
+      throttle,
+      stages: state.stages.map(stage => ({ ...stage })),
+    };
+  } else {
+    const nose = turnNose(state, clamp(input.pitchRad, -Math.PI / 2, Math.PI / 2), throttle, dt);
+    const side = state.airborne
+      ? turnAngle(state.yawRad ?? 0, state.yawRateRadS ?? 0, clamp(input.yawRad ?? 0, -Math.PI / 2, Math.PI / 2), attitudeAuthorityRadS2(state, throttle), dt, ATTITUDE)
+      : { angle: 0, rate: 0 };
+    cursor = {
+      ...state,
+      ...nose,
+      yawRad: side.angle,
+      yawRateRadS: side.rate,
+      throttle,
+      stages: state.stages.map(stage => ({ ...stage })),
+    };
+  }
   for (const slice of planSlices(cursor, throttle, dt)) {
     cursor = {
       ...cursor,
       activeStageIndex: slice.index,
       stages: cursor.stages.map((stage) => ({ ...stage })),
     };
-    cursor = burnAndMove(cursor, slice.dt, slice.burnKg);
+    cursor = burnAndMove(cursor, slice.dt, slice.burnKg, options);
     if (cursor.outcome) return cursor;
   }
   return cursor;
 }
 
-function burnAndMove(state: FlightBody, dt: number, burnKg: number): FlightBody {
+function burnAndMove(state: FlightBody, dt: number, burnKg: number, options: FlightStepOptions): FlightBody {
   const index = state.activeStageIndex;
   const plan = state.stagePlan[index];
   const ratio = plan?.oxidizerToFuel > 0 ? plan.oxidizerToFuel : Number.NaN;
@@ -472,87 +617,98 @@ function burnAndMove(state: FlightBody, dt: number, burnKg: number): FlightBody 
   });
   let next: FlightBody = { ...state, stages, simulatedTimeS: state.simulatedTimeS + dt };
   if (!(massKg(next) > 0)) return stop(next, "Simulation stopped.");
+  // The fuel ledger is already debited; this slice still receives its paid impulse.
+  const powered = burnKg > 0;
 
   if (!next.airborne) {
-    const radial = radialAccel(next);
+    const radial = radialAccel(next, powered);
     if (radial > 0) {
       next = { ...next, airborne: true };
-      const moved = translate(next, dt);
+      const moved = translate(next, dt, powered);
       if (moved.outcome) return moved;
-      if (segmentHitsEarth(next.x, next.y, moved.x, moved.y)) {
+      if (options.groundCollision !== "external" && segmentHitsEarth(next.x, next.y, moved.x, moved.y, next.z ?? 0, moved.z ?? 0)) {
         return stop(moved, "The rocket hit the ground.", "crashed");
       }
       next = moved;
     } else {
-      next = { ...next, x: 0, y: EARTH_RADIUS_M, vx: 0, vy: 0 };
+      next = { ...next, x: 0, y: EARTH_RADIUS_M, z: 0, vx: 0, vy: 0, vz: 0 };
     }
   } else {
-    const moved = translate(next, dt);
+    const moved = translate(next, dt, powered);
     if (moved.outcome) return moved;
-    if (segmentHitsEarth(next.x, next.y, moved.x, moved.y)) {
+    if (options.groundCollision !== "external" && segmentHitsEarth(next.x, next.y, moved.x, moved.y, next.z ?? 0, moved.z ?? 0)) {
       return stop(moved, "The rocket hit the ground.", "crashed");
     }
     next = moved;
   }
-  return judge(next, dt);
+  return judge(next, dt, powered);
 }
 
-function translate(state: FlightBody, dt: number): FlightBody {
-  const a = acceleration(state);
-  if (!Number.isFinite(a.x) || !Number.isFinite(a.y)) return stop(state, "Simulation stopped.");
+function translate(state: FlightBody, dt: number, powered: boolean): FlightBody {
+  const a = acceleration(state, powered);
+  if (!Number.isFinite(a.x) || !Number.isFinite(a.y) || !Number.isFinite(a.z ?? 0)) return stop(state, "Simulation stopped.");
   const vx = state.vx + a.x * dt;
   const vy = state.vy + a.y * dt;
-  return { ...state, vx, vy, x: state.x + vx * dt, y: state.y + vy * dt };
+  const vz = (state.vz ?? 0) + (a.z ?? 0) * dt;
+  const moved = { ...state, vx, vy, vz, x: state.x + vx * dt, y: state.y + vy * dt, z: (state.z ?? 0) + vz * dt };
+  return state.attitudeQuat ? {
+    ...moved,
+    ...(state.controlFrameQuat ? { controlFrameQuat: transportControlFrame(state, moved, state.controlFrameQuat) } : {}),
+    ...attitudeReadout(moved, state.attitudeQuat),
+  } : moved;
 }
 
-function acceleration(state: FlightBody): Vec2 {
-  const r = Math.hypot(state.x, state.y);
-  if (r < 1) return { x: Number.NaN, y: Number.NaN };
+function acceleration(state: FlightBody, powered: boolean): Vector3 {
+  const z = state.z ?? 0;
+  const vz = state.vz ?? 0;
+  const r = length3(state.x, state.y, z);
+  if (r < 1) return { x: Number.NaN, y: Number.NaN, z: Number.NaN };
   const rx = state.x / r;
   const ry = state.y / r;
   const gravity = EARTH_MU_M3_S2 / (r * r);
   let ax = -rx * gravity;
   let ay = -ry * gravity;
+  let az = -(z / r) * gravity;
   const mass = massKg(state);
   const stage = state.stages[state.activeStageIndex];
   const plan = state.stagePlan[state.activeStageIndex];
-  if (mass > 0 && state.throttle > 0 && stage && plan && stage.propellantRemainingKg > 0) {
+  if (mass > 0 && state.throttle > 0 && stage && plan && powered) {
     const thrust = (state.throttle * plan.thrustN) / mass;
-    const c = Math.cos(state.pitchRad);
-    const s = Math.sin(state.pitchRad);
-    const tx = ry;
-    const ty = -rx;
-    ax += thrust * (c * rx + s * tx);
-    ay += thrust * (c * ry + s * ty);
+    const nose = physicalNose(state);
+    ax += thrust * nose.x;
+    ay += thrust * nose.y;
+    az += thrust * nose.z;
   }
   if (state.airborne && mass > 0) {
     const alt = r - EARTH_RADIUS_M;
-    const speed = Math.hypot(state.vx, state.vy);
+    const speed = length3(state.vx, state.vy, vz);
     if (alt > 0 && alt < ATMOSPHERE.limitM && speed > 1) {
       const rho = ATMOSPHERE.rho0KgPerM3 * Math.exp(-alt / ATMOSPHERE.scaleHeightM);
       const drag = (0.5 * ATMOSPHERE.dragCoefficient * ATMOSPHERE.areaM2 * rho * speed * speed) / mass;
       ax -= drag * (state.vx / speed);
       ay -= drag * (state.vy / speed);
+      az -= drag * (vz / speed);
     }
   }
-  return { x: ax, y: ay };
+  return { x: ax, y: ay, z: az };
 }
 
-function radialAccel(state: FlightBody): number {
-  const a = acceleration(state);
-  const r = Math.hypot(state.x, state.y);
+function radialAccel(state: FlightBody, powered: boolean): number {
+  const a = acceleration(state, powered);
+  const r = length3(state.x, state.y, state.z ?? 0);
   if (!Number.isFinite(a.x) || r < 1) return Number.NaN;
-  return (a.x * state.x + a.y * state.y) / r;
+  return (a.x * state.x + a.y * state.y + (a.z ?? 0) * (state.z ?? 0)) / r;
 }
 
-export function segmentHitsEarth(x0: number, y0: number, x1: number, y1: number): boolean {
-  const r0 = Math.hypot(x0, y0);
-  const r1 = Math.hypot(x1, y1);
+export function segmentHitsEarth(x0: number, y0: number, x1: number, y1: number, z0 = 0, z1 = 0): boolean {
+  const r0 = length3(x0, y0, z0);
+  const r1 = length3(x1, y1, z1);
   if (r1 < EARTH_RADIUS_M - SURFACE_EPS_M) return true;
   const dx = x1 - x0;
   const dy = y1 - y0;
-  const a = dx * dx + dy * dy;
-  const b = 2 * (x0 * dx + y0 * dy);
+  const dz = z1 - z0;
+  const a = dx * dx + dy * dy + dz * dz;
+  const b = 2 * (x0 * dx + y0 * dy + z0 * dz);
   const c = r0 * r0 - EARTH_RADIUS_M * EARTH_RADIUS_M;
   if (a < 1e-6) return false;
   const disc = b * b - 4 * a * c;
@@ -564,15 +720,14 @@ export function segmentHitsEarth(x0: number, y0: number, x1: number, y1: number)
   return r0 >= EARTH_RADIUS_M - SURFACE_EPS_M && (crosses(tEnter) || crosses(tExit));
 }
 
-function judge(state: FlightBody, dt: number): FlightBody {
+function judge(state: FlightBody, dt: number, thrusting: boolean): FlightBody {
   if (!finiteBody(state)) return stop(state, "Simulation stopped.");
   const orbit = orbitFromState(state);
   if (!orbit.finite) return stop(state, "Simulation stopped.");
-  const alt = Math.hypot(state.x, state.y) - EARTH_RADIUS_M;
+  const alt = length3(state.x, state.y, state.z ?? 0) - EARTH_RADIUS_M;
   if (state.airborne && orbit.energy !== null && orbit.energy > ESCAPE_ENERGY && alt > 1_000) {
     return stop(state, "You are leaving Earth. This goal is an orbit around Earth.");
   }
-  const thrusting = isThrusting(state);
   const inWindow = state.airborne
     && orbit.bound
     && !orbit.intersectsEarth
@@ -595,14 +750,13 @@ function judge(state: FlightBody, dt: number): FlightBody {
   return next;
 }
 
-function isThrusting(state: FlightBody): boolean {
-  const stage = state.stages[state.activeStageIndex];
-  return state.throttle > 1e-6 && !!stage && stage.propellantRemainingKg > 1e-6;
-}
-
 function finiteBody(state: FlightBody): boolean {
-  const values = [state.x, state.y, state.vx, state.vy, state.simulatedTimeS];
-  return values.every((value) => Number.isFinite(value)) && massKg(state) > 0;
+  const values = [state.x, state.y, state.z ?? 0, state.vx, state.vy, state.vz ?? 0, state.pitchRad, state.pitchRateRadS ?? 0, state.yawRad ?? 0, state.yawRateRadS ?? 0, state.simulatedTimeS];
+  return values.every((value) => Number.isFinite(value))
+    && (state.attitudeQuat === undefined || validQuaternion(state.attitudeQuat))
+    && (state.controlFrameQuat === undefined || validQuaternion(state.controlFrameQuat))
+    && (state.angularVelocityRadS === undefined || (state.angularVelocityRadS.length === 3 && state.angularVelocityRadS.every(Number.isFinite)))
+    && massKg(state) > 0;
 }
 
 function clamp(value: number, min: number, max: number): number {

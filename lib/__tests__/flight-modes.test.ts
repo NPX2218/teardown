@@ -10,17 +10,13 @@ import {
   REENTRY_REASON,
   STABLE_ORBIT_REASON,
   SUBORBITAL_REASON,
-  TOWER_REASON,
   classifyAnomaly,
   type AnomalySample,
 } from "@/lib/flight/anomalies";
-import { CORRIDOR } from "@/lib/flight/corridor";
 import { emptyGuide, stepGuide, type GuideSample } from "@/lib/flight/guidance";
 import { historicalMissions } from "@/lib/flight/mission-select";
 import {
   REFERENCE_UNAVAILABLE,
-  autopilotInput,
-  corridorEdges,
   referenceHasKinematics,
   referencePath,
   referencePoint,
@@ -33,9 +29,17 @@ import { CLASSROOM_ORBIT_PROFILE, inputAt } from "@/lib/flight/profiles";
 import { replayDataCaption, referenceTrajectoryNote } from "@/lib/replay";
 import { recordPracticeCorridor } from "@/scripts/record-practice-corridor";
 import { useScene } from "@/lib/store";
-import type { Mission, MissionReference } from "@/lib/types";
+import type { FlightGuide, Mission, MissionReference } from "@/lib/types";
 
 const initial = useScene.getState();
+
+function expectNoGuidePenalty(guide: FlightGuide): void {
+  expect(guide).toMatchObject({
+    warningLevel: "nominal", failureReason: null, banner: null, countdownS: null,
+    corridor: false, deviation: null, targetPitchRad: null, accuracy: null,
+    outsideS: 0, insideS: 0, errorSumSq: 0, samples: 0, beeped: false, cue: null,
+  });
+}
 
 beforeEach(() => {
   useScene.setState(initial, true);
@@ -136,7 +140,6 @@ describe("mission reference", () => {
     expect(referenceHasKinematics(TIMING_ONLY)).toBe(false);
     expect(sampleReference(TIMING_ONLY, 10)).toBeNull();
     expect(referencePath(TIMING_ONLY)).toBeNull();
-    expect(corridorEdges(TIMING_ONLY, CORRIDOR.altM)).toBeNull();
     const stepped = stepGuide(emptyGuide("mission"), guideSample({ t: 10 }), {
       playMode: "mission",
       reference: TIMING_ONLY,
@@ -162,8 +165,6 @@ describe("mission reference", () => {
     expect(referenceHasKinematics(SENTINEL_MILESTONES)).toBe(false);
     expect(sampleReference(SENTINEL_MILESTONES, 136)).toBeNull();
     expect(referencePath(SENTINEL_MILESTONES)).toBeNull();
-    expect(corridorEdges(SENTINEL_MILESTONES, CORRIDOR.altM)).toBeNull();
-    expect(autopilotInput(SENTINEL_MILESTONES, 136, 1000)).toBeNull();
     expect(referencePoint(1_300_000, null)).toBeNull();
     const mission: Mission = {
       ...MISSIONS.practice,
@@ -193,8 +194,9 @@ describe("mission reference", () => {
       expect(guide.warningLevel === "caution" || guide.warningLevel === "warning").toBe(false);
     }
     expect(guide.milestones).toEqual(["liftoff", "max-Q", "MECO", "stage sep", "fairing", "SECO", "insertion"]);
-    expect(outcome).toEqual({ kind: "orbit", reason: "Mission complete." });
-    expect(guide.accuracy).toBeNull();
+    // Passing the last published milestone never manufactures an orbital result.
+    expect(outcome).toBeNull();
+    expectNoGuidePenalty(guide);
   });
 
   it("reads a kinematic sample without adding a point the record does not have", () => {
@@ -204,7 +206,6 @@ describe("mission reference", () => {
     expect(mid?.velMs).toBeCloseTo(900);
     const path = referencePath(KINEMATIC);
     expect(path).toHaveLength(2);
-    expect(corridorEdges(KINEMATIC, CORRIDOR.altM)?.outer).toHaveLength(2);
   });
 
   it("places altitude and downrange on the planar globe", () => {
@@ -296,11 +297,12 @@ describe("mission reference", () => {
       expect(stepped.outcome?.reason).not.toBe("Mission failed: off nominal");
     }
     expect(body.outcome?.kind).toBe("orbit");
-    expect(guide.corridor).toBe(true);
+    expectNoGuidePenalty(guide);
   });
 });
 
-describe("corridor drift", () => {
+// REGRESSION GUARD: the 2026-10-17 request made mission paths optional visual guides.
+describe("optional reference deviations (2026-10-17 request)", () => {
   const ctx = {
     playMode: "mission" as const,
     reference: KINEMATIC,
@@ -308,63 +310,43 @@ describe("corridor drift", () => {
     endTimeS: 100,
   };
 
-  it("warns, counts five seconds, then fails off nominal", () => {
+  it("D1: sustained altitude deviation never warns, counts down, scores, or fails (2026-10-17 request)", () => {
     let guide = emptyGuide("mission");
-    const caution = stepGuide(guide, guideSample({ t: 0, altM: 10_000 + CORRIDOR.altM * 1.2, speedMs: 300 }), ctx);
-    expect(caution.guide.warningLevel).toBe("caution");
-    expect(caution.guide.banner).toBe("Drifting off track");
-    expect(caution.guide.cue).toBe("beep");
-    expect(caution.guide.beeped).toBe(true);
-    const again = stepGuide(caution.guide, guideSample({ t: 1, altM: 10_000 + CORRIDOR.altM * 1.2, speedMs: 300 }), ctx);
-    expect(again.guide.cue).toBeNull();
-
-    guide = emptyGuide("mission");
-    let failed = false;
-    for (let second = 0; second < 5; second += 1) {
+    for (let second = 0; second < 20; second += 1) {
       const stepped = stepGuide(
         guide,
-        guideSample({ t: second, altM: 10_000 + CORRIDOR.altM * 2, speedMs: 300, dt: 1 }),
+        guideSample({ t: second, altM: 70_000, speedMs: 300, dt: 1 }),
         ctx,
       );
       guide = stepped.guide;
-      failed = stepped.outcome?.reason === "Mission failed: off nominal";
-      if (failed) break;
+      expect(stepped.outcome).toBeNull();
+      expectNoGuidePenalty(guide);
     }
-    expect(failed).toBe(true);
-    expect(guide.warningLevel).toBe("failed");
-    expect(guide.countdownS).toBe(0);
+    expect(guide.milestones).toEqual(["liftoff"]);
   });
 
-  it("one extreme deviation fails immediately", () => {
+  it("D2: extreme altitude, speed and pointing deviations cannot fail an otherwise safe flight (2026-10-17 request)", () => {
     const stepped = stepGuide(
       emptyGuide("mission"),
-      guideSample({ t: 0, altM: 10_000 + CORRIDOR.altM * CORRIDOR.extremeScale + 1, speedMs: 300 }),
+      guideSample({ t: 0, altM: 1_000_000, speedMs: 8_000, pitchRad: 1.5 }),
       ctx,
     );
-    expect(stepped.outcome).toEqual({ kind: "failed", reason: "Mission failed: off nominal" });
+    expect(stepped.outcome).toBeNull();
+    expectNoGuidePenalty(stepped.guide);
   });
 
-  it("hysteresis clears only after the rocket is back inside", () => {
-    const warned = stepGuide(
-      emptyGuide("mission"),
-      guideSample({ t: 0, altM: 10_000 + CORRIDOR.altM * 2, speedMs: 300, dt: 0.2 }),
-      ctx,
-    );
-    expect(warned.guide.warningLevel).toBe("warning");
-    const still = stepGuide(
-      warned.guide,
-      guideSample({ t: 0.2, altM: 10_000 + CORRIDOR.altM * 0.9, speedMs: 300, dt: 0.2 }),
-      ctx,
-    );
-    expect(still.guide.warningLevel).toBe("warning");
-    const clear = stepGuide(
-      warned.guide,
-      guideSample({ t: 0.2, altM: 10_000, speedMs: 300, dt: 0.2 }),
-      ctx,
-    );
-    expect(clear.guide.warningLevel).toBe("nominal");
-    expect(clear.guide.countdownS).toBeNull();
-    expect(clear.guide.banner).toBeNull();
+  it("D3: retired warnings clear immediately without requiring a return to the path (2026-10-17 request)", () => {
+    let guide: FlightGuide = {
+      ...emptyGuide("mission"), warningLevel: "warning", outsideS: 4,
+      countdownS: 1, banner: "Return to trajectory", beeped: true,
+      accuracy: { insideFraction: 0.1, rms: 5 }, insideS: 1, errorSumSq: 25, samples: 10,
+    };
+    for (const [t, altM] of [[0, 70_000], [0.2, 37_000], [0.4, 10_000]]) {
+      const stepped = stepGuide(guide, guideSample({ t, altM, dt: 0.2 }), ctx);
+      guide = stepped.guide;
+      expect(stepped.outcome).toBeNull();
+      expectNoGuidePenalty(guide);
+    }
   });
 });
 
@@ -374,8 +356,8 @@ describe("anomaly detectors", () => {
     expect(classifyAnomaly(sample({ altM: -1, t: 2 }))?.reason).toBe(GROUND_REASON);
   });
 
-  it("flags a tower strike, loss of control, breakup, and re-entry", () => {
-    expect(classifyAnomaly(sample({ t: 2, altM: 40, pitchRad: 1.4 }))?.reason).toBe(TOWER_REASON);
+  it("flags loss of control, breakup, and re-entry while leaving collision geometry authoritative", () => {
+    expect(classifyAnomaly(sample({ t: 2, altM: 40, pitchRad: 1.4 }))).toBeNull();
     expect(classifyAnomaly(sample({ altM: 400, pitchRad: 1.5, pitchRateRadS: 2 }))?.reason).toBe(CONTROL_REASON);
     expect(classifyAnomaly(sample({ gLoad: 50 }))?.reason).toBe(BREAKUP_REASON);
     expect(classifyAnomaly(sample({ qPa: 2_000_000, aoaRad: 3 }))?.reason).toBe(BREAKUP_REASON);
@@ -432,7 +414,7 @@ describe("flight loop fuel and mission degrade", () => {
     expect(getPublishedFuelReadout()?.consumedRp1Kg?.[1]).toBeGreaterThan(0);
   });
 
-  it("practice mission shows drift warnings, then fails off nominal after about five seconds", () => {
+  it("D4: a practice reference never penalizes waiting on the pad, even past its final milestone (2026-10-17 request)", () => {
     expect(referenceHasKinematics(MISSIONS.practice.reference)).toBe(true);
     useScene.getState().setPlayMode("mission");
     useScene.getState().setMissionTrack("practice");
@@ -445,28 +427,21 @@ describe("flight loop fuel and mission degrade", () => {
     expect(useScene.getState().setFlightInput({ pitchRad: 0, throttle: 0, calibrated: true }, "phone", runId).ok).toBe(true);
     useScene.getState().setFlightWarp(8);
 
-    const seen: string[] = [];
-    let cautionT: number | null = null;
-    let warningT: number | null = null;
-    let failT: number | null = null;
-    for (let i = 0; i < 800 && failT === null; i += 1) {
+    for (let i = 0; i < 800; i += 1) {
       useScene.getState().advanceFlight(0.1);
       const flight = useScene.getState().flight;
-      const banner = flight.guide?.banner ?? null;
-      if (banner && seen[seen.length - 1] !== banner) seen.push(banner);
-      if (banner === "Drifting off track" && cautionT === null) cautionT = flight.simulatedTimeS;
-      if (banner === "Return to trajectory" && warningT === null) warningT = flight.simulatedTimeS;
-      if (flight.guide?.warningLevel === "failed") failT = flight.simulatedTimeS;
+      expect(flight.status).toBe("flying");
+      expect(flight.outcome).toBeNull();
+      expect(flight.guide).not.toBeNull();
+      expectNoGuidePenalty(flight.guide!);
     }
 
-    expect(seen).toEqual(["Drifting off track", "Return to trajectory", "Mission failed: off nominal"]);
-    expect(cautionT).not.toBeNull();
-    expect(warningT).not.toBeNull();
-    expect(failT).not.toBeNull();
-    expect((failT ?? 0) - (warningT ?? 0)).toBeGreaterThan(4.5);
-    expect((failT ?? 0) - (warningT ?? 0)).toBeLessThan(5.5);
-    expect(useScene.getState().flight.outcome?.reason).toBe("Mission failed: off nominal");
-    expect(useScene.getState().flight.guide?.corridor).toBe(true);
+    const flight = useScene.getState().flight;
+    expect(flight.simulatedTimeS).toBeGreaterThan(532);
+    expect(flight.guide?.milestones).toContain("seco");
+    expect(flight.state?.airborne).toBe(false);
+    expect(flight.state?.positionM).toEqual({ x: 0, y: EARTH_RADIUS_M, z: 0 });
+    expect(flight.fuel?.rp1ConsumedKg).toBe(0);
     expect(useScene.getState().guidanceNote).toBeNull();
     expect(referenceTrajectoryNote(MISSIONS["sentinel-6-michael-freilich"])).toBe("Reference trajectory unavailable");
   });

@@ -1,12 +1,13 @@
 "use client";
 // Falcon 9 in rocket-local metres, parented in the Earth-radii group.
 // The cached explorer scene is cloned so preparing that model cannot move this one.
-import { Suspense, useEffect, useMemo, useRef } from "react";
+import { Suspense, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { EARTH_RADIUS_M } from "@/lib/flight.helpers";
 import { EARTH_RADIUS } from "@/lib/flight/scene-types";
+import { vehiclePoseOffsets } from "@/lib/flight/vehicle-pose.helpers";
 import { FLIGHT_SCENE } from "@/lib/viewer/colors";
 import { flightDrawNow } from "./flightDraw";
 import { FALCON_HEIGHT_M, fitFalcon } from "./fitFalcon";
@@ -19,19 +20,13 @@ useGLTF.preload(MODEL);
 const scratch = {
   up: new THREE.Vector3(0, 1, 0),
   nose: new THREE.Vector3(),
-  radial: new THREE.Vector3(),
   quat: new THREE.Quaternion(),
   world: new THREE.Vector3(),
 };
 
-function FalconModel({ stage }: { stage: number }) {
+function FalconModel() {
   const { scene } = useGLTF(MODEL);
   const fitted = useMemo(() => fitFalcon(scene), [scene]);
-  useEffect(() => {
-    fitted.traverse((node) => {
-      if (node.name === "First Stage") node.visible = stage < 1;
-    });
-  }, [fitted, stage]);
   return <primitive object={fitted} />;
 }
 
@@ -44,27 +39,36 @@ function FallbackRocket() {
   );
 }
 
-export function Vehicle({ stage, throttle, altitudeKm, elapsedS }: {
+export function Vehicle({ stage, throttle, altitudeKm, elapsedS, visible = true }: {
   stage: number;
   throttle: number;
   altitudeKm: number;
   elapsedS: number;
+  visible?: boolean;
 }) {
   const rig = useRef<THREE.Group>(null);
   const marker = useRef<THREE.Mesh>(null);
-
   useFrame(({ camera }) => {
     const draw = flightDrawNow.current;
     const node = rig.current;
     if (!draw || !node) return;
+    node.visible = visible;
+    if (!visible) {
+      if (marker.current) marker.current.visible = false;
+      return;
+    }
     scratch.nose.set(draw.nose[0], draw.nose[1], draw.nose[2]);
     if (scratch.nose.lengthSq() < 1e-8) scratch.nose.set(0, 1, 0);
     scratch.nose.normalize();
-    scratch.quat.setFromUnitVectors(scratch.up, scratch.nose);
+    if (draw.orientation) {
+      const [w, x, y, z] = draw.orientation;
+      scratch.quat.set(x, y, z, w);
+    } else scratch.quat.setFromUnitVectors(scratch.up, scratch.nose);
+    const { originM } = vehiclePoseOffsets(draw.position, draw.nose, draw.altitudeM, stage, draw.padLiftM);
+    node.position.set(draw.position[0] + originM[0] / EARTH_RADIUS_M,
+      draw.position[1] + originM[1] / EARTH_RADIUS_M,
+      draw.position[2] + originM[2] / EARTH_RADIUS_M);
     node.quaternion.copy(scratch.quat);
-    scratch.radial.set(draw.up[0], draw.up[1], draw.up[2]);
-    node.position.set(draw.position[0], draw.position[1], draw.position[2]);
-    node.position.addScaledVector(scratch.radial, 0.6 / EARTH_RADIUS_M);
     const mark = marker.current;
     if (!mark) return;
     node.getWorldPosition(scratch.world);
@@ -78,12 +82,13 @@ export function Vehicle({ stage, throttle, altitudeKm, elapsedS }: {
 
   return (
     <>
-      <group ref={rig} scale={1 / EARTH_RADIUS_M}>
-        <Suspense fallback={<FallbackRocket />}>
-          <FalconModel stage={stage} />
-        </Suspense>
-        <EnginePlume throttle={throttle} altitudeKm={altitudeKm} />
-        <StageSeparation stage={stage} elapsedS={elapsedS} />
+      <group ref={rig} visible={visible} scale={1 / EARTH_RADIUS_M}>
+        {stage < 1 ? (
+          <Suspense fallback={<FallbackRocket />}>
+            <FalconModel />
+          </Suspense>
+        ) : <StageSeparation stage={stage} throttle={throttle} elapsedS={elapsedS} />}
+        <EnginePlume throttle={stage < 1 ? throttle : 0} altitudeKm={altitudeKm} />
       </group>
       <mesh ref={marker} visible={false}>
         <ringGeometry args={[0.62, 1, 28]} />

@@ -172,9 +172,47 @@
   display: grid;
   gap: 8px;
   justify-items: end;
-  pointer-events: auto;
+  pointer-events: none;
   width: min(18rem, calc(100% - 48px));
   transform-origin: top right;
+}
+
+.chipWrap > * { pointer-events: auto; }
+
+/* The 2026-10-17 launch-panel report exposed two independent overlays sharing
+   the right control column. Flight pairing gets its own left/between-column
+   space, and empty wrapper space never captures a flight-control click.
+   The disconnected entry sits above the footer. Opening its card temporarily
+   uses the briefing column on narrow screens, with enough height to scan a QR.
+   Wide screens have room for the complete card between the two HUD columns.
+   Mobile cards stop above the controls' 34dvh region and 40px bottom margin. */
+.chipWrap.flight {
+  top: auto;
+  right: auto;
+  bottom: 64px;
+  left: 24px;
+  width: auto;
+  max-width: calc(100vw - 48px);
+  transform-origin: bottom left;
+}
+
+.center.flight {
+  top: 80px;
+  right: auto;
+  bottom: 64px;
+  left: 24px;
+  max-height: calc(100dvh - 144px);
+  transform-origin: top left;
+}
+
+@media (min-width: 1100px) {
+  .center.flight {
+    top: 80px;
+    bottom: auto;
+    left: calc(50% - 10.25rem);
+    max-height: calc(100dvh - 104px);
+    transform-origin: top center;
+  }
 }
 
 .linkBtn {
@@ -201,6 +239,28 @@
   }
   .panel { border-radius: 16px 16px 0 0; border-bottom: 0; }
   .chipWrap { top: 128px; right: 12px; }
+  .chipWrap.flight {
+    top: 80px;
+    right: auto;
+    bottom: auto;
+    left: 12px;
+    max-width: calc(100vw - 24px);
+    transform-origin: top left;
+  }
+  .center.flight {
+    top: 128px;
+    right: 12px;
+    bottom: calc(34dvh + 52px);
+    left: 12px;
+    width: auto;
+    max-height: none;
+    transform-origin: top center;
+  }
+  /* Keep the complete QR visible when the short-screen card is scrolled to it. */
+  .center.flight .finder {
+    max-width: min(14rem, calc(66dvh - 204px));
+    margin-inline: auto;
+  }
 }
 
 /* "Calibration successful": a quiet confirmation right under the Calibrate button. */

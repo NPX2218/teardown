@@ -87,7 +87,7 @@ export function usePhoneSensors(
       if (now - lastEmit < FRAME_MS - 5) return; // -5: 60 Hz events land at ~49.9 ms; without it the rate drops to ~15 Hz
       lastEmit = now;
       frames += 1;
-      onFrameRef.current(f);
+      onFrameRef.current(latest);
     };
     const debugTimer = setInterval(() => {
       const now = performance.now();

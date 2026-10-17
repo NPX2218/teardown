@@ -4,11 +4,9 @@ import { describe, expect, it } from "vitest";
 import { EARTH_RADIUS_M } from "@/lib/flight.helpers";
 import { METRES_TO_SCENE } from "@/lib/flight/scene-scale";
 import {
-  ATMOSPHERE_POWER,
   CLOUD_OPACITY,
   CLOUD_YAW_RAD_PER_SEC,
   EARTH_SUN_DIRECTION,
-  atmosphereFragmentShader,
   cloudFragmentShader,
   cloudOpacity,
   cloudYawDelta,
@@ -17,7 +15,6 @@ import {
   nightGate,
 } from "@/components/flight/earthShaders";
 import {
-  ATMOSPHERE_RADIUS_SCALE,
   EARTH_IMAGERY_CAPTION,
   EARTH_MAPS,
   EARTH_RENDER_RADIUS,
@@ -119,9 +116,8 @@ describe("earth texture files", () => {
 });
 
 describe("earth shading", () => {
-  it("keeps the rendered radius and the atmosphere shell", () => {
+  it("keeps the rendered Earth radius", () => {
     expect(EARTH_RENDER_RADIUS).toBe(EARTH_RADIUS_M * METRES_TO_SCENE);
-    expect(ATMOSPHERE_RADIUS_SCALE).toBe(1.025);
   });
 
   it("puts the terminator across the default flight camera", () => {
@@ -145,8 +141,6 @@ describe("earth shading", () => {
     expect(earthFragmentShader).toContain("float ocean = texture2D(specMap, vUv).r");
     expect(earthFragmentShader).toContain("specColor * glint * wet");
     expect(earthFragmentShader).toContain("smoothstep(-0.15, 0.25, ndotl)");
-    expect(atmosphereFragmentShader).toContain("float fresnel = pow(1.0 - ndv,");
-    expect(atmosphereFragmentShader).toContain(ATMOSPHERE_POWER.toFixed(1));
     expect(cloudFragmentShader).toContain("texture2D(cloudMap, vUv)");
     expect(cloudOpacity(0)).toBe(0);
     expect(cloudOpacity(1)).toBeCloseTo(CLOUD_OPACITY, 5);
@@ -170,8 +164,9 @@ describe("earth scene wiring", () => {
 
     const earth = read("components/flight/Earth.tsx");
     expect(earth).toContain("drawEarthMap");
-    expect(earth).toContain("THREE.BackSide");
-    expect(earth).toContain("THREE.AdditiveBlending");
+    // REGRESSION GUARD for the 2026-10-17 black-background request.
+    expect(earth).not.toContain("atmosphereMaterial");
+    expect(earth).not.toContain("ATMOSPHERE_RADIUS_SCALE");
     expect(earth).toContain("EARTH_RENDER_RADIUS");
     expect(earth).toContain("cloudYawDelta");
     expect(earth).toContain("EARTH_IMAGERY_CAPTION");

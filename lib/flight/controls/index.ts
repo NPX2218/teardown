@@ -1,9 +1,10 @@
 // One control pipeline for Explore, Your mission (including free flight), and Flight replay.
 // Phone samples and keyboard holds both enter through the functions in this file.
 import { useAppMode, type AppMode } from "@/lib/flight/app-mode";
-import { heldAxes, stepHeld } from "@/lib/flight/local-controls";
+import { heldAxes, stepHeld, type HeldAxes } from "@/lib/flight/local-controls";
+import { releasePhoneThrottle } from "@/lib/flight/phone-pitch";
 import { useScene } from "@/lib/store";
-import type { FlightAxisCommand, ToolResult } from "@/lib/types";
+import type { FlightAxisCommand, Quat, ToolResult } from "@/lib/types";
 
 /** The three screens. Free flight is the mission screen with play mode "free". */
 export const CONTROL_MODES = ["explore", "mission", "replay"] as const;
@@ -24,6 +25,8 @@ export function measuresDrift(mode: ControlMode, playMode: "free" | "mission"): 
 
 export interface PhoneAxes {
   pitchRad: number;
+  yawRad?: number;
+  attitudeQuat?: Quat;
   /** Null leaves the laptop throttle alone. */
   throttle: number | null;
   /** A real push, not the pitch-derived throttle hint. */
@@ -40,20 +43,28 @@ export function commitPhoneAxes(sample: PhoneAxes, mode: ControlMode = currentCo
   if (mode === "explore" && store.flight.status === "idle") return { ok: true };
   const live = store.flight;
   if (live.status !== "flying" || !live.runId) return { ok: false, error: "no active flight" };
+  let steering: ToolResult = { ok: false, error: "phone steering not owned" };
   if (live.owners.pitch === "phone") {
-    const pitched = store.setFlightInput(
-      { pitchRad: sample.pitchRad, calibrated: sample.calibrated },
+    steering = store.setFlightInput(
+      { pitchRad: sample.pitchRad, yawRad: sample.yawRad ?? 0, attitudeQuat: sample.attitudeQuat, calibrated: sample.calibrated },
       "phone",
       live.runId,
     );
-    if (!pitched.ok && sample.throttle === null) return pitched;
   }
-  if (sample.throttle === null) return { ok: true };
-  if (sample.throttlePush && store.rocket.connected && useScene.getState().flight.owners.throttle !== "phone") {
-    store.setFlightAxisOwner("throttle", "phone");
+  if (sample.throttle === null) {
+    const released = releasePhoneThrottle();
+    return released.ok ? steering : released;
+  }
+  if (sample.throttlePush && sample.calibrated && store.rocket.connected && useScene.getState().flight.owners.throttle !== "phone") {
+    const moved = store.setFlightAxisOwner("throttle", "phone");
+    if (!moved.ok) return moved;
+    // The deliberate push is consent to take power. Arm the newly owned axis
+    // at neutral before applying this sample; the following rest is null.
+    const armed = store.setFlightInput({ throttle: 0, calibrated: true }, "phone", live.runId);
+    if (!armed.ok) return armed;
   }
   const owned = useScene.getState().flight;
-  if (!owned.runId || owned.owners.throttle !== "phone") return { ok: true };
+  if (!owned.runId || owned.owners.throttle !== "phone") return steering;
   return store.setFlightInput({ throttle: sample.throttle, calibrated: sample.calibrated }, "phone", owned.runId);
 }
 
@@ -78,24 +89,23 @@ export function commitShellEvent(event: "launch" | "shake" | "flick" | "abort" |
   return store.abortFlight("Aborted: the rocket was held upside down.");
 }
 
-/** Keyboard and on-screen holds. Wall time, never warped. */
+/** Keyboard holds change engine power; only the phone steers. */
 export function commitHeldAxes(wallDt: number, mode: ControlMode = currentControlMode()): ToolResult {
   if (mode === "explore") return { ok: true };
-  if (mode === "replay" && (heldAxes.pitch !== 0 || heldAxes.throttle !== 0)) {
+  if (mode === "replay" && heldAxes.throttle !== 0) {
     const armed = launchControlledFlight(mode);
     if (!armed.ok && useScene.getState().flight.status !== "flying") return armed;
   }
   const scene = useScene.getState();
   const flight = scene.flight;
   if (flight.status !== "flying" || !flight.runId) return { ok: false, error: "no active flight" };
-  if (heldAxes.pitch === 0 && heldAxes.throttle === 0) return { ok: true };
-  const owned = {
-    pitch: flight.owners.pitch === "local" ? heldAxes.pitch : 0,
+  if (heldAxes.throttle === 0) return { ok: true };
+  const owned: HeldAxes = {
+    pitch: 0,
     throttle: flight.owners.throttle === "local" ? heldAxes.throttle : 0,
   };
   const next = stepHeld(flight.input, owned, wallDt);
   const command: FlightAxisCommand = {};
-  if (owned.pitch !== 0) command.pitchRad = next.pitchRad;
   if (owned.throttle !== 0) command.throttle = next.throttle;
   if (command.pitchRad === undefined && command.throttle === undefined) return { ok: true };
   scene.markActivity(performance.now());
@@ -109,20 +119,24 @@ export function commitHeldAxes(wallDt: number, mode: ControlMode = currentContro
  */
 export function launchControlledFlight(mode: ControlMode = currentControlMode()): ToolResult {
   const store = useScene.getState();
+  if (!store.rocket.connected) return { ok: false, error: "connect your phone to launch" };
   if (mode === "replay" && store.flight.status === "idle") {
     const replay = store.replay;
     const missionId = replay.missionId;
+    if (!missionId) return { ok: false, error: "choose a replay mission first" };
     const started = store.startFlight("classroom");
     if (!started.ok) return started;
     useScene.setState({ replay });
     if (missionId) store.setMissionTrack(missionId);
-    if (store.rocket.connected) store.setFlightAxisOwner("pitch", "phone");
   }
   if (useScene.getState().flight.status !== "ready") {
     return useScene.getState().flight.status === "flying"
       ? { ok: true }
       : { ok: false, error: "flight is not ready" };
   }
-  if (store.rocket.connected) useScene.getState().setFlightAxisOwner("pitch", "phone");
-  return useScene.getState().launchFlight();
+  const owned = useScene.getState().setFlightAxisOwner("pitch", "phone");
+  if (!owned.ok) return owned;
+  const launched = useScene.getState().launchFlight();
+  if (launched.ok && mode === "replay") useScene.getState().resumeReplay();
+  return launched;
 }

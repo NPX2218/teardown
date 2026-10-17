@@ -150,6 +150,7 @@ export interface FlightAccuracy {
 export interface FlightImpact {
   x: number;
   y: number;
+  z?: number;
   t: number;
 }
 
@@ -169,7 +170,7 @@ export interface FlightGuide {
   milestones: string[];
   accuracy: FlightAccuracy | null;
   impact: FlightImpact | null;
-  trail: { t: number; x: number; y: number }[];
+  trail: { t: number; x: number; y: number; z?: number }[];
   outsideS: number;
   beeped: boolean;
   lastAlarmT: number;
@@ -369,12 +370,19 @@ export interface FlightScenario {
 export interface FlightInput {
   /** Pitch relative to the local radial direction, radians. */
   pitchRad: number;
+  /** Crossrange side lean. Missing in older commands means zero. */
+  yawRad?: number;
+  /** Full phone orientation in the local radial frame; [w, x, y, z]. */
+  attitudeQuat?: Quat;
   /** 0 = engines off, 1 = full thrust. */
   throttle: number;
 }
 
 export interface FlightAxisCommand {
   pitchRad?: number;
+  /** Side lean shares the pitch owner and arming contract. */
+  yawRad?: number;
+  attitudeQuat?: Quat;
   throttle?: number;
   /** Phone control must send true on the sample that arms an axis. */
   calibrated?: boolean;
@@ -406,13 +414,23 @@ export interface StageFuelSnapshot {
  */
 export interface FlightState {
   pitchRad: number;
+  /** Crossrange side lean and turn rate; absent values mean zero. */
+  yawRad?: number;
+  yawRateRadS?: number;
+  /** Actual physical orientation and angular velocity in fixed physics XYZ. */
+  attitudeQuat?: Quat;
+  angularVelocityRadS?: Vec3;
+  /** Radial control frame transported with the flight, avoiding a heading flip at a pole. */
+  controlFrameQuat?: Quat;
+  /** Nose turn rate; missing means 0. */
+  pitchRateRadS?: number;
   throttle: number;
   activeStageId: string;
   simulatedTimeS: number;
   stages: StageFuelSnapshot[];
   payloadKg: number;
-  positionM: { x: number; y: number } | null;
-  velocityMps: { x: number; y: number } | null;
+  positionM: { x: number; y: number; z?: number } | null;
+  velocityMps: { x: number; y: number; z?: number } | null;
   /** Consecutive simulated seconds inside the orbit goal with thrust off. */
   thrustOffS: number;
   /** True after liftoff. Falling back to Earth is a crash. */

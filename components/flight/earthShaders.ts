@@ -12,9 +12,6 @@ export const CLOUD_OPACITY = 0.88;
 /** One turn in about six minutes. Paused when the visitor asks for less motion. */
 export const CLOUD_YAW_RAD_PER_SEC = 0.018;
 
-export const ATMOSPHERE_POWER = 3.0;
-export const ATMOSPHERE_GAIN = 2.15;
-
 const SUN_RAW = [-1, 0.36, 1] as const;
 const SUN_LENGTH = Math.hypot(SUN_RAW[0], SUN_RAW[1], SUN_RAW[2]);
 
@@ -125,25 +122,6 @@ void main() {
   float alpha = smoothstep(${cloudMask}, density) * ${CLOUD_OPACITY.toFixed(2)};
   float light = mix(0.04, 1.0, smoothstep(-0.20, 0.45, ndotl));
   gl_FragColor = vec4(vec3(light), alpha);
-  #include <logdepthbuf_fragment>
-  #include <colorspace_fragment>
-}
-`;
-
-export const atmosphereFragmentShader = /* glsl */ `
-varying vec3 vNormalW;
-varying vec3 vWorldPos;
-uniform vec3 sunDir;
-uniform vec3 atmosphereColor;
-uniform float atmosphereGain;
-#include <logdepthbuf_pars_fragment>
-void main() {
-  vec3 N = normalize(vNormalW);
-  vec3 V = normalize(cameraPosition - vWorldPos);
-  float ndv = abs(dot(N, V));
-  float fresnel = pow(1.0 - ndv, ${ATMOSPHERE_POWER.toFixed(1)});
-  float lit = mix(0.18, 1.0, smoothstep(-0.35, 0.45, dot(N, normalize(sunDir))));
-  gl_FragColor = vec4(atmosphereColor * fresnel * lit * atmosphereGain, 1.0);
   #include <logdepthbuf_fragment>
   #include <colorspace_fragment>
 }

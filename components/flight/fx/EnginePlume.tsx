@@ -26,7 +26,7 @@ const _color = new THREE.Color();
 /**
  * Merlin exhaust in the rocket frame (metres, origin at the bells, +Y nose).
  * Bright white column at the bells, orange where it meets the pad, and a
- * cream billow that spreads across the ground. A white contrail grows
+ * cream trail that stays behind the bells. A white contrail grows
  * behind the vehicle as it climbs. Wide and faint only in vacuum.
  */
 export function EnginePlume({ throttle, altitudeKm, reducedMotion }: EnginePlumeProps & MotionOverride) {
@@ -123,7 +123,7 @@ export function EnginePlume({ throttle, altitudeKm, reducedMotion }: EnginePlume
     fragmentShader: smokeFragment,
     transparent: true,
     depthWrite: false,
-    depthTest: false,
+    depthTest: true,
     toneMapped: false,
   }), [cream, flame, map]);
 

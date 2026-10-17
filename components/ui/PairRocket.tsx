@@ -147,6 +147,7 @@ export function PairRocket() {
     };
   }, [showCard]);
 
+  const flightEnded = useScene((s) => s.flight.outcome !== null);
   const qr = useMemo(() => (code && origin ? qrSvgPath(rocketUrl(origin, code)) : null), [code, origin]);
   const tryNow = useCallback(() => retryNow.current(), []);
 
@@ -163,9 +164,11 @@ export function PairRocket() {
     </p>
   );
 
-  // One surface per state. Each grows out of the top-right corner where the "Connect rocket" button sits
-  // (bottom edge on phones, see pair.module.css). Opacity and scale only: no layout work, the 3D scene never re-renders.
-  const view = rocket.connected ? (justConnected ? "toast" : "status") : showCard ? "card" : "button";
+  // Flight owns its connection readout while the flight is in progress.
+  // Once a result is up, keep a small "Rocket on" chip so that card stays visible.
+  const flightMode = mode !== "explore";
+  const view = rocket.connected ? (justConnected ? "toast" : flightEnded ? "chip" : "status") : showCard ? "card" : "button";
+  const showSurface = !flightMode || !rocket.connected || view === "chip";
   let surface: ReactNode;
   if (view === "toast") {
     surface = (
@@ -173,6 +176,9 @@ export function PairRocket() {
         <p className="lead">Rocket connected</p>
       </div>
     );
+  } else if (view === "chip") {
+    // The flight result card sits in this corner; the full status card would cover Try again.
+    surface = <span className="chip chip--ok">Rocket on</span>;
   } else if (view === "status") {
     surface = (
       <div className="card">
@@ -282,15 +288,16 @@ export function PairRocket() {
     <>
       {live}
       <AnimatePresence initial={false}>
-        <motion.div
+        {showSurface && <motion.div
           key={view}
-          className={view === "card" ? styles.center : styles.chipWrap}
+          data-pair-surface={view}
+          className={`${view === "card" ? styles.center : styles.chipWrap} ${flightMode ? styles.flight : ""}`}
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1, transition: motionPresets.out }}
           exit={{ opacity: 0, scale: 0.98, transition: motionPresets.ui }}
         >
           {surface}
-        </motion.div>
+        </motion.div>}
       </AnimatePresence>
     </>
   );

@@ -3,6 +3,7 @@
 // Exact stats are HTML, built by buildPatchCard.
 import type { FlightOutcome, FlightOutcomeKind, FlightReadout } from "@/lib/types";
 import { FLIGHT_SCENARIOS } from "@/data/flight";
+import { formatCo2Amount } from "@/lib/emissions-format";
 
 const NO_LETTERS =
   "Do not draw any letters, numbers, words, or logos.";
@@ -114,6 +115,8 @@ export interface PatchCard {
   outcomeLabel: string;
   scenarioName: string;
   maxAltitude: string;
+  /** Estimated CO₂ from the RP-1 burned, same rounding as the emissions readout. */
+  co2: string;
   playfulBreakup: boolean;
   reason: string;
 }
@@ -193,13 +196,14 @@ export function scenarioLabel(scenarioId: string | null): string {
   return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
-export function buildPatchCard(outcome: FlightOutcome, scenarioName: string, flightNumber: number): PatchCard {
+export function buildPatchCard(outcome: FlightOutcome, scenarioName: string, flightNumber: number, co2Kg: number | null = null): PatchCard {
   return {
     title: patchTitle(flightNumber),
     flightNumber,
     outcomeLabel: outcomeLabel(outcome.kind),
     scenarioName,
     maxAltitude: formatMaxAltitude(maxAltitudeMetres(outcome.readout)),
+    co2: co2Kg !== null && Number.isFinite(co2Kg) && co2Kg >= 0 ? formatCo2Amount(co2Kg).valueText : "Not available",
     playfulBreakup: outcome.kind !== "orbit",
     reason: outcome.reason,
   };

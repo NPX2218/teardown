@@ -11,7 +11,6 @@ import { LevelSwitch } from "./LevelSwitch";
 
 const MODES = [
   { id: "explore", label: "Explore" },
-  { id: "replay", label: "Flight replay" },
   { id: "mission", label: "Your mission" },
 ] as const;
 
@@ -21,7 +20,6 @@ export function Header() {
   const open = (id: (typeof MODES)[number]["id"]) => {
     const app = useAppMode.getState();
     if (id === "explore") app.openExplore();
-    if (id === "replay") app.openReplay();
     if (id === "mission") app.openMission();
   };
   return (

@@ -37,6 +37,8 @@ export interface StageSeparationProps {
   stage: number;
   /** Seconds since `stage` became 1. 0 while the vehicle is still stacked. */
   elapsedS: number;
+  /** Actual engine command. Zero keeps the upper stage dark while coasting. */
+  throttle?: number;
   /**
    * When true, the payload-fairing halves open on the same `elapsedS` clock.
    * Omit or pass false to keep the nose closed.
@@ -59,6 +61,8 @@ export interface CloudLayerProps {
    * (25.997, -97.157), the Starbase pad the env module is building.
    */
   pad?: EarthRadiiVec3;
+  /** True once the engines have fired this run. No pad steam before that. */
+  ignited?: boolean;
 }
 
 /** Optional override. When omitted, the OS `prefers-reduced-motion` setting is used. */

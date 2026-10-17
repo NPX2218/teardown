@@ -160,23 +160,6 @@ export function padBasis(pad: readonly [number, number, number]): PadBasis {
   return { up, east, north };
 }
 
-/** Ground steam stays bright through the climb, then thins out above the cloud band. */
-export function padBankOpacity(altitudeKm: number): number {
-  const h = Math.max(0, finiteOr(altitudeKm, 0));
-  if (h <= 8) return 0.95;
-  if (h >= 25) return 0;
-  return clamp01(1 - (h - 8) / 17) * 0.95;
-}
-
-/** White column from the pad up toward the vehicle. Holds at 6 km so the draw stays bounded. */
-export function padColumn(altitudeKm: number): { lengthM: number; amount: number } {
-  const h = Math.max(0, finiteOr(altitudeKm, 0));
-  return {
-    lengthM: Math.min(h * 1000, 6000),
-    amount: clamp01(h / 0.2) * clamp01(1 - h / 45),
-  };
-}
-
 /** Nine Merlin bells: one on the axis, eight on the octaweb ring. */
 export function merlinNozzles(): ReadonlyArray<readonly [number, number, number]> {
   const out: Array<readonly [number, number, number]> = [[0, 0, 0]];
@@ -309,12 +292,7 @@ export interface FxBudget {
   contrail: number;
   debris: number;
   embers: number;
-  cloudDecks: number;
   cloudPuffs: number;
-  /** Cream bank sprites anchored at the pad. */
-  padBank: number;
-  /** Column sprites from the pad up along the radial. */
-  padColumn: number;
   flicker: boolean;
 }
 
@@ -323,11 +301,11 @@ export function fxBudget(reduced: boolean): FxBudget {
   if (reduced) {
     return {
       sparks: 0, smoke: 16, contrail: 10, debris: 8, embers: 0,
-      cloudDecks: 2, cloudPuffs: 4, padBank: 12, padColumn: 8, flicker: false,
+      cloudPuffs: 4, flicker: false,
     };
   }
   return {
     sparks: 28, smoke: 72, contrail: 40, debris: 32, embers: 40,
-    cloudDecks: 4, cloudPuffs: 12, padBank: 56, padColumn: 36, flicker: true,
+    cloudPuffs: 12, flicker: true,
   };
 }
