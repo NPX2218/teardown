@@ -33,7 +33,15 @@ export interface LaunchSiteProps {
   site: LaunchSiteSpec;
   /**
    * Earth-fixed sun. Optional so `<LaunchSite site={...} />` matches the
-   * integrator props. Defaults to `EARTH_SUN_DIRECTION`.
+   * integrator props. Starbase defaults to a low warm sun; other sites
+   * default to `EARTH_SUN_DIRECTION`.
    */
   sunDirection?: Vec3;
+  /**
+   * 0..1 liftoff steam for the fx module (`neel/19b-rocket-fx`).
+   * This component does not draw the cloud. The value is copied onto the
+   * group's `userData.launchCloudIntensity` so EnginePlume / CloudLayer can
+   * read it without a second plume living here.
+   */
+  launchCloudIntensity?: number;
 }

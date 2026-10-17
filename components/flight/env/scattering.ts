@@ -129,7 +129,7 @@ export function marchAtmosphere(
   const atmosR = SCATTER.planetKm + SCATTER.atmosphereKm;
   const atmo = raySphere(ro, rd, atmosR);
   if (!atmo) return { r: 0, g: 0, b: 0, alpha: 0, odR: 0 };
-  let t0 = Math.max(atmo[0], 0);
+  const t0 = Math.max(atmo[0], 0);
   let t1 = atmo[1];
   const planet = raySphere(ro, rd, SCATTER.planetKm);
   if (planet && planet[0] > 0.001) t1 = Math.min(t1, planet[0]);

@@ -143,6 +143,15 @@ export function sitePlacement(site: LaunchSiteSpec): SitePlacement {
   };
 }
 
+/** Earth-fixed sun at a compass bearing and an elevation above the local horizon. */
+export function sunFromHorizon(latDeg: number, lonDeg: number, bearingDeg: number, elevationDeg: number): [number, number, number] {
+  const { east, north, up } = eastNorthUp(latDeg, lonDeg);
+  const az = bearingDeg * DEG;
+  const el = elevationDeg * DEG;
+  const horiz = normalize(add(scale(north, Math.cos(az)), scale(east, Math.sin(az))));
+  return normalize(add(scale(up, Math.sin(el)), scale(horiz, Math.cos(el))));
+}
+
 export function sunElevationDeg(sun: Vec3, up: Vec3): number {
   const dir = normalize(sun);
   return (Math.asin(clamp(dot(dir, up), -1, 1)) * 180) / Math.PI;

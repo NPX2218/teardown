@@ -1,5 +1,16 @@
 import type { LaunchSiteSpec } from "./types";
 
+/**
+ * Default pad. Boca Chica, Texas. Starship flies east over the Gulf.
+ * The photo reference is a coastal tidal flat, not a surveyed model.
+ */
+export const STARBASE: LaunchSiteSpec = {
+  lat: 25.997,
+  lon: -97.157,
+  name: "Starbase",
+  azimuthDeg: 90,
+};
+
 /** Cape Canaveral SLC-40. Free flight, practice, and the classroom pad. */
 export const CAPE_SLC40: LaunchSiteSpec = {
   lat: 28.561941,
@@ -19,7 +30,7 @@ export const VSFB_SLC4E: LaunchSiteSpec = {
   azimuthDeg: 150.4,
 };
 
-export const LAUNCH_SITES = [VSFB_SLC4E, CAPE_SLC40] as const;
+export const LAUNCH_SITES = [STARBASE, CAPE_SLC40, VSFB_SLC4E] as const;
 
 /**
  * Illustrative shoreline, not a survey. Bearing is clockwise from north,
@@ -31,6 +42,7 @@ export type CoastDressing = {
 };
 
 const COASTS: readonly { site: LaunchSiteSpec; coast: CoastDressing }[] = [
+  { site: STARBASE, coast: { coastBearingDeg: 90, shoreM: 1_100 } },
   { site: VSFB_SLC4E, coast: { coastBearingDeg: 255, shoreM: 780 } },
   { site: CAPE_SLC40, coast: { coastBearingDeg: 95, shoreM: 620 } },
 ];
