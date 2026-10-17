@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { useScene } from "@/lib/store";
+import { isFlightActive, useScene } from "@/lib/store";
 import { FLIGHT_SCENARIOS } from "@/data/flight/index";
 import { MISSIONS } from "@/data/missions/index";
 import { clampFlightWallDelta, MAX_FLIGHT_WALL_DELTA_S } from "@/lib/flight/hold-step";
@@ -72,6 +72,7 @@ const s = () => useScene.getState();
 function readyRun(): string {
   const started = s().startFlight(SCENARIO_ID);
   expect(started.ok).toBe(true);
+  expect(started.data).toMatchObject({ scenarioId: SCENARIO_ID, status: "ready" });
   return (started.data as { runId: string }).runId;
 }
 
@@ -87,7 +88,17 @@ describe("flight contract 2026-10-17.1", () => {
   it("FC1 startFlight rejects an unknown or prototype scenario id", () => {
     expect(s().startFlight("missing")).toEqual({ ok: false, error: "unknown scenario: missing" });
     expect(s().startFlight("toString").ok).toBe(false);
+    expect(s().startFlight()).toEqual({ ok: false, error: "unknown scenario: reference" });
     expect(s().flight.status).toBe("idle");
+  });
+
+  it("FC1b flightActive follows replay or a non-idle player flight", () => {
+    expect(isFlightActive(s())).toBe(false);
+    s().startReplay(MISSION_ID);
+    expect(isFlightActive(s())).toBe(true);
+    s().stopReplay();
+    readyRun();
+    expect(isFlightActive(s())).toBe(true);
   });
 
   it("FC2 startFlight opens a ready run and does not launch or mix replay", () => {

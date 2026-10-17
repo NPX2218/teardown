@@ -5,6 +5,18 @@
 // and emissions lens. Historical replay stays independent of player flight.
 // Gesture and checkpoint id lists remain phone-relay vocabulary; they do not
 // start a mission and they cannot award orbit.
+//
+// Anders's open PRs still declare local copies and do not import this file yet.
+// These exports match those copies: ToolResult, ExplainLevel, EXPLAIN_LEVELS,
+// isExplainLevel, PartId, PartGroup, PartsFile, EmissionType, EmissionValue,
+// EmissionsFile, FlightStatus, FlightFuelReadout, ConsumedRp1Kg,
+// EmissionsFlightScope, DEFAULT_SCENARIO_ID.
+// Contract deltas (do not import the agent stand-in under these names):
+// - FlightReadout is the HUD in metres and radians (altitudeM, pitchRad).
+// - FlightOutcome is { kind, reason, readout, runId }.
+// - EmissionsProvenance is a string union.
+// - Mission is the historical record (booster object or null, LandingKind).
+// - Scenario ids are open registry keys. Only an omitted startFlight() uses "reference".
 
 export const SHARED_CONTRACT_VERSION = "2026-10-17.1" as const;
 
@@ -142,10 +154,12 @@ export type RocketMessage =
   | { k: "listenError"; reason: ListenErrorReason }; // phone → laptop
 
 // Emissions facts file (13). There is no emissions lens or standalone mode.
+export type EmissionType = "official" | "peer-reviewed" | "estimate";
+
 export interface EmissionValue {
   value: number | string;
   unit: string;
-  type: "official" | "peer-reviewed" | "estimate";
+  type: EmissionType;
   source: string;
   url: string;
   low?: number;
@@ -157,6 +171,47 @@ export interface EmissionsFile {
   vehicle: string;
   caveats: string[];
   values: Record<string, EmissionValue>;
+}
+
+/** Interactive simulator versus a historical model ledger. The two are never added. */
+export type EmissionsFlightScope = "interactive" | "historical";
+
+/** Kilograms of RP-1 only. Stage 1 is the booster. Stage 2 is the upper stage. */
+export interface ConsumedRp1Kg {
+  1: number;
+  2: number;
+}
+
+/**
+ * Snapshot Anders's emissions module reads. `consumedRp1Kg` is cumulative RP-1
+ * already burned. Null means the ledger is missing. Mixed LOX+RP-1 belongs in
+ * `mixedPropellantKg`, never inside `consumedRp1Kg`.
+ */
+export interface FlightFuelReadout {
+  runId: string;
+  scope: EmissionsFlightScope;
+  /** Simulated or model time in seconds. Display only. It does not burn fuel. */
+  tSeconds: number;
+  /** Terminal outcome. Later snapshots for this same run are ignored. */
+  frozen: boolean;
+  consumedRp1Kg: ConsumedRp1Kg | null;
+  /** Total LOX+RP-1 kilograms, only when the simulator has not split out RP-1. */
+  mixedPropellantKg?: ConsumedRp1Kg | null;
+  /**
+   * Oxidizer ÷ fuel. When omitted, a mixed ledger uses the sourced file ratio.
+   * Ignored for an RP-1 ledger.
+   */
+  oxidizerToFuel?: number;
+  /** Fuel still available, if the simulator reports it. Consumed mass above this is rejected. */
+  availableRp1Kg?: ConsumedRp1Kg | null;
+  /**
+   * Per-engine RP-1 kilograms. The stage total already includes every engine.
+   * A matching breakdown is accepted once. A mismatch is rejected. It is never multiplied again.
+   */
+  rp1KgByEngine?: ReadonlyArray<{ stage: 1 | 2; rp1Kg: number }>;
+  /** Historical model note. Required for visitors to see that a replay is not measured fuel. */
+  assumption?: string;
+  sourceNote?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -207,6 +262,9 @@ export interface FlightScenarioBounds {
   /** Multiplier on each stage's propellant mass. */
   propellantScale?: { min: number; max: number };
 }
+
+/** Omitted startFlight() looks up this registry key. Other ids stay open. */
+export const DEFAULT_SCENARIO_ID = "reference";
 
 /** A simulation preset. It is not a historical timeline and it does not prove a real trajectory. */
 export interface FlightScenario {
@@ -400,6 +458,8 @@ export const FLIGHT_SCENARIO_KINDS = ["historical-reference", "custom"] as const
 export const VALUE_CLASSIFICATIONS = ["sourced", "gameplay-tuning", "model-assumption"] as const satisfies readonly ValueClassification[];
 export const FLIGHT_OUTCOME_KINDS = ["orbit", "crashed", "failed"] as const satisfies readonly FlightOutcomeKind[];
 export const EMISSIONS_PROVENANCES = ["simulated-consumed-rp1", "historical-estimate", "unavailable"] as const satisfies readonly EmissionsProvenance[];
+export const EMISSION_TYPES = ["official", "peer-reviewed", "estimate"] as const satisfies readonly EmissionType[];
+export const EMISSIONS_FLIGHT_SCOPES = ["interactive", "historical"] as const satisfies readonly EmissionsFlightScope[];
 
 export type _ExplainLevelsComplete = Assert<Complete<ExplainLevel, typeof EXPLAIN_LEVELS>>;
 export type _MissionEventIdsComplete = Assert<Complete<MissionEventId, typeof MISSION_EVENT_IDS>>;
@@ -419,6 +479,8 @@ export type _FlightScenarioKindsComplete = Assert<Complete<FlightScenarioKind, t
 export type _ValueClassificationsComplete = Assert<Complete<ValueClassification, typeof VALUE_CLASSIFICATIONS>>;
 export type _FlightOutcomeKindsComplete = Assert<Complete<FlightOutcomeKind, typeof FLIGHT_OUTCOME_KINDS>>;
 export type _EmissionsProvenancesComplete = Assert<Complete<EmissionsProvenance, typeof EMISSIONS_PROVENANCES>>;
+export type _EmissionTypesComplete = Assert<Complete<EmissionType, typeof EMISSION_TYPES>>;
+export type _EmissionsFlightScopesComplete = Assert<Complete<EmissionsFlightScope, typeof EMISSIONS_FLIGHT_SCOPES>>;
 
 export const isExplainLevel = (x: unknown): x is ExplainLevel => (EXPLAIN_LEVELS as readonly unknown[]).includes(x);
 export const isMissionEventId = (x: unknown): x is MissionEventId => (MISSION_EVENT_IDS as readonly unknown[]).includes(x);

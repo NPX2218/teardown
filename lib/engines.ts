@@ -7,7 +7,8 @@ import type { PartsFile } from "@/lib/types";
 export const G0 = 9.80665;
 
 // Falcon 9 first stage has 9 Merlins: index 0 = center, 1–8 = ring.
-// MUST equal vehicle.merlinCount in data/parts/falcon9.json (drift check: seams test SE4).
+// MUST equal vehicle.merlinCount in the parts file (drift check: seams test SE4).
+// 01 loads lib/fixtures/parts-falcon9.placeholder.json. Anders PR #2 replaces it with data/parts/falcon9.json.
 export const MERLIN_COUNT = 9;
 
 // T/W at or below 1 cannot lift off. Between 1 and BARELY_BELOW = "barely".

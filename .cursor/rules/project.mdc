@@ -43,3 +43,5 @@ Motto: "Bringing rocket science down to Earth."
 | Shared · Neel integration owner | `lib/types.ts`, `lib/store.ts`, `lib/engines.ts`, `app/page.tsx` (frozen after 01), `.cursor/rules/` |
 
 Each person owns the tests for their own files in `lib/__tests__/`. Neel's code never imports Anders's components and vice versa; the store and the 01 seams are the only meeting points.
+
+01 does not create paths Anders's open PRs already add (`lib/agent/*`, `lib/voice/lines.ts`, `lib/parts.ts`, `lib/emissions*.ts`, `components/voice/*`, `components/imagine/*`, `components/emissions/*`, `data/parts/falcon9.json`, `data/emissions/falcon9.json`, `app/api/*`). Until those merge, `app/page.tsx` renders `components/seams/*Fixture.tsx`, and the store loads `lib/fixtures/parts-falcon9.placeholder.json`.

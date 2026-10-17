@@ -16,10 +16,11 @@ import type {
   Quat,
   ToolResult,
 } from "@/lib/types";
-import { isControlAxis, isControlSource, isExplainLevel, isFlightWarp } from "@/lib/types";
+import { DEFAULT_SCENARIO_ID, isControlAxis, isControlSource, isExplainLevel, isFlightWarp } from "@/lib/types";
 import { MISSIONS } from "@/data/missions/index";
 import { FLIGHT_SCENARIOS } from "@/data/flight/index";
-import partsData from "@/data/parts/falcon9.json";
+// Stand-in until Anders PR #2 adds data/parts/falcon9.json. Swap this import then.
+import partsData from "@/lib/fixtures/parts-falcon9.placeholder.json";
 import { assignAxisOwner, mixFlightInput, NEUTRAL_FLIGHT_INPUT } from "@/lib/flight/input-mixer";
 import { clampFlightWallDelta, holdFlightStep } from "@/lib/flight/hold-step";
 import { validateFlightScenario } from "@/lib/flight/scenario";
@@ -57,7 +58,8 @@ export interface SceneState {
   setHistoricalEmissions(readout: EmissionsReadout | null): ToolResult;
   setOrientation(q: Quat | null): void;
   setRocket(r: { connected: boolean; code: string | null }): void;
-  startFlight(scenarioId: string): ToolResult;
+  /** Omitted id is DEFAULT_SCENARIO_ID ("reference"). Any other registry key is valid. */
+  startFlight(scenarioId?: string): ToolResult;
   launchFlight(): ToolResult;
   setFlightInput(input: FlightAxisCommand, source: ControlSource, runId: string): ToolResult;
   setFlightAxisOwner(axis: ControlAxis, source: ControlSource): ToolResult;
@@ -123,6 +125,11 @@ function emissionsError(readout: EmissionsReadout): string | null {
     }
   }
   return null;
+}
+
+/** True during historical replay or any player-flight status other than idle. */
+export function isFlightActive(state: Pick<SceneState, "flight" | "replay">): boolean {
+  return state.replay.missionId !== null || state.flight.status !== "idle";
 }
 
 export const useScene = create<SceneState>()((set, get) => {
@@ -236,7 +243,7 @@ export const useScene = create<SceneState>()((set, get) => {
       if (wasConnected && !connected) set({ flight: releasePhoneControl(get().flight) });
     },
 
-    startFlight: (scenarioId) => {
+    startFlight: (scenarioId = DEFAULT_SCENARIO_ID) => {
       if (!hasScenario(scenarioId)) return { ok: false, error: `unknown scenario: ${String(scenarioId)}` };
       const scenario = FLIGHT_SCENARIOS[scenarioId];
       const errors = validateFlightScenario(scenario);
@@ -249,7 +256,7 @@ export const useScene = create<SceneState>()((set, get) => {
         historicalEmissions: null,
         explode: 0,
       });
-      return { ok: true, data: { runId } };
+      return { ok: true, data: { scenarioId, status: "ready", runId } };
     },
 
     launchFlight: () => {
