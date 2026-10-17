@@ -73,7 +73,18 @@ export interface LaunchSiteSpec {
   azimuthDeg?: number;
 }
 
-/** Cape Canaveral SLC-40. Free flight, practice, and the classroom pad. */
+/**
+ * Boca Chica / Starbase. Free flight, practice, and the classroom pad.
+ * Azimuth 90 faces due east, over the Gulf.
+ */
+export const STARBASE: LaunchSiteSpec = {
+  lat: 25.997,
+  lon: -97.157,
+  name: "Starbase",
+  azimuthDeg: 90,
+};
+
+/** Cape Canaveral SLC-40. Kept for a mission that names it. */
 export const CAPE_SLC40: LaunchSiteSpec = {
   lat: 28.561941,
   lon: -80.577357,

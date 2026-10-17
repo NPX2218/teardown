@@ -4,6 +4,9 @@
 import { EARTH_RADIUS_M, orbitFromState } from "@/lib/flight.helpers";
 import { predictOrbit, traceBehind, type StateVector } from "@/lib/flight/map/predict";
 import type { MapVec2 } from "@/lib/flight/map/trail";
+import { STARBASE } from "@/lib/flight/scene-types";
+
+export { STARBASE };
 
 /** Earth-fixed coordinates in Earth radii. The surface is radius 1. */
 export type EarthRadiiVec3 = readonly [number, number, number];
@@ -51,17 +54,6 @@ export const PHYSICS_PLANE_FRAME: MapFrame = {
   downrange: [1, 0, 0],
   right: [0, 0, 1],
 };
-
-/**
- * Free-flight pad. Boca Chica / Starbase. Azimuth 90 is due east, same
- * convention as `globeFrame` in scene-types (degrees clockwise from north).
- */
-export const STARBASE = {
-  lat: 25.997,
-  lon: -97.157,
-  name: "Starbase",
-  azimuthDeg: 90,
-} as const;
 
 const DEG = Math.PI / 180;
 

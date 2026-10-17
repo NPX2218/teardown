@@ -16,6 +16,7 @@ import { launchSiteFor } from "@/lib/flight/launch-site";
 import {
   CAPE_SLC40,
   EARTH_RADIUS,
+  STARBASE,
   VSFB_SLC4E,
   dot,
   earthRadiiToScene,
@@ -27,10 +28,12 @@ import {
 } from "@/lib/flight/scene-types";
 
 describe("launch sites", () => {
-  it("puts free flight and practice on the Cape and Sentinel-6 at Vandenberg", () => {
-    expect(launchSiteFor({ missionId: null }).name).toBe(CAPE_SLC40.name);
-    expect(launchSiteFor({ missionId: "practice" }).name).toBe(CAPE_SLC40.name);
-    expect(launchSiteFor({ missionId: "classroom" }).name).toBe(CAPE_SLC40.name);
+  it("puts free flight and practice at Starbase and Sentinel-6 at Vandenberg", () => {
+    expect(launchSiteFor({ missionId: null }).name).toBe(STARBASE.name);
+    expect(launchSiteFor({ missionId: null }).lat).toBeCloseTo(25.997, 5);
+    expect(launchSiteFor({ missionId: null }).lon).toBeCloseTo(-97.157, 5);
+    expect(launchSiteFor({ missionId: "practice" }).name).toBe(STARBASE.name);
+    expect(launchSiteFor({ missionId: "classroom" }).name).toBe(STARBASE.name);
     expect(launchSiteFor({ missionId: "sentinel-6-michael-freilich" }).name).toBe(VSFB_SLC4E.name);
     expect(launchSiteFor({ launchSiteText: "SLC-4E at Vandenberg" }).name).toBe(VSFB_SLC4E.name);
     const vsfb = globeFrameFor(VSFB_SLC4E);
