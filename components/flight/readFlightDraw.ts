@@ -6,11 +6,12 @@ import { useAppMode } from "@/lib/flight/app-mode";
 import { CLASSROOM_SCENARIOS } from "@/lib/flight/classroom";
 import { buildFlightDraw, stageIndex, type FlightDraw } from "@/lib/flight/flight-pose";
 import { launchSiteFor } from "@/lib/flight/launch-site";
+import { frameFromLatLon, toOrbitPathState, vectorFromFlightState } from "@/lib/flight/map";
 import { bodyFromFlightState, coastPreview, orbitFromState, type OrbitElements } from "@/lib/flight.helpers";
-import type { OrbitElementsView } from "@/lib/flight/scene-types";
+import type { LaunchSiteSpec, OrbitElementsView, OrbitPathState } from "@/lib/flight/scene-types";
 import { illustratedTrack, replayPose } from "@/lib/replay";
 import { useScene } from "@/lib/store";
-import type { FlightScenario, Mission } from "@/lib/types";
+import type { FlightScenario, FlightState, Mission } from "@/lib/types";
 
 const EMPTY_ELEMENTS: OrbitElementsView = {
   periapsisAltitudeM: null,
@@ -37,6 +38,13 @@ function siteText(mission: Mission | null): string | null {
   if (!mission) return null;
   const extra = mission as Mission & { launchSite?: { text?: string } };
   return typeof extra.launchSite?.text === "string" ? extra.launchSite.text : null;
+}
+
+function coastAtSite(site: LaunchSiteSpec, state: FlightState | null): OrbitPathState | null {
+  const vector = vectorFromFlightState(state);
+  if (!vector || !state?.airborne) return null;
+  const frame = frameFromLatLon(site.lat, site.lon, site.azimuthDeg ?? 90);
+  return toOrbitPathState(vector, frame);
 }
 
 function elementsOf(orbit: OrbitElements): OrbitElementsView {
@@ -99,7 +107,7 @@ export function readFlightDraw(): FlightDraw {
   } else if (!separated || separated.key !== key) {
     separated = { key, t: flight.simulatedTimeS };
   }
-  return buildFlightDraw({
+  const draw = buildFlightDraw({
     site,
     positionM: state?.positionM ?? null,
     pitchRad: state?.pitchRad ?? flight.input.pitchRad,
@@ -114,4 +122,6 @@ export function readFlightDraw(): FlightDraw {
     pathHitsEarth,
     elements,
   });
+  const coast = coastAtSite(site, state);
+  return coast ? { ...draw, orbit: coast } : draw;
 }

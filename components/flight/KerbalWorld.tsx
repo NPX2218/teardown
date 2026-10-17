@@ -31,9 +31,12 @@ export function KerbalWorld() {
   void tick;
   const labels: MapLabel[] = [
     { id: "site", text: draw.site.name, at: draw.up },
+    { id: "rocket", text: "Rocket", at: draw.position },
   ];
-  if (draw.orbit.periapsis) labels.push({ id: "peri", text: "Lowest point", at: draw.orbit.periapsis });
-  if (draw.orbit.apoapsis && draw.orbit.points.length > 2) {
+  if (draw.orbit.periapsis && draw.orbit.elements.periapsisAltitudeM !== null) {
+    labels.push({ id: "peri", text: "Lowest point", at: draw.orbit.periapsis });
+  }
+  if (draw.orbit.apoapsis && draw.orbit.elements.apoapsisAltitudeM !== null && draw.orbit.points.length > 2) {
     labels.push({ id: "apo", text: "Highest point", at: draw.orbit.apoapsis });
   }
   const boom = status === "crashed" && impact

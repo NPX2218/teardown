@@ -106,7 +106,7 @@ export function predictOrbit(state: StateVector): OrbitPrediction {
   if (radius < 1) return EMPTY;
   const kepler = keplerFromState(state, radius);
   if (!kepler) return EMPTY;
-  if (kepler.radial) return radialPrediction(state, radius, kepler);
+  if (kepler.radial) return radialPrediction(state, radius);
 
   const hits = kepler.periapsisRadiusM !== null && kepler.periapsisRadiusM < EARTH_RADIUS_M - SURFACE_MARGIN_M;
   if (kepler.bound && !hits) return ellipsePrediction(kepler);
@@ -224,7 +224,7 @@ function escapePrediction(kepler: Kepler): OrbitPrediction {
   };
 }
 
-function radialPrediction(state: StateVector, radius: number, kepler: Kepler): OrbitPrediction {
+function radialPrediction(state: StateVector, radius: number): OrbitPrediction {
   const speed2 = state.vx * state.vx + state.vy * state.vy;
   const energy = speed2 / 2 - EARTH_MU_M3_S2 / radius;
   const outward = state.x * state.vx + state.y * state.vy;
@@ -302,7 +302,7 @@ function keplerFromState(state: StateVector, radius: number): Kepler | null {
   const p = (h * h) / EARTH_MU_M3_S2;
   if (!Number.isFinite(p) || p <= 0) return null;
 
-  let periDir = eccentricity > 1e-7 ? unit(ex, ey) : unit(state.x, state.y);
+  const periDir = eccentricity > 1e-7 ? unit(ex, ey) : unit(state.x, state.y);
   if (!periDir) return null;
   if (eccentricity < 1e-8) eccentricity = 0;
   const sense = h >= 0 ? 1 : -1;
