@@ -125,6 +125,12 @@ export function decodeMessage(raw: unknown): RocketMessage | null {
       if (typeof power !== "number" || !Number.isFinite(power) || power < 0 || power > 1) return null;
       return { k: "engine", power };
     }
+    case "settings": {
+      const { engineSound, master, vibrate } = raw;
+      if (typeof engineSound !== "boolean" || typeof vibrate !== "boolean") return null;
+      if (typeof master !== "number" || !Number.isFinite(master) || master < 0 || master > 1) return null;
+      return { k: "settings", engineSound, master, vibrate };
+    }
     default:
       return null;
   }

@@ -59,6 +59,7 @@ describe("engine power", () => {
       showStatus() {},
       calibrate() {},
       setEngine(power: number) { seen.push(power); },
+      applySettings() {},
     } satisfies PhoneHandlers;
     routePhoneMessage({ k: "engine", power: 0.25 }, handlers);
     expect(seen).toEqual([0.25]);

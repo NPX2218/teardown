@@ -2,6 +2,7 @@
 // Grok lines play on the laptop. say / stopSay do not fetch audio or use speechSynthesis.
 // Core classes take their browser pieces as deps so they can be tested in node; the browser deps are at the bottom.
 import type { ListenErrorReason, RocketMessage } from "@/lib/types";
+import { getPlaybackGain } from "@/lib/settings/playback";
 import { duckSounds, getAudioContext, setAudioSessionType } from "@/lib/rocket/sound";
 
 // Cached file + /api/voice must have produced audio within this long after `say` arrives, else the phone's
@@ -448,10 +449,12 @@ async function postAudio(clip: Blob): Promise<string> {
 function blip(): void {
   const ctx = getAudioContext();
   if (!ctx) return;
+  const level = 0.4 * getPlaybackGain();
+  if (!(level > 0)) return;
   const osc = ctx.createOscillator();
   const g = ctx.createGain();
   osc.frequency.value = 880; // short high beep = "I'm listening"
-  g.gain.value = 0.4;
+  g.gain.value = level;
   osc.connect(g).connect(ctx.destination);
   osc.start();
   osc.stop(ctx.currentTime + 0.12);

@@ -20,6 +20,7 @@ export interface PhoneHandlers {
   showStatus(word: ShellStatusWord, level: ShellStatusLevel, flash: boolean): void;
   calibrate(): void;
   setEngine(power: number): void;
+  applySettings(message: { engineSound: boolean; master: number; vibrate: boolean }): void;
 }
 
 /** Laptop → phone messages (already checked by decodeMessage in link.ts). Phone → laptop kinds are ignored. */
@@ -36,6 +37,7 @@ export function routePhoneMessage(m: RocketMessage, h: PhoneHandlers): void {
     case "status": h.showStatus(m.word, m.level, m.flash === true); return;
     case "calibrate": h.calibrate(); return;
     case "engine": h.setEngine(m.power); return;
+    case "settings": h.applySettings(m); return;
     case "frame": case "said": case "heard": case "listenError": return;
     default: { const never: never = m; void never; }
   }

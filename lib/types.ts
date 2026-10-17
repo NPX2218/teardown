@@ -238,7 +238,8 @@ export type RocketMessage =
   | { k: "listenError"; reason: ListenErrorReason } // phone → laptop
   | { k: "status"; word: ShellStatusWord; level: ShellStatusLevel; flash?: boolean } // laptop → phone
   | { k: "calibrate" } // laptop → phone: hold upright so the next samples become neutral
-  | { k: "engine"; power: number }; // laptop → phone: 0..1 synthesized rumble, 0 is silent
+  | { k: "engine"; power: number } // laptop → phone: 0..1 synthesized rumble, 0 is silent
+  | { k: "settings"; engineSound: boolean; master: number; vibrate: boolean }; // laptop → phone: master is 0..1
 
 // Emissions facts file (13). There is no emissions lens or standalone mode.
 export type EmissionType = "official" | "peer-reviewed" | "estimate";
@@ -573,6 +574,7 @@ export const ROCKET_MESSAGE_KINDS = [
   "status",
   "calibrate",
   "engine",
+  "settings",
 ] as const satisfies readonly RocketMessage["k"][];
 export const CONTROL_SOURCES = ["local", "phone"] as const satisfies readonly ControlSource[];
 export const CONTROL_AXES = ["pitch", "throttle"] as const satisfies readonly ControlAxis[];
