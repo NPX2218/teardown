@@ -124,7 +124,7 @@
   outline: none;
   position: fixed;
   inset: 0;
-  z-index: 1;
+  z-index: 20; /* above the app-wide Credits footer (z 6) */
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
   background: var(--bg);
@@ -414,13 +414,22 @@
   margin-top: var(--sp-5);
 }
 
+/* No frame on stage: the control bar floats over the slide, hidden until the
+   mouse comes near it or a control has keyboard focus. Arrow keys still work. */
 .deck-chrome {
-  display: grid;
-  gap: var(--sp-2);
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 3;
   padding: var(--sp-3) var(--gutter) var(--sp-4);
   background: var(--bg);
-  border-top: 1px solid var(--line-soft);
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-ui);
 }
+.deck-chrome:hover,
+.deck-chrome:focus-within { opacity: 1; }
+.deck-chrome .deck-legal { display: none; }
 
 .deck-controls {
   display: flex;
@@ -547,7 +556,7 @@
 
 .deck-notes p:last-child { margin-bottom: 0; }
 
-@media (max-width: 800px) {
+@media screen and (max-width: 800px) {
   .deck-body,
   .deck-poster .deck-body,
   .deck-slide[data-figure="evidence"] .deck-body,
@@ -569,8 +578,265 @@
 
 .deck[data-motion="reduce"] .deck-beat { animation: none !important; }
 
+/* ---- Title: the README hero, full bleed. Its own art carries the wordmark. ---- */
+.deck-poster { position: relative; isolation: isolate; align-content: end; }
+.deck-hero {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 30%;
+}
+.deck-poster header { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.deck-poster .deck-body { grid-template-columns: 1fr; align-items: end; }
+.deck-poster .deck-copy { max-width: none; text-align: center; }
+.deck-poster .deck-beat:first-child { display: none; }
+.deck-poster .deck-copy p {
+  font-family: var(--font-mono);
+  font-size: var(--fs-small);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--text-90);
+}
+
+/* ---- Wide figures get the bigger column ---- */
+.deck-slide[data-figure="pipeline"] .deck-body,
+.deck-slide[data-figure="gestures"] .deck-body,
+.deck-slide[data-figure="physics"] .deck-body,
+.deck-slide[data-figure="store"] .deck-body,
+.deck-slide[data-figure="challenge"] .deck-body,
+.deck-slide[data-figure="grok"] .deck-body {
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+}
+.deck-slide[data-figure="challenge"] .deck-body { grid-template-columns: minmax(0, 0.55fr) minmax(0, 1.45fr); }
+
+.deck-slide[data-figure="shot"] .deck-body { grid-template-columns: minmax(0, 0.62fr) minmax(0, 1.38fr); }
+
+.deck-copy .deck-beat--strong {
+  padding-left: var(--sp-4);
+  border-left: 3px solid var(--flame);
+  font-weight: 600;
+}
+
+/* ---- Close: one centred stack, the motto last ---- */
+.deck-slide[data-figure="close"] { align-content: center; justify-items: center; text-align: center; }
+.deck-slide[data-figure="close"] header { display: grid; justify-items: center; }
+.deck-slide[data-figure="close"] h1 { max-width: none; font-size: var(--fs-display); line-height: 1; }
+.deck-slide[data-figure="close"] .deck-body { grid-template-columns: 1fr; justify-items: center; }
+.deck-slide[data-figure="close"] .deck-copy { max-width: none; }
+.deck-slide[data-figure="close"] .deck-beat:first-child {
+  font-family: var(--font-mono);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--flame);
+}
+.deck-slide[data-figure="close"] .deck-figure--words ul { display: flex; gap: var(--sp-6); }
+.deck-slide[data-figure="close"] .deck-figure--words li { color: var(--text-muted); }
+
+/* ---- Real screenshots ---- */
+.deck-shot img {
+  display: block;
+  width: 100%;
+  max-height: 68vh;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+}
+
+/* ---- Cards ---- */
+.deck-card {
+  padding: var(--sp-4) var(--sp-5);
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+.deck-card__tag {
+  margin: 0 0 var(--sp-2);
+  font-family: var(--font-mono);
+  font-size: var(--fs-small);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--flame);
+}
+.deck-copy .deck-card__line,
+.deck-card__line { margin: 0; font-size: var(--fs-body); line-height: 1.4; }
+
+.deck-scatter { display: grid; gap: var(--sp-4); }
+.deck-scatter .deck-card:nth-child(1) { transform: rotate(-2deg); margin-right: 18%; }
+.deck-scatter .deck-card:nth-child(2) { transform: rotate(1.5deg); margin-left: 22%; }
+.deck-scatter .deck-card:nth-child(3) { transform: rotate(-1deg); margin-right: 8%; margin-left: 6%; }
+.deck-scatter__none {
+  margin-top: var(--sp-3);
+  font-family: var(--font-display);
+  font-size: var(--fs-h2);
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--bad-text);
+}
+
+.deck-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); }
+
+/* ---- Stats row ---- */
+.deck-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-6) var(--sp-5);
+  margin: 0;
+  text-align: center;
+}
+.deck-stats dt {
+  font-family: var(--font-display);
+  font-size: clamp(3.5rem, 8vw, 7rem);
+  font-weight: 700;
+  line-height: 1;
+}
+.deck-stats dd {
+  margin: var(--sp-2) 0 0;
+  font-family: var(--font-mono);
+  font-size: var(--fs-small);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ---- Phone rocket ---- */
+.deck-phone svg { max-height: 46vh; }
+.deck-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin: var(--sp-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.deck-chips li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: var(--track-head);
+  text-transform: uppercase;
+}
+.deck-chips li span { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--flame); }
+
+/* ---- Sensor pipeline ---- */
+.deck-pipe { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--sp-2); counter-reset: pipe; }
+.deck-pipe li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 11rem minmax(0, 1fr);
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
+  border-left: 3px solid var(--flame);
+  background: var(--surface-1);
+}
+.deck-pipe__name {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: var(--track-head);
+  text-transform: uppercase;
+}
+.deck code,
+.deck-eq {
+  font-family: var(--font-mono);
+  font-size: var(--fs-small);
+  color: var(--text-90);
+}
+
+/* ---- Tables ---- */
+.deck-table { width: 100%; border-collapse: collapse; }
+.deck-table th,
+.deck-table td {
+  padding: var(--sp-3) var(--sp-3);
+  border-bottom: 1px solid var(--line-soft);
+  text-align: left;
+  vertical-align: middle;
+}
+.deck-table thead th {
+  font-family: var(--font-mono);
+  font-size: var(--fs-caption);
+  font-weight: 400;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.deck-table tbody th {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: var(--track-head);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.deck-table tbody td:last-child { font-weight: 600; }
+.deck-table--check tbody td:last-child { font-weight: 400; font-size: var(--fs-lead); }
+.deck-table--check th span { color: var(--flame); margin-right: var(--sp-2); }
+
+/* ---- Physics ---- */
+.deck-physics svg { max-height: 36vh; }
+.deck-eq {
+  display: grid;
+  gap: var(--sp-2);
+  margin: var(--sp-4) 0 0;
+  padding: var(--sp-4) var(--sp-5);
+  background: var(--surface-1);
+  border-left: 3px solid var(--flame);
+  font-size: 0.95rem;
+  white-space: pre-wrap;
+}
+.deck-eq span[data-shown="false"] { visibility: hidden; display: block !important; }
+
+/* ---- One store ---- */
+.deck-store {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--sp-3);
+}
+.deck-store__col { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--sp-3); }
+.deck-store__col li {
+  padding: var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  text-align: center;
+  font-weight: 600;
+}
+.deck-store__arrow { font-size: 2rem; color: var(--flame); }
+.deck-store__hub {
+  display: grid;
+  gap: var(--sp-2);
+  padding: var(--sp-5) var(--sp-4);
+  border: 2px solid var(--text);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+.deck-store__hub strong {
+  font-family: var(--font-display);
+  font-size: var(--fs-h2);
+  text-transform: uppercase;
+  line-height: 1;
+}
+.deck-store__hub span { color: var(--text-muted); font-size: var(--fs-small); }
+.deck-store__hub em { font-style: normal; font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--flame); }
+
+@media screen and (max-width: 800px) {
+  .deck-slide[data-figure] .deck-body { grid-template-columns: 1fr; }
+  .deck-pipe li { grid-template-columns: 1fr; }
+  .deck-store { grid-template-columns: 1fr; }
+  .deck-store__arrow { transform: rotate(90deg); justify-self: center; }
+}
+
 @media print {
-  @page { size: 13.333in 7.5in; margin: 0.38in; }
+  /* Full-bleed black pages: no white paper margin around the slides. */
+  @page { size: 13.333in 7.5in; margin: 0; }
+  html, body { margin: 0 !important; background: #000 !important; }
   .deck {
     position: static;
     display: block;
@@ -586,13 +852,14 @@
   .deck-slide,
   .deck-slide[data-active="false"] {
     display: grid !important;
-    height: 6.74in;
-    max-height: 6.74in;
+    height: 7.5in;
+    max-height: 7.5in;
     overflow: hidden;
     break-after: page;
     page-break-after: always;
-    padding: 0.05in 0.08in 0;
+    padding: 0.42in 0.5in 0.3in;
     gap: 0.12in;
+    background: var(--bg);
   }
   .deck-slide:last-child {
     break-after: auto;
@@ -631,13 +898,20 @@
     opacity: 1 !important;
   }
   .deck-gaps { max-height: none; overflow: visible; }
+  .deck-figure [data-shown="false"],
+  .deck-chips li[data-shown="false"],
+  .deck-pipe li[data-shown="false"] { display: revert !important; }
+  .deck-eq span[data-shown="false"] { visibility: visible; }
+  .deck-shot img { max-height: 4.6in; }
+  .deck-poster .deck-beat:first-child { display: none !important; }
   .deck-figure svg,
   .deck-frame svg { max-height: 2.3in; }
   .deck-figure svg g { display: inline !important; opacity: 1 !important; }
   .deck-slide h1 { font-size: 36px; }
   .deck-poster h1 { font-size: 60px; }
   .deck-copy p { font-size: 16px; }
-  .deck-print-legal { display: flex !important; }
+  /* Credits print once, on the closing slide, not on every page. */
+  .deck-slide[data-figure="close"] .deck-print-legal { display: flex !important; justify-content: center; }
 }
 
 .deck-print-legal { display: none; margin-top: var(--sp-3); }
