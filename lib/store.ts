@@ -40,6 +40,8 @@ export interface SceneState {
   parts: PartsFile | null;
   selectedId: PartId | null;
   explode: number; // 0..1
+  /** Explore-mode Merlin power, 0..1. 0 is off. Settings and other screens read this. */
+  enginePower: number;
   camera: { focus: PartId | "home" };
   tour: { active: boolean; step: number };
   replay: { missionId: string | null; t: number; playing: boolean };
@@ -66,6 +68,7 @@ export interface SceneState {
   setParts(p: PartsFile): void;
   selectPart(id: PartId | null): ToolResult;
   setExplode(t: number): ToolResult;
+  setEnginePower(t: number): ToolResult;
   flyTo(id: PartId | "home"): ToolResult;
   startTour(): ToolResult;
   stopTour(): void;
@@ -172,6 +175,7 @@ export const useScene = create<SceneState>()((set, get) => {
     parts: loadParts(),
     selectedId: null,
     explode: 0,
+    enginePower: 0,
     camera: { focus: "home" },
     tour: { ...NO_TOUR },
     replay: { ...NO_REPLAY },
@@ -208,6 +212,14 @@ export const useScene = create<SceneState>()((set, get) => {
         return { ok: false, error: `explode must be a number from 0 to 1, got: ${String(t)}` };
       }
       set({ explode: t });
+      return { ok: true };
+    },
+
+    setEnginePower: (t) => {
+      if (typeof t !== "number" || !Number.isFinite(t) || t < 0 || t > 1) {
+        return { ok: false, error: `engine power must be a number from 0 to 1, got: ${String(t)}` };
+      }
+      set({ enginePower: t });
       return { ok: true };
     },
 
@@ -482,6 +494,7 @@ export const useScene = create<SceneState>()((set, get) => {
         orientation: null,
         selectedId: null,
         explode: 0,
+        enginePower: 0,
         camera: { focus: "home" },
         level: "kid",
         snapshot: null,

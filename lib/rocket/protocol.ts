@@ -120,6 +120,11 @@ export function decodeMessage(raw: unknown): RocketMessage | null {
     }
     case "calibrate":
       return { k: "calibrate" };
+    case "engine": {
+      const power = raw.power;
+      if (typeof power !== "number" || !Number.isFinite(power) || power < 0 || power > 1) return null;
+      return { k: "engine", power };
+    }
     default:
       return null;
   }

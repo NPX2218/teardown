@@ -6,7 +6,7 @@ import { newPairCode } from "@/lib/rocket/protocol";
 function handlers() {
   return {
     playSound: vi.fn(), stopSound: vi.fn(), vibrate: vi.fn(), say: vi.fn(), stopSay: vi.fn(),
-    listen: vi.fn(), stopListen: vi.fn(), showStatus: vi.fn(), calibrate: vi.fn(),
+    listen: vi.fn(), stopListen: vi.fn(), showStatus: vi.fn(), calibrate: vi.fn(), setEngine: vi.fn(),
   } satisfies PhoneHandlers;
 }
 const calls = (h: ReturnType<typeof handlers>) =>
@@ -44,6 +44,12 @@ describe("phone glue (10 Task 4)", () => {
     routePhoneMessage({ k: "stop", id: "maxq_rumble" }, h);
     routePhoneMessage({ k: "stop" }, h);
     expect(h.stopSound.mock.calls).toEqual([["maxq_rumble"], [undefined]]);
+  });
+
+  it("PR3b engine power reaches the phone rumble", () => {
+    const h = handlers();
+    routePhoneMessage({ k: "engine", power: 0.4 }, h);
+    expect(h.setEngine).toHaveBeenCalledWith(0.4);
   });
 
   it("PR3 vibrate → vibrate(pattern)", () => {

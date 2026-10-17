@@ -70,6 +70,19 @@ describe("scene store (01 Task 3, replay kept)", () => {
     expect(s().selectedId).toBeNull();
   });
 
+  it("S2b setEnginePower stores 0..1 and rejects anything else", () => {
+    expect(s().enginePower).toBe(0);
+    expect(s().setEnginePower(1.5).ok).toBe(false);
+    expect(s().setEnginePower(Number.NaN).ok).toBe(false);
+    expect(s().enginePower).toBe(0);
+    expect(s().setEnginePower(0.5)).toEqual({ ok: true });
+    expect(s().enginePower).toBe(0.5);
+    expect(s().setEnginePower(0)).toEqual({ ok: true });
+    expect(s().enginePower).toBe(0);
+    expect(s().setEnginePower(1)).toEqual({ ok: true });
+    expect(s().enginePower).toBe(1);
+  });
+
   it("S2 setExplode rejects out of range", () => {
     expect(s().setExplode(7).ok).toBe(false);
     expect(s().setExplode(NaN).ok).toBe(false);

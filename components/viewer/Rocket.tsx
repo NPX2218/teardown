@@ -12,6 +12,7 @@ import { CLICK_DRAG_PX, pickPartId } from "@/lib/viewer/pick";
 import { prepareModel } from "@/lib/viewer/prepareModel";
 import { aimAtCamera, ORIENT_SLERP } from "@/lib/rocket/orient";
 import { setPreparedModel, viewerRuntime } from "@/lib/viewer/runtime";
+import { ExplorePlumes } from "./ExplorePlumes";
 
 const FALLBACK_GLB = "/models/falcon9.glb";
 const MAX_DELTA_S = 0.1;
@@ -83,6 +84,7 @@ export function Rocket() {
   return (
     <group ref={group} name="rocket-rig">
       <primitive object={model.root} onClick={onPick} />
+      <ExplorePlumes />
     </group>
   );
 }

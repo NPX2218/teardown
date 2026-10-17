@@ -150,6 +150,7 @@ describe("protocol (11 Task 1)", () => {
       listenError: { k: "listenError", reason: "network" },
       status: { k: "status", word: "ARMED", level: "ok" },
       calibrate: { k: "calibrate" },
+      engine: { k: "engine", power: 0.5 },
     };
     for (const k of ROCKET_MESSAGE_KINDS) expect(decodeMessage(samples[k])?.k).toBe(k);
   });

@@ -4,6 +4,8 @@ import { Header } from "@/components/ui/Header";
 import { ModeTransition } from "@/components/ui/ModeTransition";
 import { useAppMode } from "@/lib/flight/app-mode";
 import { useScene } from "@/lib/store";
+import { EnginePowerLink } from "./EnginePowerLink";
+import { EnginePowerSlider } from "./EnginePowerSlider";
 import { ExplodeSlider } from "./ExplodeSlider";
 import { PartCard } from "./PartCard";
 import { PartChips } from "./PartChips";
@@ -19,6 +21,7 @@ export function ViewerSlot() {
   return (
     <div data-slot="viewer" className={exploring ? styles.root : `${styles.root} ${styles.flightChrome}`}>
       {exploring && <Stage />}
+      <EnginePowerLink />
       <Header />
       <ModeTransition />
       {exploring && (
@@ -27,6 +30,7 @@ export function ViewerSlot() {
             <ExplodeSlider />
             <TourButton />
           </div>
+          <EnginePowerSlider />
           <PartChips />
           <div id="flight-launcher" />
           <div id="engine-launcher" />
