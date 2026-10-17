@@ -1,0 +1,90 @@
+/* components/viewer/viewer.module.css — layout for the 03 pieces. Tokens only (theme rule 4). */
+
+.root {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-canvas);
+  overflow: hidden;
+  --rail-top: 21rem;
+}
+
+.rail {
+  position: absolute;
+  z-index: var(--z-hud);
+  top: var(--rail-top);
+  left: var(--gutter);
+  width: 20rem;
+  max-height: calc(100dvh - var(--rail-top) - var(--sp-8));
+  overflow: auto;
+  overscroll-behavior: contain;
+  display: grid;
+  gap: var(--sp-4);
+  padding: var(--sp-4);
+  background: var(--panel-hud);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-sm);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+.rail[hidden] { display: none; }
+
+.tools {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+@media (max-width: 720px) {
+  .rail {
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: auto;
+    max-height: 45dvh;
+    padding-bottom: max(var(--sp-4), env(safe-area-inset-bottom));
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+  }
+  .bottomBar[data-part-open="true"] {
+    display: none;
+  }
+}
+
+.chips { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); }
+.chips > button { width: 100%; }
+@media (max-width: 720px) {
+  .chips { display: flex; flex-wrap: wrap; }
+  .chips > button { width: auto; }
+}
+.card { max-height: calc(100dvh - var(--rail-top)); overflow: auto; overscroll-behavior: contain; }
+.specs { display: grid; gap: var(--sp-2); margin: 0; }
+.specRow { display: grid; grid-template-columns: minmax(8rem, 1fr) 2fr; gap: var(--sp-3); align-items: baseline; }
+.specRow dd { margin: 0; font-variant-numeric: tabular-nums; }
+.popoverInline { position: static; max-width: none; }
+.cardSay { display: none; margin: 0; font-size: var(--fs-lead); line-height: 1.4; color: var(--accent); }
+@media (max-width: 720px) {
+  .cardSay { display: block; }
+  .card { max-height: 45dvh; }
+}
+
+.captionWide { pointer-events: none; }
+@media (min-width: 721px) and (max-width: 1280px) {
+  .captionWide { display: none; }
+  .cardSay { display: block; }
+}
+@media (max-width: 720px) {
+  .captionWide { display: none; }
+}
+
+.header { position: absolute; z-index: var(--z-chrome); top: 0; left: 0; right: 0; align-items: flex-start; pointer-events: none; }
+.headerText { display: grid; gap: var(--sp-2); max-width: min(100%, 40rem); }
+.headerText h1 { font-size: var(--fs-h1); }
+.motto { margin: 0; }
+.stats { display: flex; flex-wrap: wrap; gap: var(--sp-5); margin: var(--sp-2) 0 0; padding: 0; list-style: none; }
+.stats :global(.stat__value) { font-size: var(--fs-h3); }
+.headerControls { pointer-events: auto; margin-top: var(--sp-2); }
+@media (max-width: 720px) {
+  .stats { display: none; }
+  .headerText h1 { font-size: var(--fs-h2); }
+  .motto { font-size: var(--fs-body); }
+}
