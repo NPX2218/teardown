@@ -42,6 +42,28 @@ export const MAX_FRAME_STEPS = 48;
 export const FRAME_POSITION_TOLERANCE_M = 1;
 
 /** Sea-level density, scale height, drag coefficient, and area. Model assumptions. */
+/**
+ * Turning the rocket. The input pitch is where the pilot wants the nose; the nose gets there
+ * through engine gimbal torque, like Kerbal's SAS, not by snapping.
+ * Gimbal angular accel for a uniform rod pivoting at its CoM: (T/m) * sin(gimbal) * 12 * lever / L^2.
+ */
+export const ATTITUDE = {
+  /** Merlin gimbal limit, about 5 degrees. */
+  gimbalSin: Math.sin((5 * Math.PI) / 180),
+  /** Engines sit about 0.4 of the stack below the CoM, so 12 * 0.4 / L. */
+  leverOverInertia: 4.8 / 70,
+  /** Real authority turns a 30-degree lean in ~5 s; 3x (Kerbal's reaction wheels) turns it in ~3 s. */
+  gameAuthority: 3,
+  /** Cold-gas thrusters still turn the nose slowly with the engines off. */
+  rcsAccelRadS2: 0.05,
+  /** 20 degrees/s top turn rate keeps a fast hand from whipping the stack around. */
+  maxRateRadS: 0.35,
+  /** Braking uses 80% of authority so the nose settles without overshoot. */
+  brakeMargin: 0.8,
+  /** Last few degrees ease in on this time constant instead of a bang-bang stop. */
+  rateTauS: 0.25,
+} as const;
+
 export const ATMOSPHERE = {
   rho0KgPerM3: 1.225,
   scaleHeightM: 8_500,
@@ -70,6 +92,8 @@ export interface FlightBody {
   vx: number;
   vy: number;
   pitchRad: number;
+  /** Nose turn rate. Missing means 0 (older saved states). */
+  pitchRateRadS?: number;
   throttle: number;
   activeStageIndex: number;
   stages: StageFuelSnapshot[];
@@ -259,6 +283,7 @@ export function readFlight(state: FlightBody): FlightReadout {
 export function toFlightState(state: FlightBody): FlightState {
   return {
     pitchRad: state.pitchRad,
+    pitchRateRadS: state.pitchRateRadS ?? 0,
     throttle: state.throttle,
     activeStageId: state.stages[state.activeStageIndex]?.id ?? state.stages[0]?.id ?? "",
     simulatedTimeS: state.simulatedTimeS,
@@ -282,6 +307,7 @@ export function bodyFromFlightState(scenario: FlightScenario, state: FlightState
     vx: state.velocityMps.x,
     vy: state.velocityMps.y,
     pitchRad: state.pitchRad,
+    pitchRateRadS: state.pitchRateRadS ?? 0,
     throttle: state.throttle,
     activeStageIndex: index >= 0 ? index : 0,
     stages: state.stages.map((stage) => ({ ...stage })),
@@ -431,14 +457,40 @@ function planSlices(state: FlightBody, throttle: number, dt: number): Slice[] {
   return slices;
 }
 
+/** Max nose angular acceleration from the gimbal at this throttle, plus RCS. */
+export function attitudeAuthorityRadS2(state: FlightBody, throttle: number): number {
+  const mass = massKg(state);
+  const plan = state.stagePlan[state.activeStageIndex];
+  const stage = state.stages[state.activeStageIndex];
+  const burning = mass > 0 && plan && stage && stage.propellantRemainingKg > 0;
+  const thrustAccel = burning ? (throttle * plan.thrustN) / mass : 0;
+  return ATTITUDE.rcsAccelRadS2
+    + ATTITUDE.gameAuthority * thrustAccel * ATTITUDE.gimbalSin * ATTITUDE.leverOverInertia;
+}
+
+/** Moves the nose toward the target with limited torque: no snap, no overshoot. Clamps hold it upright on the pad. */
+export function turnNose(state: FlightBody, targetRad: number, throttle: number, dt: number): { pitchRad: number; pitchRateRadS: number } {
+  if (!state.airborne) return { pitchRad: 0, pitchRateRadS: 0 };
+  const rate = state.pitchRateRadS ?? 0;
+  const err = targetRad - state.pitchRad;
+  const alpha = attitudeAuthorityRadS2(state, throttle);
+  // Fastest rate that can still brake to a stop at the target.
+  const brakeRate = Math.sqrt(2 * alpha * ATTITUDE.brakeMargin * Math.abs(err));
+  const wantRate = Math.sign(err) * Math.min(ATTITUDE.maxRateRadS, brakeRate, Math.abs(err) / ATTITUDE.rateTauS);
+  // Track the wanted rate as hard as the torque allows, so braking never starts late.
+  const accel = clamp((wantRate - rate) / dt, -alpha, alpha);
+  const nextRate = clamp(rate + accel * dt, -ATTITUDE.maxRateRadS, ATTITUDE.maxRateRadS);
+  return { pitchRad: clamp(state.pitchRad + nextRate * dt, -Math.PI / 2, Math.PI / 2), pitchRateRadS: nextRate };
+}
+
 function stepOnce(state: FlightBody, input: FlightInput, dt: number): FlightBody {
   if (state.outcome) return state;
   if (!finiteBody(state)) return stop(state, "Simulation stopped.");
-  const pitchRad = clamp(input.pitchRad, -Math.PI / 2, Math.PI / 2);
   const throttle = clamp(input.throttle, 0, 1);
+  const nose = turnNose(state, clamp(input.pitchRad, -Math.PI / 2, Math.PI / 2), throttle, dt);
   let cursor: FlightBody = {
     ...state,
-    pitchRad,
+    ...nose,
     throttle,
     stages: state.stages.map((stage) => ({ ...stage })),
   };

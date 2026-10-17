@@ -35,7 +35,7 @@ beforeEach(() => {
 describe("phone pitch on the flight mixer", () => {
   it("phone-steers-flight: a paired phone tilts a live run and the screen keeps throttle", () => {
     const runId = launchWithPhone();
-    expect(submitPhonePitch(0.4, true).ok).toBe(false);
+    expect(submitPhonePitch(0.4, true).ok).toBe(true);
     handleRocketMessage(frame(), 1_000);
     handleRocketMessage(frame(0.35), 1_050);
     const pitched = useScene.getState().setFlightInput({ throttle: 1 }, "local", runId);
@@ -117,7 +117,9 @@ describe("phone pitch on the flight mixer", () => {
 
     expect(useScene.getState().setFlightInput({ pitchRad: 0.15 }, "local", runId).ok).toBe(true);
     expect(useScene.getState().flight.input.pitchRad).toBeCloseTo(0.15, 5);
-    advance(0.2);
+    // Full power lifts off; then the nose turns to the lean with gimbal torque.
+    useScene.getState().setFlightInput({ throttle: 1 }, "local", runId);
+    advance(4);
     expect(useScene.getState().flight.status).toBe("flying");
     expect(useScene.getState().flight.state?.pitchRad).toBeCloseTo(0.15, 2);
   });

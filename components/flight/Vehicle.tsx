@@ -7,7 +7,7 @@ import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { EARTH_RADIUS_M } from "@/lib/flight.helpers";
 import { EARTH_RADIUS } from "@/lib/flight/scene-types";
-import { aimAtCamera, ORIENT_SLERP } from "@/lib/rocket/orient";
+import { aimAtCamera } from "@/lib/rocket/orient";
 import { flightAttitudeNow } from "@/lib/rocket/useRocket";
 import { FLIGHT_SCENE } from "@/lib/viewer/colors";
 import { flightDrawNow } from "./flightDraw";
@@ -27,7 +27,15 @@ const scratch = {
   cam: new THREE.Vector3(),
   inv: new THREE.Quaternion(),
   phone: new THREE.Quaternion(),
+  pivot: new THREE.Vector3(),
 };
+
+/** Metres above the bells where the stack turns: fuelled Falcon 9 CoM, then the upper stage's once the booster drops. */
+const PIVOT_M = [28, 56];
+/** On the pad the rocket sits on its bells; the pivot moves up to the CoM over the first 40 m of climb. */
+const PIVOT_BLEND_M = 40;
+/** Side lean settles in ~0.4 s, matching the gimbal-torque pitch turn instead of snapping per frame. */
+const LEAN_RATE_PER_S = 2.5;
 
 function FalconModel({ stage }: { stage: number }) {
   const { scene } = useGLTF(MODEL);
@@ -60,7 +68,7 @@ export function Vehicle({ stage, throttle, altitudeKm, elapsedS }: {
   // Smoothed phone side-lean/twist on top of the physics nose, like Explore's slerp.
   const phone = useMemo(() => new THREE.Quaternion(), []);
 
-  useFrame(({ camera }) => {
+  useFrame(({ camera }, delta) => {
     const draw = flightDrawNow.current;
     const node = rig.current;
     if (!draw || !node) return;
@@ -81,8 +89,13 @@ export function Vehicle({ stage, throttle, altitudeKm, elapsedS }: {
       const q = aimAtCamera(att, Math.atan2(scratch.cam.x, scratch.cam.z));
       scratch.phone.set(q[1], q[2], q[3], q[0]);
     }
-    phone.slerp(scratch.phone, ORIENT_SLERP);
+    phone.slerp(scratch.phone, 1 - Math.exp(-LEAN_RATE_PER_S * Math.min(delta, 0.1)));
     node.quaternion.copy(scratch.quat).multiply(phone);
+    // Turn about the CoM, not the bells: keep the CoM where it would sit upright and swing the base under it.
+    const pivotM = PIVOT_M[Math.min(stage, 1)] * Math.min(1, Math.max(0, draw.altitudeM / PIVOT_BLEND_M));
+    scratch.pivot.set(0, pivotM, 0).applyQuaternion(node.quaternion);
+    node.position.addScaledVector(scratch.radial, pivotM / EARTH_RADIUS_M);
+    node.position.addScaledVector(scratch.pivot, -1 / EARTH_RADIUS_M);
     const mark = marker.current;
     if (!mark) return;
     node.getWorldPosition(scratch.world);

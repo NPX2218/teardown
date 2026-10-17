@@ -140,9 +140,8 @@ describe("flight contract 2026-10-17.2", () => {
     s().setRocket({ connected: true, code: "AB" });
     expect(s().setFlightAxisOwner("pitch", "phone")).toEqual({ ok: true });
     expect(s().launchFlight().ok).toBe(true);
-    expect(s().setFlightInput({ pitchRad: 0.4, calibrated: true }, "phone", runId).ok).toBe(false);
-    expect(s().flight.input.pitchRad).toBe(0);
-    expect(s().setFlightInput({ pitchRad: 0, calibrated: true }, "phone", runId).ok).toBe(true);
+    // The phone reports absolute lean, so its first calibrated sample steers (no neutral wait).
+    expect(s().setFlightInput({ pitchRad: 0.4, calibrated: false }, "phone", runId).ok).toBe(false);
     expect(s().setFlightInput({ pitchRad: 0.4, calibrated: true }, "phone", runId).ok).toBe(true);
     expect(s().setFlightInput({ throttle: 0.55 }, "local", runId).ok).toBe(true);
     expect(s().flight.input).toEqual({ pitchRad: 0.4, throttle: 0.55 });
@@ -171,7 +170,7 @@ describe("flight contract 2026-10-17.2", () => {
     expect(s().flight.input.throttle).toBe(0);
   });
 
-  it("FC6 an owner switch clears that axis until a neutral sample", () => {
+  it("FC6 an owner switch clears that axis; the phone re-arms on its first calibrated sample", () => {
     const runId = readyRun();
     s().launchFlight();
     s().setFlightInput({ pitchRad: 0.3, throttle: 0.4 }, "local", runId);
@@ -180,10 +179,13 @@ describe("flight contract 2026-10-17.2", () => {
     expect(s().flight.input.pitchRad).toBe(0);
     expect(s().flight.input.throttle).toBe(0.4);
     expect(s().flight.armed.pitch).toBe(false);
-    expect(s().setFlightInput({ pitchRad: 0.2, calibrated: true }, "phone", runId).ok).toBe(false);
-    expect(s().flight.input.pitchRad).toBe(0);
-    expect(s().setFlightInput({ pitchRad: 0, calibrated: true }, "phone", runId).ok).toBe(true);
+    expect(s().setFlightInput({ pitchRad: 0.2, calibrated: true }, "phone", runId).ok).toBe(true);
     expect(s().setFlightInput({ pitchRad: 0.25, calibrated: true }, "phone", runId).ok).toBe(true);
+    // Back to the screen: a held local lean still waits for neutral.
+    s().setFlightAxisOwner("pitch", "local");
+    expect(s().setFlightInput({ pitchRad: 0.3 }, "local", runId).ok).toBe(false);
+    s().setFlightAxisOwner("pitch", "phone");
+    s().setFlightInput({ pitchRad: 0.25, calibrated: true }, "phone", runId);
     expect(s().flight.input).toEqual({ pitchRad: 0.25, throttle: 0.4 });
   });
 

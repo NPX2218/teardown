@@ -60,7 +60,8 @@ describe("shared flight controls", () => {
       const flight = useScene.getState().flight;
       expect(flight.status).toBe("flying");
       expect(flight.input.pitchRad).toBeGreaterThan(0.3);
-      expect(flight.state?.pitchRad).toBeGreaterThan(0.3);
+      // The nose is still turning toward the lean with gimbal torque.
+      expect(flight.state?.pitchRad).toBeGreaterThan(0.15);
       expect(Math.abs(flight.state?.velocityMps?.x ?? 0)).toBeGreaterThan(0.5);
       if (measuresDrift(mode, play)) {
         expect(flight.guide?.playMode).toBe("mission");

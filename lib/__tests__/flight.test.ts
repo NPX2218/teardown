@@ -123,7 +123,8 @@ describe("flight simulator F1–F24 (2026-10-17)", () => {
     const base = aloft(rocket({ thrust: 2_000_000, propellant: 500, flow: 1 }), 40_000);
     const coast = stepFlight(base, COAST, 1 / 60);
     const upward = stepFlight(base, { pitchRad: 0, throttle: 1 }, 1 / 60);
-    const sideways = stepFlight(base, { pitchRad: Math.PI / 2, throttle: 1 }, 1 / 60);
+    // The nose turns with torque, so start it already sideways.
+    const sideways = stepFlight({ ...base, pitchRad: Math.PI / 2 }, { pitchRad: Math.PI / 2, throttle: 1 }, 1 / 60);
     const upDelta = { x: upward.vx - coast.vx, y: upward.vy - coast.vy };
     const sideDelta = { x: sideways.vx - coast.vx, y: sideways.vy - coast.vy };
     expect(upDelta.y).toBeGreaterThan(0);
@@ -336,8 +337,7 @@ describe("flight simulator F1–F24 (2026-10-17)", () => {
     useScene.getState().setRocket({ connected: true, code: "AB" });
     useScene.getState().setFlightAxisOwner("pitch", "phone");
     useScene.getState().launchFlight();
-    expect(submitPhonePitch(0.4, true).ok).toBe(false);
-    expect(submitPhonePitch(0, true).ok).toBe(true);
+    expect(submitPhonePitch(0.4, true).ok).toBe(true);
     expect(submitPhonePitch(0.3, true).ok).toBe(true);
     expect(useScene.getState().setFlightInput({ throttle: 0.7 }, "local", runId).ok).toBe(true);
     expect(useScene.getState().flight.input).toEqual({ pitchRad: 0.3, throttle: 0.7 });

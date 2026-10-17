@@ -8,10 +8,6 @@ export const PITCH_LIMIT_RAD = Math.PI / 2;
 /** A sample inside this band counts as neutral after an owner change. */
 export const NEUTRAL_PITCH_RAD = 0.02;
 
-/** The phone reads absolute tilt from a hand-held rocket, which never sits within 1°. 10° is "about upright":
- *  a leftover big lean still cannot steer at handoff, but a hand on the pad arms at once. */
-export const PHONE_NEUTRAL_PITCH_RAD = (10 * Math.PI) / 180;
-
 export const NEUTRAL_FLIGHT_INPUT: FlightInput = { pitchRad: 0, throttle: 0 };
 
 export function clampPitchRad(value: unknown): number | null {
@@ -34,7 +30,10 @@ export interface MixResult {
 
 function isNeutral(axis: ControlAxis, value: number, source: ControlSource): boolean {
   if (axis !== "pitch") return value === 0;
-  return Math.abs(value) <= (source === "phone" ? PHONE_NEUTRAL_PITCH_RAD : NEUTRAL_PITCH_RAD);
+  // Phone pitch is the rocket's absolute lean, which the drawn rocket already shows,
+  // so it steers at once. A hand-held lean often never passes near upright.
+  if (source === "phone") return true;
+  return Math.abs(value) <= NEUTRAL_PITCH_RAD;
 }
 
 /**

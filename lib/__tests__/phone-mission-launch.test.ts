@@ -54,15 +54,34 @@ describe("phone tilt steers a launched mission", () => {
     expect(pitchDeg()).toBeCloseTo(25, 1);
   });
 
-  it("M3 a leftover big lean at handoff still cannot steer until the rocket comes back near upright", () => {
+  it("M3 a hand-held lean that never passes near upright still steers (live log: -21° to -45°, never armed)", () => {
     padWithPhone();
-    hold(0, 200);
+    hold(-20, 200);
     expect(launchControlledFlight().ok).toBe(true);
-    hold(40, 200);
-    expect(pitchDeg()).toBeCloseTo(0, 5);
-    hold(5, 100);
-    hold(30, 100);
-    expect(pitchDeg()).toBeCloseTo(30, 1);
+    hold(-35, 200);
+    expect(pitchDeg()).toBeCloseTo(-35, 1);
+    hold(-15, 200);
+    expect(pitchDeg()).toBeCloseTo(-15, 1);
+  });
+
+  it("M7 the phone lean changes the course, not just the drawn rocket", () => {
+    const downrange = (lean: number): number => {
+      useScene.setState(initial, true);
+      resetRocketState();
+      padWithPhone();
+      hold(-20, 200);
+      expect(launchControlledFlight().ok).toBe(true);
+      for (let i = 0; i < 600; i += 1) {
+        handleRocketMessage(frameFor(lean, [0, 0, 0], "s24fe"), t);
+        t += 50;
+        const f = useScene.getState().flight;
+        useScene.getState().setFlightInput({ throttle: 1 }, "local", f.runId!);
+        useScene.getState().advanceFlight(0.05);
+      }
+      return useScene.getState().flight.state!.positionM!.x;
+    };
+    expect(downrange(-30)).toBeLessThan(-1000);
+    expect(downrange(30)).toBeGreaterThan(1000);
   });
 
   it("M4 without a phone, the laptop Launch button keeps pitch on the screen", () => {

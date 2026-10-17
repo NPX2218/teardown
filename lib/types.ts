@@ -404,6 +404,8 @@ export interface StageFuelSnapshot {
  */
 export interface FlightState {
   pitchRad: number;
+  /** Nose turn rate; missing means 0. */
+  pitchRateRadS?: number;
   throttle: number;
   activeStageId: string;
   simulatedTimeS: number;
