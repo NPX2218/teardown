@@ -1,0 +1,29 @@
+/* components/ui/mode-transition.module.css — full-viewport cover for tab swaps. Owner: Neel. */
+.cover {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  background: var(--bg);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.label {
+  font-family: var(--font-display-sx);
+  text-transform: uppercase;
+  letter-spacing: 0.24em;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* White hairline riding the wipe edge as it moves down. Same edge as the liftoff loader's exit. */
+.edge {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.85);
+  pointer-events: none;
+}

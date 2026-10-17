@@ -1,0 +1,101 @@
+/* components/ui/liftoff.module.css — first-load liftoff overlay. Owner: Neel. */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  display: grid;
+  place-items: center;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+  cursor: default;
+}
+
+.stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  padding: 0 var(--gutter);
+  text-align: center;
+}
+
+.count,
+.headline {
+  grid-area: 1 / 1;
+  margin: 0;
+  font-family: var(--font-display-sx);
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.count {
+  font-size: clamp(4rem, 14vw, 10rem);
+  letter-spacing: 0.02em;
+  color: var(--text);
+}
+
+.headline {
+  font-size: clamp(2.75rem, 9vw, 7rem);
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.subline {
+  margin: var(--sp-4) 0 0;
+  font-family: var(--font-sans);
+  font-size: var(--fs-lead);
+  color: var(--text-2);
+}
+
+.copy {
+  grid-area: 1 / 1;
+  display: grid;
+  justify-items: center;
+}
+
+/* Hairline horizon across the lower third. */
+.horizon {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 66.666%;
+  height: 1px;
+  background: var(--hairline-3);
+}
+
+/* Soft white glow growing up from the horizon centre. */
+.glow {
+  position: absolute;
+  left: 50%;
+  top: 66.666%;
+  width: min(60vw, 720px);
+  height: 46vh;
+  margin-left: calc(min(60vw, 720px) / -2);
+  transform-origin: 50% 100%;
+  translate: 0 -100%;
+  background: radial-gradient(ellipse 50% 100% at 50% 100%, rgba(255, 255, 255, 0.35) 0%, transparent 70%);
+  filter: blur(24px);
+  pointer-events: none;
+}
+
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* White hairline riding the exit wipe as it moves down. Same edge as ModeTransition. */
+.edge {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.85);
+  opacity: 0;
+  pointer-events: none;
+}

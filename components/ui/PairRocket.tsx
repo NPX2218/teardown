@@ -172,12 +172,20 @@ export function PairRocket() {
     );
   } else {
     surface = (
-      <div className={`card card--solid ${styles.card}`}>
-        <p className="eyebrow">Pair your rocket</p>
-        <p className="lead">Slide your phone into the rocket. Scan to connect.</p>
+      <div className={styles.panel}>
+        <header className={styles.head}>
+          <h2 className={styles.title}>Pair your rocket</h2>
+          <p className={styles.statusRow}>
+            <span className={`${styles.dot} ${relayDown ? styles.dotBad : ""}`} aria-hidden="true" />
+            <span className={styles.statusText}>{relayDown ? "No connection" : "Waiting for your rocket"}</span>
+          </p>
+        </header>
+        <ol className={styles.steps}>
+          <li>Scan the code with your phone camera.</li>
+          <li>Slide your phone into the rocket.</li>
+        </ol>
         {relayDown ? (
-          <div>
-            <span className="chip chip--bad">No connection</span>
+          <div className={styles.relay}>
             <p className="small">The rocket can&apos;t connect right now. Trying again.</p>
             <button type="button" className="btn" onClick={tryNow}>
               Try now
@@ -185,21 +193,35 @@ export function PairRocket() {
           </div>
         ) : qr && code ? (
           <motion.div initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} transition={{ ...motionPresets.out, delay: 0.06 }}>
-            <div style={PAPER}>
-              <svg
-                className="fit"
-                viewBox={`0 0 ${qr.size} ${qr.size}`}
-                role="img"
-                aria-label={`QR code to connect your rocket. Pairing code ${code.split("").join(" ")}`}
-                shapeRendering="crispEdges"
-                style={{ display: "block", width: "100%", color: "var(--bg)" }}
-              >
-                <path d={qr.d} fill="currentColor" />
-              </svg>
+            <div className={styles.finder}>
+              <i className={`${styles.corner} ${styles.tl}`} aria-hidden="true" />
+              <i className={`${styles.corner} ${styles.tr}`} aria-hidden="true" />
+              <i className={`${styles.corner} ${styles.bl}`} aria-hidden="true" />
+              <i className={`${styles.corner} ${styles.br}`} aria-hidden="true" />
+              <div style={PAPER}>
+                <svg
+                  className="fit"
+                  viewBox={`0 0 ${qr.size} ${qr.size}`}
+                  role="img"
+                  aria-label={`QR code to connect your rocket. Pairing code ${code.split("").join(" ")}`}
+                  shapeRendering="crispEdges"
+                  style={{ display: "block", width: "100%", color: "var(--bg)" }}
+                >
+                  <path d={qr.d} fill="currentColor" />
+                </svg>
+                <span className={styles.scan} aria-hidden="true" />
+              </div>
             </div>
-            <p className={styles.code} aria-hidden="true">
-              {code}
-            </p>
+            <div className={styles.codeBlock} aria-hidden="true">
+              <span className={styles.codeLabel}>Pairing code</span>
+              <span className={styles.cells}>
+                {code.split("").map((ch, i) => (
+                  <span key={i} className={styles.cell}>
+                    {ch}
+                  </span>
+                ))}
+              </span>
+            </div>
           </motion.div>
         ) : null}
         {localhostOnly && !relayDown && (
@@ -208,9 +230,11 @@ export function PairRocket() {
             <p className="small">Developer note: a phone can&apos;t open localhost. Use the tunnel or deployed URL, or set NEXT_PUBLIC_ROCKET_ORIGIN.</p>
           </div>
         )}
-        <button type="button" className="btn btn-outline" onClick={() => { setOpen(false); setPinned(false); }}>
-          Hide
-        </button>
+        <footer className={styles.foot}>
+          <button type="button" className={styles.ghost} onClick={() => { setOpen(false); setPinned(false); }}>
+            Hide
+          </button>
+        </footer>
       </div>
     );
   }
@@ -233,5 +257,5 @@ export function PairRocket() {
   );
 }
 
-// QR paper: white rounded square, 24 px quiet zone, at least 12 rem wide inside the card.
-const PAPER = { background: "var(--qr-paper)", padding: "var(--sp-5)", borderRadius: "var(--radius-md)", minWidth: "12rem", margin: "var(--sp-5) auto" } as const;
+// QR paper: white square with a 16 px quiet zone (the finder brackets sit outside it). Clips the scan line.
+const PAPER = { position: "relative", overflow: "hidden", background: "var(--qr-paper)", padding: "var(--sp-4)", borderRadius: "var(--radius-xs)" } as const;

@@ -6,9 +6,9 @@
   z-index: var(--z-hud, 10);
   top: auto;
   right: auto;
-  left: 24px;
-  bottom: 24px;
-  width: min(24rem, calc(100vw - 48px));
+  left: 40px;
+  bottom: 40px;
+  width: min(24rem, calc(100vw - 80px));
   max-width: calc(100vw - 48px);
   display: flex;
   flex-direction: column-reverse;
@@ -142,4 +142,8 @@
   letter-spacing: 0;
   text-transform: none;
   color: var(--text-2, rgba(255, 255, 255, 0.6));
+}
+
+@media (max-width: 720px) {
+  .dock { left: 16px; bottom: 16px; width: min(24rem, calc(100vw - 32px)); max-width: calc(100vw - 32px); }
 }

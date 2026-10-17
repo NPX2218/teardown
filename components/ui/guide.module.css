@@ -4,8 +4,8 @@
   position: fixed;
   z-index: var(--z-overlay);
   top: auto;
-  right: 16px;
-  bottom: 16px;
+  right: 40px;
+  bottom: 40px;
   display: flex;
   flex-direction: column-reverse;
   align-items: flex-end;

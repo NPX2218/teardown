@@ -7,6 +7,7 @@ import { MissionSlot } from "@/components/replay/MissionSlot";
 import { PairSlot } from "@/components/ui/PairSlot";
 import { VoiceSlot } from "@/components/voice/VoiceSlot";
 import { ImagineSlot } from "@/components/imagine/ImagineSlot";
+import { LiftoffLoader } from "@/components/ui/LiftoffLoader";
 
 // Full-viewport stage. Colours and layers come from docs/specs/00-theme.spec.md tokens (app/globals.css);
 // nothing here is a hard-coded colour.
@@ -29,6 +30,7 @@ export default function Home() {
       <VoiceSlot />
       <ImagineSlot />
       <GuideLauncher />
+      <LiftoffLoader />
     </main>
   );
 }

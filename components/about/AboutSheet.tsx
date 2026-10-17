@@ -1,9 +1,9 @@
 "use client";
 
-import type { Ref } from "react";
+import { useState, type Ref } from "react";
 import { motion } from "motion/react";
 import { useReducedMotion } from "@/components/ui/useReducedMotion";
-import { motionPresets } from "@/lib/ui/motion";
+import { MOTION_EASE } from "@/lib/ui/motion";
 import { ABOUT } from "./copy";
 import styles from "./about.module.css";
 
@@ -11,19 +11,29 @@ export function AboutSheet({
   onClose,
   titleId,
   closeRef,
+  closing = false,
+  onClosed,
 }: {
   onClose: () => void;
   titleId: string;
   closeRef?: Ref<HTMLButtonElement>;
+  /** True while the sheet slides back out; onClosed fires when it is gone. */
+  closing?: boolean;
+  onClosed?: () => void;
 }) {
   const reduce = useReducedMotion();
+  // Slides in from the left edge like the rest of the app's wipes; on phones it is a bottom sheet, so it rises.
+  const [phone] = useState(() => typeof window !== "undefined" && window.matchMedia("(max-width: 720px)").matches);
+  const hidden = phone ? { y: "100%" } : { x: "-100%" };
+  const shown = phone ? { y: 0 } : { x: 0 };
 
   return (
     <motion.div
       className={styles.copy}
-      initial={reduce ? false : { opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={reduce ? { duration: 0 } : motionPresets.slow}
+      initial={reduce ? false : hidden}
+      animate={closing && !reduce ? hidden : shown}
+      transition={reduce ? { duration: 0 } : { duration: closing ? 0.45 : 0.6, ease: MOTION_EASE.out }}
+      onAnimationComplete={() => closing && onClosed?.()}
       onClick={(event) => event.stopPropagation()}
     >
       <p className="eyebrow">{ABOUT.eyebrow}</p>

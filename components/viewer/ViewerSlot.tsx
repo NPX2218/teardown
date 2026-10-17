@@ -1,6 +1,7 @@
 "use client";
 import { useMotionAttribute } from "@/components/ui/useReducedMotion";
 import { Header } from "@/components/ui/Header";
+import { ModeTransition } from "@/components/ui/ModeTransition";
 import { useAppMode } from "@/lib/flight/app-mode";
 import { useScene } from "@/lib/store";
 import { ExplodeSlider } from "./ExplodeSlider";
@@ -19,6 +20,7 @@ export function ViewerSlot() {
     <div data-slot="viewer" className={exploring ? styles.root : `${styles.root} ${styles.flightChrome}`}>
       {exploring && <Stage />}
       <Header />
+      <ModeTransition />
       {exploring && (
         <div className={`${styles.rail} ${styles.bottomBar}`} data-explore-rail data-part-open={partOpen}>
           <div className={styles.tools}>

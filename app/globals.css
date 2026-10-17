@@ -531,6 +531,21 @@ button.chip[aria-pressed="true"] { background: #fff; border-color: #fff; color: 
   pointer-events: none;
 }
 .legal a { color: var(--text-2); pointer-events: auto; white-space: nowrap; }
+
+/* Mouse devices: credits hide until the pointer nears the bottom (Footer.tsx) or a link takes focus.
+   Touch devices have no hover, so they keep the credits visible. */
+@media (hover: hover) and (pointer: fine) {
+  .legal {
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity var(--dur-2) var(--ease-ui), transform var(--dur-2) var(--ease-out);
+  }
+  .legal a { pointer-events: none; }
+  body[data-credits-near="1"] .legal,
+  .legal:focus-within { opacity: 1; transform: none; }
+  body[data-credits-near="1"] .legal a,
+  .legal:focus-within a { pointer-events: auto; }
+}
 .legal span { max-width: 100%; }
 
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
@@ -755,7 +770,10 @@ dialog.overlay::backdrop { background: rgba(0, 0, 0, 0.72); }
 }
 
 @media (max-width: 720px) {
-  body[data-pair-open="1"] [data-explore-rail] { visibility: hidden; }
+  body[data-pair-open="1"] [data-explore-rail],
+  body[data-pair-open="1"] .legal,
+  body[data-pair-open="1"] [data-slot="voice"],
+  body[data-pair-open="1"] [data-guide] { visibility: hidden; }
 }
 
 body.kiosk { touch-action: pan-x pan-y; }
