@@ -1,18 +1,12 @@
-// app/page.tsx — slots stay here. The emissions fixture now mounts inside the
-// flight and replay HUD (07 §6: embedded readout, no emissions destination).
-// Voice and Imagine fixtures stay until those PRs land.
-//
-// Voice, Imagine, and Emissions real components arrive on Anders's branches:
-//   components/voice/VoiceSlot.tsx
-//   components/imagine/ImagineSlot.tsx
-//   components/emissions/EmissionsSlot.tsx
+// app/page.tsx — slots stay here. Emissions mounts inside the flight and
+// replay HUD (embedded readout, no emissions destination).
 import type { CSSProperties } from "react";
 import { GuideLauncher } from "@/components/ui/GuideLauncher";
 import { ViewerSlot } from "@/components/viewer/ViewerSlot";
 import { MissionSlot } from "@/components/replay/MissionSlot";
 import { PairSlot } from "@/components/ui/PairSlot";
-import { VoiceSlot } from "@/components/seams/VoiceSlotFixture";
-import { ImagineSlot } from "@/components/seams/ImagineSlotFixture";
+import { VoiceSlot } from "@/components/voice/VoiceSlot";
+import { ImagineSlot } from "@/components/imagine/ImagineSlot";
 
 // Full-viewport stage. Colours and layers come from docs/specs/00-theme.spec.md tokens (app/globals.css);
 // nothing here is a hard-coded colour.

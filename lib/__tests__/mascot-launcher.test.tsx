@@ -64,5 +64,6 @@ describe("Credits", () => {
     expect(html).toContain("by Jérémy Perret (MIT), an unofficial recreation of the Grok Bot. Not affiliated with xAI.");
     expect(html).toContain("Guide avatar:");
     expect(html).toContain(">bloub<");
+    expect(html).toContain("Earth imagery: NASA Visible Earth (Blue Marble, Black Marble, clouds, and the land/water mask), public domain.");
   });
 });
