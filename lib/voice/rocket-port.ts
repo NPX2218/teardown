@@ -1,5 +1,12 @@
 // lib/voice/rocket-port.ts — laptop/phone speech seam (Anders).
-// Default is disconnected until Neel binds lib/rocket/commands.ts. Say then plays on the laptop.
+// The default port is Neel's lib/rocket/commands.ts. Its placeholder body stays
+// disconnected, so a line still plays on the laptop until the phone link is real.
+import {
+  isRocketConnected as commandsConnected,
+  onRocketMessage as commandsOnMessage,
+  sendToRocket as commandsSend,
+} from "@/lib/rocket/commands";
+import type { RocketMessage as SharedRocketMessage } from "@/lib/types";
 import type { ListenErrorReason } from "@/lib/voice/errors";
 import type { SoundId } from "@/lib/voice/sound-ids";
 
@@ -20,20 +27,25 @@ export interface RocketPort {
   onRocketMessage(kind: RocketMessage["k"], fn: (message: RocketMessage) => void): () => void;
 }
 
-const disconnected: RocketPort = {
-  isRocketConnected: () => false,
-  sendToRocket: () => {},
-  onRocketMessage: () => () => {},
+const commandsPort: RocketPort = {
+  isRocketConnected: () => commandsConnected(),
+  sendToRocket: (message) => {
+    commandsSend(message as SharedRocketMessage);
+  },
+  onRocketMessage: (kind, fn) =>
+    commandsOnMessage(kind, (message) => {
+      if (message.k === kind) fn(message as RocketMessage);
+    }),
 };
 
-let port: RocketPort = disconnected;
+let port: RocketPort = commandsPort;
 
 export function bindRocketPort(next: RocketPort): void {
   port = next;
 }
 
 export function resetRocketPort(): void {
-  port = disconnected;
+  port = commandsPort;
 }
 
 export function isRocketConnected(): boolean {
