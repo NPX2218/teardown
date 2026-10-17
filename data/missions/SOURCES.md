@@ -1,0 +1,26 @@
+# Where the mission numbers come from
+
+Retrieved 2026-10-17 unless a row says otherwise. A value with no source is left null. Nothing in the reference samples was filled by guessing a smooth curve.
+
+| id | What it covers | Name and URL | Retrieved | License or terms | How the values are classed |
+| --- | --- | --- | --- | --- | --- |
+| esa-launch | Timeline after liftoff: MECO, stage separation, and second-engine start at about 2 min 16 s; fairing at 3 min; first upper-stage cutoff at 8 min; restart at 53 min for a 15 s burn; separation at 58 min. Site name SLC-4E. No latitude, longitude, altitude series, or speed series. | ESA, "Launch", https://www.esa.int/Applications/Observing_the_Earth/Copernicus/Sentinel-6/Launch | 2026-10-17 | ESA page. © European Space Agency. No open-data license was stated on the page. Cite the URL. | Published, and ESA says the times are approximate. The insertion sample at 3195 s is derived: 53×60+15. |
+| esa-press | Liftoff date 21 Nov 2020, "17:17 GMT" at minute precision, "over 1300 km", satellite "1.2 tonne". | ESA press release, https://www.esa.int/Newsroom/Press_Releases/New_Copernicus_satellite_to_monitor_sea-level_rise_launched | Already stored in the mission file; page not re-downloaded in this pass | Same ESA terms as above. | Published. "Over 1300 km" is an approximate mission description, not a sample. 1200 kg on the flyable preset is 1.2×1000. |
+| nsf-2020-11-21 | Secondary clock: max-Q at T+1 min 1 s, MECO at T+2 min 17 s, SECO-1 at T+8 min 18 s, second burn of about 10 s from T+53 min 18 s. Also booster B1063.1, 1336 km, 66°. | Tyler Gray, NASASpaceFlight.com, 21 Nov 2020, https://www.nasaspaceflight.com/2020/11/sentinel-6-michael-freilich-launch/ | 2026-10-17 | © NASASpaceFlight.com / the author. A news report, not a telemetry release. | Published as a report. Used for the max-Q time only. It is not averaged with ESA. Kinematics from this article were not copied into samples. |
+| ll2-sentinel-6 | Launch Library 2 net `2020-11-21T17:17:08Z`, booster serial B1063 flight 1, described altitude 1336 km, empty timeline. | The Space Devs, https://ll.thespacedevs.com/2.2.0/launch/56623c2d-7174-489c-b0ed-bf6f039b2412/ | Stored with the mission file; the API was not called again on 2026-10-17 | Launch Library 2 API terms. Not re-read this pass. | Published metadata. The net second is not the event clock. 1336 km is not a flight sample. |
+| spacex-falcon9 | Vehicle height 70 m, diameter 3.7 m, mass 549054 kg, LEO capability 22800 kg, Merlin sea level 845 kN, nine engines, Merlin Vacuum 981 kN. | SpaceX Falcon 9, https://www.spacex.com/vehicles/falcon-9/ | Stored in `data/flight/sentinel-6-reference.json`; the live page was not re-opened this pass | SpaceX site terms. | Published vehicle facts. Not a weighed Sentinel-6 liftoff and not a throttle trace. |
+| spacex-falcon9-2020-05-24 | Sea-level total 7607 kN. | Internet Archive capture of the SpaceX vehicle page, 24 May 2020, https://web.archive.org/web/20200524024922/https://www.spacex.com/vehicles/falcon-9/ | The capture date is 2020-05-24. Not re-downloaded this pass. | Archive of a SpaceX page. | Published. The flyable preset stores 7607000 N with this source. |
+| nasa-earth-factsheet | Equatorial radius 6378.137 km, polar radius 6356.752 km, GM 398600 km³/s², standard gravity 9.80665 m/s², mean surface gravity 9.820 m/s². | NASA, https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html | Stored in `data/flight/earth.json` | NASA public fact sheet. | Published. The flight code uses the equatorial radius as a sphere. |
+| practice-starlink-sfn | Practice event times only. | Spaceflight Now Starlink timeline, https://spaceflightnow.com/2020/03/15/timeline-for-falcon-9-launch-of-starlink-satellites-3/ | Already the practice file's source | Spaceflight Now article terms. | Practice placeholder. It is a different launch, kept as the sample script. Not Sentinel-6. |
+| classroom-tuning | Dry mass, propellant mass, and flow on the flyable presets. | This repo, `docs/specs/07-replay.spec.md`, same magnitudes Neel used for a classroom rocket | 2026-10-17 | Project spec, not a vehicle manual. | Gameplay tuning. Estimated for play. Not measured. |
+
+## Datasets that are not filled in
+
+- Launch-site coordinates. ESA names SLC-4E at Vandenberg and does not print a latitude or longitude on the page retrieved above. No coordinate is stored.
+- Trajectory and telemetry samples of altitude, downrange, speed, or pitch. Not in the ESA timeline, and not invented. Every sample leaves `altKm`, `downrangeKm`, `velMs`, and `pitchDeg` null.
+- Propellant mass, oxidizer mass, and fuel flow for the real Sentinel-6 launch. They stay null in `data/flight/sentinel-6-reference.json`. The flyable preset repeats them only as classroom tuning, with that label on each number.
+- A 1–2 second path from liftoff to insertion. There is no published kinematic anchor to interpolate between, so no interpolated points were added.
+
+## Source ids on the records
+
+Each reference sample has a `source` id from the table. The registered historical mission's `source` field is the ESA launch URL. Each of its events keeps that event's own URL. Practice samples use `practice-starlink-sfn`.

@@ -100,6 +100,90 @@
     }
   ],
   "trajectory": null,
+  "reference": {
+    "id": "sentinel-6-michael-freilich-milestones",
+    "label": "Published milestone times only. Not a measured path. Altitude, downrange, speed, and pitch are null because no public series was found. Nothing was interpolated.",
+    "interpolated": false,
+    "samples": [
+      {
+        "t": 0,
+        "altKm": null,
+        "downrangeKm": null,
+        "velMs": null,
+        "pitchDeg": null,
+        "event": "liftoff",
+        "source": "esa-press",
+        "quality": "published",
+        "note": "Elapsed-time origin. ESA gives liftoff at minute precision, so this row is not an exact UTC second and not a state vector."
+      },
+      {
+        "t": 61,
+        "altKm": null,
+        "downrangeKm": null,
+        "velMs": null,
+        "pitchDeg": null,
+        "event": "max-Q",
+        "source": "nsf-2020-11-21",
+        "quality": "published",
+        "note": "NASASpaceFlight wrote T+1 minute 1 second. 1×60+1 = 61. ESA's milestone table does not list max-Q. Not a telemetry sample."
+      },
+      {
+        "t": 136,
+        "altKm": null,
+        "downrangeKm": null,
+        "velMs": null,
+        "pitchDeg": null,
+        "event": "MECO",
+        "source": "esa-launch",
+        "quality": "published",
+        "note": "ESA: 2 minutes and 16 seconds, approximate, grouped with separation and second-engine start. 2×60+16 = 136. NASASpaceFlight reports main-engine cutoff at T+2 minutes 17 seconds. Those reports are not averaged."
+      },
+      {
+        "t": 136,
+        "altKm": null,
+        "downrangeKm": null,
+        "velMs": null,
+        "pitchDeg": null,
+        "event": "stage sep",
+        "source": "esa-launch",
+        "quality": "published",
+        "note": "Same approximate ESA mark as MECO. ESA did not publish a separate second. The equal time is the grouping, not a claim that they happened together on one second."
+      },
+      {
+        "t": 180,
+        "altKm": null,
+        "downrangeKm": null,
+        "velMs": null,
+        "pitchDeg": null,
+        "event": "fairing",
+        "source": "esa-launch",
+        "quality": "published",
+        "note": "ESA: 3 minutes, approximate. 3×60 = 180."
+      },
+      {
+        "t": 480,
+        "altKm": null,
+        "downrangeKm": null,
+        "velMs": null,
+        "pitchDeg": null,
+        "event": "SECO",
+        "source": "esa-launch",
+        "quality": "published",
+        "note": "ESA: 8 minutes, stage-II engine cut-off, approximate. 8×60 = 480. NASASpaceFlight reports SECO-1 at T+8 minutes 18 seconds. Not averaged, and not the operational orbit."
+      },
+      {
+        "t": 3195,
+        "altKm": null,
+        "downrangeKm": null,
+        "velMs": null,
+        "pitchDeg": null,
+        "event": "insertion",
+        "source": "esa-launch",
+        "quality": "derived",
+        "note": "ESA says the stage restarts at 53 minutes for a 15 second burn, then cuts off. 53×60+15 = 3195. That sum is derived from two approximate phrases. It is not a printed timestamp and not a state vector. NASASpaceFlight reports a 10 second burn from T+53 minutes 18 seconds. The described mission altitude is not attached here."
+      }
+    ]
+  },
   "continuousTelemetry": false,
   "providers": {
     "launchLibrary2": {

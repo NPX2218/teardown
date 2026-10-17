@@ -1,11 +1,13 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { FLIGHT_SCENARIOS } from "@/data/flight/index";
+import { CLASSROOM_EVIDENCE, EARTH_FACTS, FLIGHT_SCENARIOS, SENTINEL_EVIDENCE } from "@/data/flight/index";
+import { validateFlightScenario as validateContractScenario } from "@/lib/flight/scenario";
 import { SIMULATION_LABELS, validateFlightScenario, type FlightScenario } from "@/lib/missions";
+import { useScene } from "@/lib/store";
 
-const earth = FLIGHT_SCENARIOS.earth;
-const reference = FLIGHT_SCENARIOS["sentinel-6-reference"];
-const custom = FLIGHT_SCENARIOS["classroom-custom"];
+const earth = EARTH_FACTS as unknown as FlightScenario;
+const reference = SENTINEL_EVIDENCE as unknown as FlightScenario;
+const custom = CLASSROOM_EVIDENCE as unknown as FlightScenario;
 
 function clone(s: FlightScenario): FlightScenario {
   return structuredClone(s);
@@ -101,5 +103,17 @@ describe("flight scenario inputs", () => {
     const invented = clone(custom);
     invented.kidSummary = "This rocket carries twelve tonnes.";
     expect(validateFlightScenario(invented).some((e) => e.includes("number 12"))).toBe(true);
+  });
+
+  it("S7: the registered reference preset can fly, and its fuel is labelled tuning", () => {
+    const preset = FLIGHT_SCENARIOS.reference;
+    expect(validateContractScenario(preset)).toEqual([]);
+    expect(preset.id).toBe("reference");
+    expect(preset.historicalMissionId).toBe("sentinel-6-michael-freilich");
+    expect(preset.stages.every((stage) => stage.propellantKg.classification === "gameplay-tuning")).toBe(true);
+    expect(preset.stages.every((stage) => stage.propellantKg.source.includes("Not a published"))).toBe(true);
+    const started = useScene.getState().startFlight("reference");
+    expect(started.ok).toBe(true);
+    useScene.getState().stopFlight();
   });
 });
