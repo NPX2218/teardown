@@ -21,12 +21,12 @@ export function SourcesPanel({
   const factorNote = view.status === "estimate" ? view.factorNote : null;
 
   return (
-    <dialog className="overlay" open aria-labelledby="emissions-sources-title">
+    <dialog className={`overlay ${styles.dialog}`} open aria-labelledby="emissions-sources-title">
       <div className={`overlay__panel ${styles.panel}`}>
-        <button type="button" className="btn btn-icon overlay__close" aria-label="Close" onClick={onClose}>
+        <button type="button" className={`btn btn-icon overlay__close ${styles.close}`} aria-label="Close" onClick={onClose}>
           ✕
         </button>
-        <h2 id="emissions-sources-title" className="eyebrow">
+        <h2 id="emissions-sources-title" className={`eyebrow ${styles.title}`}>
           Where these numbers come from
         </h2>
         <p className="lead">
