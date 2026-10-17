@@ -1,11 +1,9 @@
 "use client";
 // Embeds the emissions readout inside flight and replay. There is no emissions tab.
-// Anders's component replaces this import after PR #1:
-//   import { EmissionsSlot } from "@/components/emissions/EmissionsSlot";
-// Until then the fixture keeps the slot name without a standalone sheet.
+// Anders's module owns the CO₂ number. The seam fixture stays for pages that
+// have not switched yet.
 import { useEffect } from "react";
-import { EmissionsSlot } from "@/components/seams/EmissionsSlotFixture";
-import { EMISSIONS_FACTOR_UNAVAILABLE } from "@/lib/flight/session";
+import { EmissionsSlot } from "@/components/emissions/EmissionsSlot";
 import {
   historicalEmissionsUnavailable,
   historicalFuelReadout,
@@ -49,17 +47,11 @@ export function EmissionsPlacement() {
   const historical = mode === "replay" && replay.missionId
     ? historicalFuelReadout(replay.missionId, replay.t)
     : null;
-  const reason = mode === "replay"
-    ? historicalEmissionsUnavailable(replay.missionId ?? "replay").unavailableReason
-    : flight.emissions?.unavailableReason ?? EMISSIONS_FACTOR_UNAVAILABLE;
   const rp1 = flight.fuel?.rp1ConsumedKg ?? 0;
 
   return (
     <div className={styles.embedded}>
       <EmissionsSlot />
-      <p className="hud__k" aria-label="Estimated carbon dioxide">Estimated carbon dioxide</p>
-      <p className="hud__v">Estimate unavailable</p>
-      <p className={styles.note}>{reason}</p>
       {mode === "mission" && flight.fuel && (
         <p className={styles.note}>
           RP-1 burned {kilograms(rp1)}. This is kerosene, not carbon dioxide.
