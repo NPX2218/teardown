@@ -68,8 +68,9 @@ export interface Slide {
   /**
    * Real app capture in public/presentation/media/, for figure "shot".
    * motion: optional GIF of the same moment, played on screen; print and reduced motion keep the still.
+   * fit "contain" shows the whole capture (a tall shot on black space) instead of filling and cropping.
    */
-  shot?: { file: string; motion?: string; alt: string; caption: string };
+  shot?: { file: string; motion?: string; fit?: "contain"; alt: string; caption: string };
 }
 
 export const SLIDES: readonly Slide[] = [
@@ -239,6 +240,7 @@ export const SLIDES: readonly Slide[] = [
     shot: {
       file: "explore.jpg",
       motion: "explore.gif",
+      fit: "contain",
       alt: "Explore mode with the Falcon 9 exploded into its parts, engine power at 100% and nine engine plumes under the booster.",
       caption: "The running app. Exploded, engine power at 100%.",
     },

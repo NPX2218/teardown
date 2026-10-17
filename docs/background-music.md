@@ -1,6 +1,6 @@
 # Background music
 
-The laptop plays one quiet loop on every page except `/rocket`. The phone engine rumble is a different sound. It lives in `public/sounds/` and follows engine power. This track does not.
+The laptop plays one quiet loop on every page except `/rocket` and `/presentation`. The phone engine rumble is a different sound. It lives in `public/sounds/` and follows engine power. This track does not.
 
 ## What plays
 

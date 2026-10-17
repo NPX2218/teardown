@@ -106,7 +106,7 @@ function DemoRun({ reveal }: { reveal: number }) {
 
 function Shot({ shot, mediaBase }: { shot: NonNullable<Slide["shot"]>; mediaBase: string }) {
   return (
-    <figure className="deck-figure deck-shot">
+    <figure className="deck-figure deck-shot" data-fit={shot.fit}>
       {shot.motion && <img className="deck-shot__motion" src={`${mediaBase}${shot.motion}`} alt={shot.alt} />}
       <img className={shot.motion ? "deck-shot__still" : undefined} src={`${mediaBase}${shot.file}`} alt={shot.motion ? "" : shot.alt} />
       <figcaption>{shot.caption}</figcaption>
