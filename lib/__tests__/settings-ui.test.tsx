@@ -10,10 +10,11 @@ describe("settings sheet", () => {
   it("shows engine sound, master sound, and vibration with the SpaceXAI controls", () => {
     const html = renderToStaticMarkup(
       <SettingsSheet
-        settings={{ engineSound: true, masterPercent: 80, vibration: false }}
+        settings={{ engineSound: true, masterPercent: 80, vibration: false, musicPercent: 40 }}
         titleId="settings-title"
         onEngineSound={() => {}}
         onMaster={() => {}}
+        onMusic={() => {}}
         onVibration={() => {}}
         onClose={() => {}}
       />,
@@ -33,6 +34,30 @@ describe("settings sheet", () => {
     expect(html).toContain(">Done<");
     expect(html).not.toContain(VIBRATION_UNSUPPORTED_NOTE);
     expect(DEFAULT_SETTINGS.masterPercent).toBe(100);
+  });
+
+  it("shows a music slider under the master level", () => {
+    const html = renderToStaticMarkup(
+      <SettingsSheet
+        settings={{ engineSound: true, masterPercent: 100, vibration: true, musicPercent: 40 }}
+        titleId="settings-title"
+        onEngineSound={() => {}}
+        onMaster={() => {}}
+        onMusic={() => {}}
+        onVibration={() => {}}
+        onClose={() => {}}
+      />,
+    );
+    const masterAt = html.indexOf("Master sound");
+    const musicAt = html.indexOf(">Music<");
+    expect(masterAt).toBeGreaterThan(-1);
+    expect(musicAt).toBeGreaterThan(masterAt);
+    expect(html).toContain("40%");
+    expect(html).toContain('aria-valuetext="40 percent"');
+    expect(html).toContain('type="range"');
+    const creditAt = html.indexOf("Music: Mokka - No Copyright Music");
+    expect(creditAt).toBeGreaterThan(musicAt);
+    expect(html.slice(creditAt - 40, creditAt)).toContain("small");
   });
 
   it("is a nav control that can open the sheet", () => {

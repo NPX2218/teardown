@@ -11,12 +11,19 @@ export interface AppSettings {
   masterPercent: number;
   /** Phone buzz while the engines push. */
   vibration: boolean;
+  /**
+   * Laptop background music, 0..100.
+   * Heard gain is this times the master slider. The phone page never plays it.
+   * 40 is the gentle default so the first visit is not a surprise.
+   */
+  musicPercent: number;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
   engineSound: true,
   masterPercent: 100,
   vibration: true,
+  musicPercent: 40,
 };
 
 export function defaultSettings(): AppSettings {
@@ -32,6 +39,12 @@ export function clampMasterPercent(value: unknown): number {
   return Math.min(100, Math.max(0, Math.round(value)));
 }
 
+/** Missing or junk music levels fall back to the gentle default, not full volume. */
+export function clampMusicPercent(value: unknown): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) return DEFAULT_SETTINGS.musicPercent;
+  return Math.min(100, Math.max(0, Math.round(value)));
+}
+
 /** Fills missing or junk fields with the defaults. Never throws. */
 export function parseSettings(raw: unknown): AppSettings {
   const record = isRecord(raw) ? raw : {};
@@ -39,6 +52,7 @@ export function parseSettings(raw: unknown): AppSettings {
     engineSound: typeof record.engineSound === "boolean" ? record.engineSound : DEFAULT_SETTINGS.engineSound,
     masterPercent: clampMasterPercent(record.masterPercent),
     vibration: typeof record.vibration === "boolean" ? record.vibration : DEFAULT_SETTINGS.vibration,
+    musicPercent: clampMusicPercent(record.musicPercent),
   };
 }
 
@@ -78,12 +92,21 @@ export function saveSettings(storage: Pick<SettingsStorage, "setItem"> | null, s
   }
 }
 
-/** Wire message → the same shape we store. `master` is 0..1. */
+/**
+ * Keep the laptop music level already in storage.
+ * A phone settings message has no music field, so a blind overwrite would drop it.
+ */
+export function withStoredMusic(storage: Pick<SettingsStorage, "getItem"> | null, settings: AppSettings): AppSettings {
+  return parseSettings({ ...settings, musicPercent: loadSettings(storage).musicPercent });
+}
+
+/** Wire message → the same shape we store. `master` is 0..1. Music stays on the laptop. */
 export function settingsFromWire(message: { engineSound: boolean; master: number; vibrate: boolean }): AppSettings {
   return parseSettings({
     engineSound: message.engineSound,
     masterPercent: Math.round(clampUnit(message.master) * 100),
     vibration: message.vibrate,
+    musicPercent: getSettings().musicPercent,
   });
 }
 
@@ -110,7 +133,10 @@ function emit(): void {
 }
 
 function same(a: AppSettings, b: AppSettings): boolean {
-  return a.engineSound === b.engineSound && a.masterPercent === b.masterPercent && a.vibration === b.vibration;
+  return a.engineSound === b.engineSound
+    && a.masterPercent === b.masterPercent
+    && a.vibration === b.vibration
+    && a.musicPercent === b.musicPercent;
 }
 
 export function commitSettings(next: AppSettings): void {
