@@ -1,8 +1,33 @@
 # 12 · Demo + Submission — Implementation Spec
 
+## Current scope revision — 17 October 2026
+
+**This section supersedes the demo, shortcut, reset, README, and acceptance instructions below wherever they describe retired scope.** [07 — Replay + Mission](07-replay.spec.md) owns the precise current game/input/physics seams; [13 — Emissions](13-emissions.spec.md) owns the estimation assumptions. This revision describes required work, not a completed or tested game.
+
+| Area | Current demo / submission contract |
+|---|---|
+| Navigation | Exactly three modes: **Explore**, **Flight replay**, and **Your mission**. There is no standalone Engines or Emissions mode, nine-engine-out interface, engine-failure shortcut, or engine-out agent tool. Engine facts remain in Explore; emissions are integrated into the mission experience defined by 07/13. |
+| Flight replay | Present source-backed recorded mission events, distinguish measured/published event facts from illustrative 3D motion, and display provenance/limitations. Do not describe planned/sample times or inferred attitude as actual flight telemetry. |
+| Your mission | Manual Earth launch to orbit with an Earth/space backdrop, meaningful steering/throttle, crash/failure, pause/resume, and retry. A visitor can complete it with desktop or touch controls. Phone control is optional; no docking, rendezvous, interplanetary flight, or playable booster-landing mission. |
+| Demo sequence | Show the 3D explorer and real mission replay, then demonstrate that manual input can cause failure/crash, retry, and reach the orbit predicate defined by 07. Explain the integrated emissions estimate and its limits. Show an achievable successful run using actual inputs; never force a success state for the recording. |
+| Timing | Remeasure the entire revised demo in rehearsal, including at least one failure/retry and successful orbit. The old 70-second guided-mission / 115-second total budget is retired. No new duration claim is accepted until measured; adjust the talk/demo plan to the actual submission limit. |
+| Shortcuts | `Space` must not complete a checkpoint or grant progress/win. Remove the old `2` engine-out shortcut and old checkpoint fallback/help text. The revised keyboard/touch bindings must match 07, avoid conflicts with camera orbit/text inputs, and have an on-screen equivalent. |
+| New run / reset | Cancel the active physics loop and pending run callbacks; release keyboard/touch/phone inputs; clear or reset the run's speech, captions, looping audio, emissions accumulation, trail, result overlay, and pending async updates. A run identifier/generation prevents late old-run work mutating a new run. Reset does not preserve a prior success or resume a disconnected phone automatically. |
+| Footer / credits | Use the exact footer text **"Made by Neel Bansal and Anders Haroldson"** as specified in 00/01. Preserve the model's Stanley Creative attribution, CC BY 4.0 license, and required link. Keep “Student project. Not affiliated with SpaceX or xAI.” separately. Public source/asset credits remain distinct from the authorship footer. |
+
+### Retired instructions and verification claims
+
+The historical implementation snippets and scratch compile/test counts below target the old checkpoint/stars mission. Their `checkpointsFor`, `completeCheckpoint`/`Space`, `decideMove`, old mission waiting state, engine-panel imports/reset, `2` shortcut, checkpoint demo row, engine-out README table, and README test R4 must not be used as current-game implementation or acceptance. The 70-second mission row and old guided-mission timing rationale are superseded. Reusable kiosk, activity, narration-cancellation, licensing, and reset concepts still need adaptation to 07's current runtime seam before implementation.
+
+Replace the old README/Devpost narrative about completing six gestures, landing a booster, receiving participation stars, or switching engines off with the actual current three-mode feature set. Distinguish implemented and verified features from specification-only work; list live-provider/phone requirements honestly. Retired test counts are not proof of any current orbital-game behavior.
+
+Before submission, record evidence for desktop and touch steering/throttle, at least one input-caused failure/crash and retry, a genuinely achievable orbit using inputs, explicit pause/resume, phone disconnect pause if phone support ships, reset during flight with no stale input/audio/emissions, and the integrated estimate's assumptions. Rehearse the complete measured demo and confirm footer/model credit at desktop and mobile sizes. A replay, scripted checkpoint advance, forced state, or bypass key does not satisfy playable-game acceptance.
+
+---
+
 **Plan:** `docs/plans/12-demo-submission.md` · **Owner:** Both · **Needs:** everything that survived the cut list · **Feature freeze:** Sat 12:00 AM. After that, only fixes.
 **Contract:** `docs/specs/01-setup-contract.spec.md` wins over the plan (store, types, seams). **Theme:** every UI piece below uses the tokens and classes of `docs/specs/00-theme.spec.md` (`.kiosk`, `.display--sentence`, `.reveal`, `.attract`, `.btn`, `.btn-accent`, `.btn-lg`, `.btn-icon`, `.card`, `.caption`, `.overlay`, `.dock--bottom`, `.scrim-bottom`, `--z-overlay`, `--target`). No hard-coded colours.
-Footer line (already in 01 and 03, repeated in the README): **"Student project. Not affiliated with SpaceX or xAI."**
+Required separate disclaimer, retained alongside the new author credit: **"Student project. Not affiliated with SpaceX or xAI."**
 
 ## Compile status
 

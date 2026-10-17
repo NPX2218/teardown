@@ -1,5 +1,45 @@
 # 06 · Mission Data — Implementation Spec
 
+## Authoritative scope revision · 2026-10-17
+
+This revision governs the next implementation and supersedes conflicting mission-selection rules, event enums, required-event checks, fixtures and code snippets below. Those snippets document the previous checkpoint design; their earlier verification claims do not verify this revision. The historical replay and interactive orbital-flight modes follow [07 · Replay and interactive flight](07-replay.spec.md). Historical milestones are reference data for an interactive flight, never proof that the player's trajectory matched a real vehicle.
+
+### Historical data and evidence
+
+The public historical replay opens a real mission: **Sentinel-6 Michael Freilich, 2020-11-21, launched from SLC-4E at Vandenberg**. [ESA's launch confirmation](https://www.esa.int/Newsroom/Press_Releases/New_Copernicus_satellite_to_monitor_sea-level_rise_launched) reports liftoff at 17:17 GMT, at minute precision. `t = 0` defines elapsed time from liftoff; it does not supply an exact UTC launch second.
+
+| Replay event | Elapsed seconds | Evidence and precision | Representation |
+|---|---:|---|---|
+| `liftoff` | 0 | [ESA launch confirmation](https://www.esa.int/Newsroom/Press_Releases/New_Copernicus_satellite_to_monitor_sea-level_rise_launched); confirmed launch, elapsed-time origin | Liftoff |
+| `staging` | 136 | [ESA postflight launch milestones](https://www.esa.int/Applications/Observing_the_Earth/Copernicus/Sentinel-6/Launch); explicitly approximate and grouped | First-stage cutoff, stage separation and upper-stage ignition occur in quick succession; booster begins its return |
+| `fairing_sep` | 180 | [ESA postflight launch milestones](https://www.esa.int/Applications/Observing_the_Earth/Copernicus/Sentinel-6/Launch); explicitly approximate | Protective fairing separates |
+| `orbit_and_return` | 480 | [ESA postflight launch milestones](https://www.esa.int/Applications/Observing_the_Earth/Copernicus/Sentinel-6/Launch) places upper-stage cutoff at about eight minutes; [NOAA's 2020 Vandenberg report, §4.3.1](https://www.fisheries.noaa.gov/s3/2024-01/Vandenberg-2019LOA-MonRep2020-OPR1.pdf) describes landing about eight minutes after launch | Around this time, upper-stage cutoff establishes parking orbit and the booster returns to land; simultaneous exact events are not asserted |
+
+Keep each row's source URLs, timing classification and grouping in the data. The `staging` row must not become three invented exact timestamps. The last row summarizes independently approximate milestones; it does not assert that engine cutoff and touchdown occurred at the same second. The [original SpaceX webcast](https://www.youtube.com/watch?v=aVFPzTDCihQ) is available for visitors to inspect; do not mark a time as webcast-observed unless that event and elapsed clock have actually been checked.
+
+The visible label is **“Real mission · published approximate milestones.”** State that motion between these milestones is illustrated, with no continuous position, velocity, altitude or attitude telemetry included. There is no verified Max-Q, entry-burn or landing-burn timestamp in this selected record. **Do not invent missing events, borrow another mission's times, or relabel an ignition as burn completion.** Missing historical measurements remain unknown. Any additional historical mission needs its own evidence and precision classification.
+
+Launch Library 2 supplies launch metadata such as mission name, date, vehicle, booster and landing information. It does not provide a continuous trajectory or establish these event times. Preserve provider identity and source separately from event evidence. Show unavailable metadata as unknown rather than filling it with a sample serial or flight count.
+
+### Validation and selection contract
+
+- Structural validation accepts a sourced real mission with only the verified events above. Replace the old blanket `CORE_EVENT_IDS` completeness gate: missing unsourced Max-Q, standalone MECO/separation/ignition, entry-burn or landing-burn events are allowed and must not block historical replay.
+- Validate finite, nonnegative elapsed times; stable chronological ordering; unique row IDs; nonempty display/narration copy; supported grouped-event IDs; source URLs and explicit timing precision. Duration comes from the selected replay's last milestone, not `532` or another sample constant. A continuous trajectory must never be inferred by the validator.
+- Required evidence depends on the claim: a row claiming an observed exact event needs observed evidence; a published planned row must retain its planned label; an approximate postflight row retains its approximate label. Sorting or schema conversion cannot upgrade evidence precision.
+- Keep `practice` as an explicit, clearly labeled sample choice for development or a disclosed fallback. Its planned timeline is not a real-flight result. The public demo must not silently default or fall back to it. If the real record cannot load, show the failure and offer the labeled practice choice.
+- Preserve the sample separately from historical data. In particular, the planned March 2020 sample's successful-touchdown narration must not be presented as the outcome of the actual March 18 flight. Neither historical nor practice timing governs the custom orbital simulation in 07.
+
+### Required acceptance and tests · not yet executed for this revision
+
+- [ ] Load Sentinel-6 as the initial public historical replay; verify all four rows and their source links against the table above.
+- [ ] Validate the real four-row record without inventing missing core events; reject missing provenance, invalid time values and duplicate row IDs.
+- [ ] Preserve the grouped 136-second milestone and approximate 480-second summary in both visible text and narration.
+- [ ] Use a second fixture with different staging, fairing and ending times; verify replay duration, event lookup, seeking and restart follow that fixture rather than sample constants.
+- [ ] Disconnect or fail the real-data request; verify the UI explains the failure and requires an explicit labeled practice choice.
+- [ ] Confirm custom-flight controls, outcomes and [integrated emissions](13-emissions.spec.md) read the simulation's state rather than a historical event clock. No measured-telemetry claim appears without its own dataset.
+
+---
+
 **Plan:** `docs/plans/06-mission-data.md` · **Owner:** Anders · **Needs:** 01 · **Target:** Sat 1:00 PM.
 **Conventions followed (from 01):** `@/` alias; JSON imports cast via `unknown`; vitest with explicit imports, sentinel ids (M1…M10) in test names; tests live in `lib/__tests__/`; no Neel files touched, no cross-lane imports (only `@/lib/types` and `@/data/missions/index`).
 

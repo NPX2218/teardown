@@ -1,3 +1,14 @@
+# 08 · Engine-Out Simulator
+
+## Deferred — excluded from current build
+
+**Scope revision · 17 October 2026 · user decision.** The standalone engine-out feature is cut from the current build. Do not create its navigation entry, nine-engine toggles, engine-marker interaction, panel, shortcut, or agent tool. This applies even where older documents still name the feature.
+
+Keep grounded engine facts in the part inspector and the physical engine/mass/thrust data needed by the orbital game in [07](../specs/07-replay.spec.md). Reusing those facts does not restore the engine-out simulator or its liftoff-only verdict as an orbital-success rule. The orbital game's propulsion and success contracts belong to 07.
+
+The former implementation plan is preserved below inside an HTML comment for reference. It is excluded from implementation and acceptance; its historical test claims do not verify the current orbital game.
+
+<!-- DEFERRED LEGACY BUILD INSTRUCTIONS — not current scope
 # 08 · Engine-Out Simulator Implementation Plan
 
 > **For agentic workers (Cursor Agent):** implement one task at a time, run the tests, stop for review. Steps use `- [ ]` checkboxes.
@@ -41,3 +52,4 @@ Layout: the real octaweb is eight engines in a ring around one center engine. In
 - [ ] **Step 3:** "Reset engines" button → `setEnginesOut([])`.
 - [ ] **Step 4: Verify:** turn off 3 engines. Expected: "6 / 9", T/W 0.94, verdict "no".
 - [ ] **Step 5:** Commit `feat: engine-out panel`.
+END DEFERRED LEGACY BUILD INSTRUCTIONS -->

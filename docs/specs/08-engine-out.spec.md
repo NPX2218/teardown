@@ -1,3 +1,14 @@
+# 08 · Engine-Out Simulator
+
+## Deferred — excluded from current build
+
+**Scope revision · 17 October 2026 · user decision.** The standalone engine-out feature is cut from the current build. Do not create its navigation entry, nine-engine toggles, engine-marker interaction, panel, shortcut, or agent tool. This applies even where older documents still name the feature.
+
+Keep grounded engine facts in the part inspector and the physical engine/mass/thrust data needed by the orbital game in [07](07-replay.spec.md). Reusing those facts does not restore the engine-out simulator or its liftoff-only verdict as an orbital-success rule. The orbital game's propulsion and success contracts belong to 07.
+
+The former implementation spec is preserved below inside an HTML comment for reference. It is excluded from implementation and acceptance; its historical test claims do not verify the current orbital game.
+
+<!-- DEFERRED LEGACY BUILD INSTRUCTIONS — not current scope
 # 08 · Engine-Out Simulator — Implementation Spec
 
 **Plan:** `docs/plans/08-engine-out.md` · **Owner:** Neel · **Needs:** 03 (`PreparedModel`, `Rocket.tsx`, `ViewerSlot.tsx`) · **Target:** Fri 2:00 AM.
@@ -772,3 +783,4 @@ No Anders files are imported. No store field, store action or shared type is add
 
 1. **Placement settled:** the engine controls use the bottom-left sheet in explore mode and hide during flight. The mount step hides the explorer rail/card while the engine sheet is open; verify at 375×667 and 1280×720.
 2. Should 12's idle reset close the panel (`useEnginesUi.getState().setOpen(false)`) as well as clear `enginesOut`? Spec provides the hook; 12 decides.
+END DEFERRED LEGACY BUILD INSTRUCTIONS -->

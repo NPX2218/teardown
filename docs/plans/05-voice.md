@@ -1,5 +1,7 @@
 # 05 · Voice Implementation Plan
 
+**Scope revision — 2026-10-17:** the [current stage spec](../specs/05-voice.spec.md) and [07 migration contract](../specs/07-replay.spec.md#6-cross-stage-migration-contract) supersede conflicting instructions below for flight narration and retired checkpoint caches. The former checkpoint/stars mission and standalone Engines/Emissions surfaces are retired. Follow the revised [07 execution plan](07-replay.md); do not build legacy snippets verbatim.
+
 > **For agentic workers (Cursor Agent):** implement one task at a time, run the tests, stop for review. Steps use `- [ ]` checkboxes.
 
 **Goal:** Every spoken line uses Grok Voice, with cached audio as a fallback. Short mission callouts come **out of the rocket** (the phone inside it); explanations come out of the laptop. Visitors ask questions out loud, through the phone mic or the laptop mic.

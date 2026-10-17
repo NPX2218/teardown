@@ -1,5 +1,7 @@
 # 01 · Setup + Shared Contract — Implementation Spec
 
+**Scope revision — 2026-10-17:** [07 §6](07-replay.spec.md#6-cross-stage-migration-contract) now defines the replacement flight types/actions and their migration into this shared contract. It supersedes this file's old checkpoint `MissionState`, `startMission`/`completeCheckpoint`/star lifecycle and engine-out tool exposure. Keep historical `replay` separate from player `flight`; no gesture or shortcut can grant orbit. The old code/tests below remain baseline evidence for unrelated seams, not a ready implementation of the new game. 00 owns the revised three-mode navigation, corner guide and exact author credit. Do not implement conflicting legacy game snippets verbatim.
+
 **Plan:** `docs/plans/01-setup-contract.md` · **Owner:** Both · **Needs:** nothing · **Target:** Fri 5:00 PM.
 **This file is the source of truth** for every shared type, store action, seam signature and file path. Later specs import from it and never redefine it.
 

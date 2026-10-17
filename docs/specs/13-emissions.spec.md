@@ -1,5 +1,51 @@
 # 13 · Emissions Layer — Implementation Spec
 
+## Authoritative scope revision · 2026-10-17
+
+This revision governs the next implementation and supersedes conflicting lens/navigation behavior, fixed-timeline integration, narrator rules, stars and end-card instructions below. The earlier code and tests describe the previous checkpoint design; they do not establish that this revision is implemented or verified. Follow [07 · Replay and interactive flight](07-replay.spec.md) for historical reference flights and custom orbital missions, and [06 · Mission data](06-mission-data.spec.md) for evidence boundaries.
+
+### Integrated live readout
+
+Emissions appear as a compact live readout inside the flight HUD for historical replay, interactive flight using a historical mission as reference, and custom orbital missions. **There is no separate emissions section, navigation destination, mode or lens.** Retire `LensSwitch`, emissions-only playback controls and `set_lens` routing from the earlier design. One active flight supplies the time, fuel ledger and emissions readout. The readout must not cover steering, throttle, staging, mission status or the vehicle.
+
+Show cumulative **estimated direct-combustion CO₂**, in `kg CO₂` or `tonnes CO₂` with units visible, and provide a compact sources/assumptions disclosure. This is not measured emissions telemetry, CO₂e, soot warming or a lifecycle footprint. Historical source evidence establishes selected mission milestones, not measured fuel flow or emissions. Label historical totals and any interpolation as model estimates, and name the assumptions and exclusions. Missing historical burn details stay unknown; any modeled burn needs an explicit assumption rather than a fabricated historical event.
+
+### Fuel ledger and calculation contract
+
+For interactive and custom orbital missions, calculate from the fuel actually consumed **by the simulation** and the engines/stages that consumed it. The word “actual” here describes simulator state, not measured real-flight propellant use. A fixed `532`-second schedule, planned event duration, button count or checkpoint completion must not determine a player's emissions. Engine-off, throttle changes, coast, staging, fuel exhaustion and crash affect the same fuel integration that drives the flight simulation.
+
+For each simulation step, accumulate the nonnegative mass of RP-1 burned by each active engine/stage. Multiply the summed RP-1 mass by a documented combustion factor in `kg CO₂ / kg RP-1`; convert kilograms to tonnes by dividing by `1000`. If the simulator tracks mixed RP-1/LOX propellant instead of RP-1 separately, derive fuel mass using its documented oxidizer-to-fuel ratio before applying the factor. **Do not multiply total propellant, including oxygen, by a kerosene-only factor.** Per-engine flow, throttle response, mixture ratio and combustion-factor assumptions must each carry units, source and precision. Engine count is already represented in the ledger; never multiply it a second time.
+
+Historical replay may use a separately declared estimated fuel ledger anchored to available milestones, with unverified flow/burn assumptions disclosed. Replaying recorded milestones must not misrepresent this ledger as measured fuel consumption. Historical-reference interactive flight uses the player's simulated ledger once control begins; it must not continue adding an independent historical schedule underneath it. Estimates with different scope must not be presented as directly comparable totals.
+
+| Flight condition/action | Required emissions behavior |
+|---|---|
+| Throttle is zero, engines are off, or flight is coasting | Zero additional fuel burn and zero emissions increment |
+| Active engine/throttle/stage changes | Read the simulation's resulting fuel consumption; count only burning engines and the consuming stage |
+| Staging or fuel exhaustion within a simulation step | Split or bound integration at the transition; never burn detached/inactive engines or more fuel than remains |
+| Crash or terminal flight outcome | Freeze emissions at the terminal simulation time; no continued accumulation from animation or wall-clock time |
+| Pause or hidden/resumed tab | Preserve the simulation's clock behavior; paused time adds nothing and a resumed frame cannot invent consumption |
+| Restart | Reset that run's ledger and cumulative emissions to zero before the new flight begins |
+| Historical seek, or any supported simulation seek | Recompute deterministically from the relevant recorded/model ledger up to the target time; backward seek reduces the total correctly and does not append another burn |
+| Switch historical/custom missions or start another run | Isolate each run's state and assumptions; neither ledger nor total leaks across missions or modes |
+
+Keep one source of truth for fuel consumption and emissions. Rendering and narration only read it; neither advances the ledger. Check all inputs and outputs for finite, nonnegative values and preserve a consistent stage breakdown. If a required fuel/model input is unavailable, show “Estimate unavailable” with its reason instead of a fabricated zero or a sample flight's total.
+
+The earlier participation-star end card and automatic emissions summary are retired with the checkpoint flow. An explicit details action may explain the current run's estimate; it must preserve the flight outcome and reference the same ledger. Any guide response must use the active run's estimate and say “about” for estimates. It must not switch to an emissions lens or create a second flight clock.
+
+### Required acceptance and tests · not yet executed for this revision
+
+- [ ] Historical replay and both interactive-flight variants show one compact emissions readout; no standalone emissions navigation, mode, lens or independent clock remains.
+- [ ] A hand-calculated fuel fixture verifies stage totals, RP-1/LOX conversion, combustion-factor units and `kg`→`tonnes` conversion without using the production calculator to derive expectations.
+- [ ] Equal-duration runs at different throttle/engine configurations follow their independently verified simulated fuel consumption; an otherwise identical coast/throttle-zero interval contributes exactly zero.
+- [ ] Staging and fuel exhaustion inside a step cannot count detached engines, negative fuel, or a burn beyond the available fuel. Stage subtotals equal the cumulative total.
+- [ ] Crash freezes the total; restart resets it; pause/resume does not integrate elapsed wall time; historical/custom mode changes do not share ledgers.
+- [ ] Seek forward and backward reproduces the same total for the same ledger/time; a different mission duration proves no `532`-second sample dependency remains in the player flight.
+- [ ] Historical data gaps and unavailable model inputs display their limitations. Sources distinguish mission evidence from fuel/emissions assumptions; no UI or narration calls these measured emissions.
+- [ ] Inspect narrow and desktop layouts: the readout and its disclosure leave flight controls and terminal outcomes readable and operable. These are future verification requirements, not a claim that browser or simulation tests have run.
+
+---
+
 **Plan:** `docs/plans/13-emissions.md` · **Owner:** Anders (Tasks 1–5), Both (Task 6) · **Needs:** 01 for Tasks 1–3; 05 `stopSpeaking` for Task 4; 04 for Task 5.
 Contract: `docs/specs/01-setup-contract.spec.md` (types `Lens`, `EmissionValue`, `EmissionsFile`, `Mission`, `CheckpointId`, `ExplainLevel`; store `lens`, `setLens`, `mission.narratedStep`, `mission.results`, `replay`; seam `speakLine`). Theme: `docs/specs/00-theme.spec.md` §7 "Emissions (13)".
 

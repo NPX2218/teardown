@@ -1,5 +1,7 @@
 # 10 · Phone Rocket Implementation Plan
 
+**Included in the current build:** implement the QR-connected phone webpage, motion/orientation permission, calibration, continuous steering, audio/voice and supported vibration. Phone use is optional for visitors; phone support is not deferred. Follow [10](../specs/10-phone-rocket.spec.md), [11](../specs/11-rocket-link.spec.md) and the [07 migration contract](../specs/07-replay.spec.md#6-cross-stage-migration-contract), replacing the old checkpoint bridge.
+
 > **For agentic workers (Cursor Agent):** implement one task at a time, run the tests, verify on a real phone, stop for review. Steps use `- [ ]` checkboxes.
 
 **Goal:** A visitor slides a phone into the model rocket. The phone becomes the rocket's **motion sensor** (which way it points, how it moves), its **speaker** (engine rumble, separation clunk, launch music, vibration, and **Grok's mission-control voice**), and optionally its **ear** (the phone mic, for asking the rocket questions).

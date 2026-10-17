@@ -1,5 +1,7 @@
 # 04 · Grok Client + Agent — Implementation Spec
 
+**Scope revision — 2026-10-17:** follow [07 §6](07-replay.spec.md#6-cross-stage-migration-contract) for the active tool/state contract. `start_mission` opens the orbital-flight briefing with optional validated `scenario_id`; `start_replay` selects historical data. Remove `set_engines_out` from exposed tools and fallback matching. `get_state` returns computed flight status/readout/outcome and estimated-emissions provenance; remove checkpoint/stars coaching and the phone-required start instruction. The guide never supplies hidden control inputs or awards success. The corner mascot is this guide's launcher, not a claim of an active provider connection. Older tool arrays, fixtures and prompts below must migrate together; their historical passing counts do not validate the revised flight contract.
+
 **Plan:** `docs/plans/04-agent.md` · **Owner:** Anders · **Needs:** 01; final Imagine integration also needs 09 Task 3 · **Target:** Fri 10:00 PM (Task 6: Sat).
 **Contract:** `docs/specs/01-setup-contract.spec.md` is the source of truth for `lib/types.ts`, `lib/store.ts`, `lib/engines.ts`, `lib/agent/types.ts`, `lib/voice/lines.ts`, `data/*`. This spec imports them and redefines nothing.
 **Theme:** UI uses `docs/specs/00-theme.spec.md` classes and tokens only (`.hud`, `.row`, `.btn`, `.btn-accent`, `.btn-outline`, `.card`, `.chip.chip--bad`, `.lead`, `.muted`, `.sr-only`; `--gutter`, `--sp-*`, `--target`, `--panel-hud`, `--line-strong`, `--radius-sm`).

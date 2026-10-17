@@ -1,5 +1,27 @@
 # Final specification review — 2026-10-17
 
+## Scope revision review · 2026-10-17
+
+The current handoff follows the reorganized product scope in [07](07-replay.spec.md) and its [build plan](../plans/07-replay.md). The 95/100 assessment and extracted-suite counts below describe the prior baseline. They are not a score or passing-test claim for the newly specified orbital game.
+
+| Requested change | Current disposition |
+|---|---|
+| Real flight data | Named Sentinel-6 historical reference, sourced approximate milestones, grouped events and explicit missing-telemetry limits; no silent sample substitution. |
+| Your mission | Player-controlled Earth launch to orbit, full globe, pitch/throttle, fuel/staging and computed crash/retry/orbit outcome; historical-reference and bounded custom scenarios. |
+| Scope cuts | Docking, stations, booster-landing gameplay and planet travel excluded. Engine-out stage 08 build instructions commented out. |
+| Emissions | Embedded in historical/reference/custom flight sessions; player's consumed RP-1 ledger drives estimates. No separate navigation or lens. |
+| Design | Next builder must replace the generic preview layout with 00's cleaner SpaceX/xAI composition. Corner mascot reference and asset-selection task recorded. |
+| Credit | Exact “Made by Neel Bansal and Anders Haroldson” line; model licence and student-project disclaimer preserved separately. |
+| Immediate preview | Only Engines/Emissions navigation buttons hidden. No orbital-game or design implementation included. |
+
+Three independent scope reviews covered design, historical data/emissions and flight/input/lifecycle. Findings closed: practice fallback requires explicit visitor choice; input ownership is per axis so phone pitch can coexist with local throttle. Shared-state/tool/voice/phone/demo migrations are explicitly listed in 07 §6. Superseded snippets in other stages carry authoritative scope notices; they must migrate before assembly.
+
+New physical inputs, stage tuning, globe assets, successful/failed public-control runs, browser/hardware checks and demo timing remain implementation gates. No old checkpoint test count is reused as evidence for them.
+
+**Audit for this update:** no API/database/queue/backfill or production metric changes. Domain types, pure-helper tests, input ownership, source classification, reset and terminal-state checks are specified for future implementation. No new runtime test claims. The larger documentation diff is kept together because it removes the old mission specification and updates the cross-stage consumers in one coherent scope change; splitting only the mission text from its contract notices would leave an inconsistent handoff. Application diff is two `hidden` attributes. No PR, push or deployment requested.
+
+---
+
 **Assessment: 95/100 for implementation-spec readiness.** The specification handoff is complete. This is an editorial and engineering review judgment about the documents, not a measured product-quality score or a claim that the application has shipped.
 
 | Dimension | Score | Basis |

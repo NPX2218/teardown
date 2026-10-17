@@ -2,7 +2,28 @@
 
 **Owner:** Neel (`app/layout.tsx`, `app/globals.css`). Everyone else *consumes* these tokens and never edits those two files; ask for a token in the PR that changes this spec.
 **Used by:** plans 03, 05, 07, 08, 09, 10, 11, 12, 13.
-**Look:** SpaceX's black, wide-tracked, uppercase style with xAI's quiet panels and warm accent. Our own name is **Teardown**. No logos, wordmarks, photos or font files from either company.
+**Look:** SpaceX's black, wide-tracked, uppercase style with xAI's quiet panels. White is the primary interaction colour; warm amber is reserved for semantic status. Our own name is **Teardown**. No unlicensed company logos, wordmarks, photos or font files. A permitted guide-mascot asset follows the provenance rules below.
+
+## Current scope — user corrections, 2026-10-17 (normative)
+
+This section supersedes older surface maps, coloured-accent examples and mode descriptions below. It specifies the next implementation; it does **not** claim that a redesign or game has been implemented or verified. [07 · Replay and Your mission](07-replay.spec.md) owns the current flight experience and simulation requirements.
+
+| Area | Required behavior |
+|---|---|
+| Navigation | Exactly **Explore · Flight replay · Your mission** as the primary modes. Remove standalone Engines and Emissions destinations, their launch controls and their persistent panels from this scope. Historical component recipes for 08 and 13 below are deferred references, not build requirements. |
+| Composition | One full-bleed scene on black, strong white display type, generous space and sharp outline controls. Keep necessary flight telemetry compact and clearly grouped. No decorative radar rings, ornamental crosshairs, dense dashboard chrome, card mosaics or amber branding. The rocket/Earth scene remains the visual anchor. |
+| Colour | Primary links, active navigation, focus rings, headings and control states use off-white `--accent` / white `--accent-hover`. Amber may identify a named caution or pending status; red may identify failure. Never communicate status by colour alone. Physical exhaust may remain warm. |
+| Explore controls | Mouse drag and touch drag must rotate the model predictably; wheel/pinch zoom and keyboard orbit must work. Viewport overlays cannot intercept an empty scene drag. Camera focus/tour transitions cancel on intentional user camera input and must not snap the view back on the following frame. A drag cannot also select a part. Keyboard bindings act only while the viewer has focus and never consume typing or pilot inputs. |
+| Guide launcher | A subtle corner mascot button opens the guide; its accessible name states the action. A quiet Grok-style assistant presence is the direction, not permission to copy an unknown mascot. Use an original asset, or an official asset with explicit reuse rights and recorded provenance. Do not import an unlicensed logo, screenshot or downloaded avatar. |
+| Guide placement and honesty | Launcher and expanded guide must never cover steering, throttle, replay transport, primary mission actions or recovery controls. Move or collapse the guide at narrow widths; close restores focus. Connected Grok/voice states require the real configured service. Local answers, browser narration, loading and connection failures are labelled accurately; no simulated live-service claims. |
+| Footer | Show the exact visible credit **Made by Neel Bansal and Anders Haroldson**. Keep **Student project. Not affiliated with SpaceX or xAI.** and the Falcon 9 model creator / CC BY 4.0 attribution as separate readable items. Authorship credit does not replace the model licence or disclaimer. |
+| Responsive acceptance | Verify 375, 720, 1280 and 1920 px widths with representative short and tall viewports. Header/title, model or Earth, active sheet, guide, flight controls and footer must not collide. No horizontal page overflow; active panels may scroll internally without hiding the only action. Camera framing accounts for actual reserved UI space in every mode. |
+
+**Required evidence before implementation sign-off:** desktop and mobile screenshots for all three modes; real pointer/touch and keyboard camera tests; a scene drag that starts in visible empty space; a click-versus-drag regression; cancel-during-camera-flight and cancel-during-tour regressions; guide-open and guide-closed control access; readable success/failure states. These are acceptance requirements, not checks already performed. Preserve reduced-motion and focus behavior throughout.
+
+### Mascot research handoff
+
+Use the official [Grok Bot design article](https://x.ai/news/designing-grok-bot) as the visual reference and check the current [brand guidelines](https://x.ai/legal/brand-guidelines) when selecting an asset. A public image is not automatically a reusable asset; record the chosen file/source/permission, or create an original guide character with the same restrained corner-launcher role. The mascot is optional decoration around the working guide, never a separate pet system, chat service or game objective. No mascot asset has been copied or implemented in this documentation pass.
 
 ## 1. What was measured
 
@@ -33,8 +54,9 @@ Public pages, read on 2026-10-16. spacex.com was read from its published HTML an
 | `--fill-1` | `rgba(240,240,250,.1)` | SPX `--white-10` (round icon button bg, hover fill) |
 | `--fill-2` | `rgba(240,240,250,.25)` | SPX `--white-25` (pressed fill) |
 | `--scrim-50` / `--scrim-80` | `rgba(0,0,0,.5)` / `rgba(0,0,0,.8)` | SPX `--black-50` (button bg), `--black-80` |
-| `--accent` | `#FFB547` | **Ours.** Hue 36 deg, 11.95:1 on black. Same hue family as XAI `--color-dawn` (`hsl(37 100% 76%)`) but deeper. SPX has no accent colour (pure monochrome) |
-| `--accent-hover` | `#FFD085` | XAI `--accent-hover: var(--color-dawn)` = `hsl(37 100% 76%)` |
+| `--accent` | `#F0F0FA` | Primary interaction colour; matches SPX off-white. User correction 2026-10-17 replaces the earlier amber brand accent. |
+| `--accent-hover` | `#FFFFFF` | White hover / active emphasis on black; user correction 2026-10-17. |
+| `--status-amber` | `#FFB547` | Optional caution or pending-status colour only, paired with a word. Never primary navigation, display type or decorative trim. |
 | `--flame` | `#FF6308` | XAI `--color-sunset` `hsl(22 100% 51.6%)`; computed `rgba(255,99,8,.1)` tint bg. Engines, fire, danger glow only |
 | `--ok` | `hsl(142 71% 45%)` | XAI `--success` |
 | `--warn` | `hsl(45 93% 47%)` | XAI `--warning` |
@@ -42,7 +64,7 @@ Public pages, read on 2026-10-16. spacex.com was read from its published HTML an
 | `--info` | `hsl(214 49% 74%)` | XAI `--info` = `--color-breeze` |
 | `--bad-text` | `#FF8A8A` | Ours. A lighter red for words and numbers (5.9:1 on a chip); `--bad` is for icons and glows only |
 | `--panel` / `--panel-hud` | `rgba(10,10,10,.94)` / `rgba(0,0,0,.88)` | Ours. Opaque-enough reading surfaces (SPX uses `.5` scrims over video, which fails over a white rocket); see section 6 |
-| `--phase-1/2/3` | flame / accent / info | Ours, emissions bar; always with a pattern and a label |
+| `--phase-1/2/3` | flame / accent / info | Historical deferred emissions recipe; no standalone Emissions mode in current scope. |
 | `--qr-paper` | `#FFFFFF` | Ours: QR codes need a light quiet zone (21:1 with black modules) |
 
 ### Type
@@ -126,16 +148,16 @@ SPX is 16 px body for a person at arm's length. A walk-up exhibit is read from a
 |---|---|---|---|
 | Background | `#000` | `#000` (SPX) | Same. |
 | Text | `#F0F0FA` | `#F0F0FA` (SPX `--white-100`) | Same, confirmed exactly. |
-| Highlight | `#FFB547` | SPX has none; XAI uses warm `dawn #FFD085` and `sunset #FF6308` | **`#FFB547` stays** as our accent. It is not copied from either site, it is in the same warm hue (36 vs 37 deg) as XAI's accent, and it reaches 11.95:1 on black. Hover uses XAI's real `#FFD085`. `--flame #FF6308` is added from XAI for engines and fire only. |
+| Highlight | Earlier plan: `#FFB547` | SPX uses monochrome type and controls | Current user correction wins: `--accent #F0F0FA`, hover white. Amber is optional semantic status only; `--flame` is physical exhaust, not navigation or headline colour. |
 | Display font | Barlow Semi Condensed | D-DIN-Bold (proprietary) | Index wins: closest free semi-condensed DIN-like face. Substitution recorded here. |
 | Body font | Barlow | D-DIN (proprietary) | Index wins. |
 | Mono | not in index | Roboto Mono (SPX, open licence) | Added, used for eyebrows and numbers in HUDs. |
 | xAI font | not in index | `xVf` (proprietary) | Not used. Imagine caption text uses Barlow 500 sentence case instead. |
-| Footer line | "Student project, not affiliated with SpaceX." | x.ai footer now reads "SpaceXAI LLC" | **Footer becomes "Student project. Not affiliated with SpaceX or xAI."** (the challenge is the SpaceXAI one). Index text should be updated to match when 01 is next edited. |
+| Footer line | Earlier plan: student disclaimer only | Brand references do not replace attribution | Visible credit is exactly "Made by Neel Bansal and Anders Haroldson"; retain student disclaimer and GLB creator/licence as separate items. |
 | Touch target | 48 px | SPX buttons are 48 px | Same, and primary actions go to 64 px. |
 | Button look | Plan 03 Task 3: 2 px `#F0F0FA` border, invert on hover | SPX 1 px `.35` border, `.5` black fill | **Plan 03 wins** (visible on white imagery, 18.5:1 edge, simple to see on a touchscreen). SPX shape, uppercase and 48 px height are kept. |
 | Level switch | Plan 03 Task 6: Kid · Curious · Engineer | n/a | Plan 03; the `.seg` has three buttons. |
-| Engine colours | Plan 08: running = `#FFB547` glow, out = dim red with an X, verdict yes green / barely amber / no red | XAI `--flame` | Plan 08 wins for the toggles (accent) and verdict chips (`--ok`, `--warn`, `--bad-text`); `--flame` is used only for the 3D exhaust glow and big emissions numbers. |
+| Engine colours | Earlier Plan 08 sandbox | Physical exhaust can remain warm | Standalone engine sandbox is deferred. Current flight controls use white primary states and word-labelled semantic warnings/failures. |
 | Motto / sentences | Motto is a sentence | SPX uppercases everything | Sentences stay sentence case (`.display--sentence`, `.legal`). |
 | Body size | not set | SPX 16 px | Exhibit scale is larger (§5). |
 | Tailwind | not in stack | n/a | Plain CSS in `app/globals.css`; no new dependency. |
@@ -187,6 +209,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         {children}
         <footer className="legal">
+          <span>Made by Neel Bansal and Anders Haroldson</span>
           <span>Student project. Not affiliated with SpaceX or xAI.</span>
           <span>
             Model: &ldquo;Falcon 9 - SpaceX&rdquo; by Stanley Creative,{" "}
@@ -232,10 +255,11 @@ Notes: do not put `maximum-scale` or `user-scalable=no` in the viewport (it bloc
   --scrim-80: rgba(0, 0, 0, 0.8);
 
   /* Colour: accent and status */
-  --accent: #ffb547; /* our highlight, 11.95:1 on #000 */
-  --accent-hover: #ffd085;
+  --accent: #f0f0fa; /* primary white interaction colour: user correction 2026-10-17 */
+  --accent-hover: #ffffff;
   --accent-ink: #000000;
-  --accent-tint: rgba(255, 181, 71, 0.12);
+  --accent-tint: rgba(240, 240, 250, 0.12);
+  --status-amber: #ffb547; /* caution/pending status only, always with a word */
   --flame: #ff6308;
   --flame-tint: rgba(255, 99, 8, 0.12);
   --ok: hsl(142 71% 45%);
@@ -656,8 +680,8 @@ a.chip, button.chip { min-height: var(--target); min-width: var(--target); paddi
   to { opacity: 1; transform: none; }
 }
 @keyframes attract-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 181, 71, 0.45); }
-  50% { box-shadow: 0 0 0 18px rgba(255, 181, 71, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(240, 240, 250, 0.45); }
+  50% { box-shadow: 0 0 0 18px rgba(240, 240, 250, 0); }
 }
 .reveal { animation: reveal-up var(--dur-slow) ease-in-out both; }
 .reveal--2 { animation-delay: 0.5s; }
@@ -886,7 +910,7 @@ dialog.overlay::backdrop { background: var(--scrim-80); }
 | **Reduced motion** | One preference governs everything (section 6.1): CSS, `useFrame` animations, auto-rotate, flame flicker, camera sweeps and the attract loop. |
 | **No keyboard needed** | Every action has a visible button. No hover-only UI (SPX's `.card:hover .button` pattern is NOT copied). Ask works with touch only (section 7). |
 | **Selection and gestures** | `.kiosk` on `<body>` disables text selection, overscroll bounce and the long-press menu. Do not disable pinch-zoom in the viewport. |
-| **Glare and distance** | Pure black ground, off-white text, one warm accent. No weights below 400. |
+| **Glare and distance** | Pure black ground, off-white type and controls; amber only for named semantic status. No weights below 400. |
 
 ### 6.1 One reactive motion preference
 
@@ -952,9 +976,10 @@ Use a native `<dialog class="overlay">` and `showModal()`. That gives focus cont
 | `--text` border (2 px) on `#000` | 18.55 | button borders (needs 3:1) |
 | `--line-strong` (.5) on `#000` | 4.78 | slider track, range bar |
 | `--line` (.35) on `#000` | 2.79 | decorative only |
-| `--accent` `#FFB547` on `#000` / `#1A1A1A` / `--panel` over white | 11.95 / 9.91 / 10.01 | accent text, focus ring |
-| `#000` on `--accent` | 11.95 | `.btn-accent`, pressed `.seg` button |
-| `--accent-hover` `#FFD085` on `#000` | 14.61 | link hover |
+| `--accent` `#F0F0FA` on `#000` / `#1A1A1A` / `--panel` over white | 18.55 / 15.37 / 15.53 | primary controls, active labels, focus ring |
+| `#000` on `--accent` | 18.55 | `.btn-accent`, pressed `.seg` button |
+| `--accent-hover` `#FFFFFF` on `#000` | 21.0 | link hover |
+| `--status-amber` `#FFB547` on `#000` | 11.95 | optional named caution/pending status only |
 | `--flame` `#FF6308` on `#000` | 7.04 | **large numbers only** (24 px+ bold). On a chip fill it is 4.48, so it is never used for small text |
 | `--ok` / `--warn` / `--info` on a chip fill (`#1A1A1A` + 10% white) | 5.81 / 6.76 / above 8 | status chips |
 | `--bad-text` `#FF8A8A` on a chip fill | 5.89 | red words, `.chip--bad`, `.hud__v--bad` |
@@ -962,6 +987,8 @@ Use a native `<dialog class="overlay">` and `showModal()`. That gives focus cont
 | QR: black on `--qr-paper` | 21.0 | pairing QR |
 
 ## 7. How each surface uses it
+
+**Historical implementation recipes:** apply the current-scope section above first. Standalone engine/emissions surfaces and the former six-checkpoint guided mission are superseded for the next build. Current Replay and Your mission behavior comes from [07](07-replay.spec.md). The guide uses the corner-launcher placement above.
 
 | Surface (plan) | Uses | Specifics |
 |---|---|---|
@@ -976,7 +1003,7 @@ Use a native `<dialog class="overlay">` and `showModal()`. That gives focus cont
 | **Emissions (13)** | `.seg` (LensSwitch), `.hud`, `.hud__v--clock`, `.bar-stack`, `.phase--*`, `.range-bar`, `.chip`, `a.chip`, `<dialog class="overlay">`, `.card` | **LensSwitch:** a `.seg` "Rocket · Emissions" in `.dock--tr`. **Counter:** "≈ 379 t CO₂" in `.hud__v--clock` with `.chip--est` "estimated". **Phase bar:** `.bar-stack` with `.phase--1/2/3` (stage 1, stage 2, landing burns) each labelled in text under the segment. **Uncertainty:** value in words "≈ 3 t (0.4 to 17 t)" and a `.range-bar` with `--lo`, `--hi`, `--mid`; the words are authoritative. **Source badges:** `a.chip` per value, with type shown as word and style: `.chip--ok` "Official", `.chip--info` "Peer-reviewed", `.chip--est` plus `.chip--warn` "Estimate". The `SourcesPanel` is a dialog per 6.2. **End summary:** a "Flight emissions" trigger above the stars overlay opens a native dialog with total CO₂, comparisons, soot note and the honest-scale line; no colour-only meaning. |
 | **Kiosk attract loop (12)** | `.kiosk`, `.display--sentence`, `.reveal`, `.attract`, `.btn-accent .btn-lg` | Idle screen: orbiting rocket (a fixed pose under reduced motion, section 6.1), the motto "Bringing rocket science down to Earth." in `.display--sentence`, `.reveal` stagger (0 / .5 s / 1 s as on SPX), one `.btn-accent .btn-lg` "Touch to explore" with `.attract` (static ring under reduced motion). The idle reset closes dialogs, resets the lens and level. |
 
-### 7.1 Slots and collisions (375 px, 720 px, exhibit)
+### 7.1 Historical slots and collisions (superseded by current scope)
 
 Parent: `ViewerSlot` is `position: relative; height: 100dvh`. Children use `.dock--*`.
 
@@ -995,14 +1022,14 @@ The mode owns the bottom content: idle explorer rail (including the flight/engin
 ## 8. Rules
 
 1. **No SpaceX or xAI logos, wordmarks, photos, videos or font files.** No D-DIN, no `xVf`, no copied CSS blocks. We use measured numbers only.
-2. **Footer on every screen with chrome:** "Student project. Not affiliated with SpaceX or xAI." and the model credit "Falcon 9 - SpaceX by Stanley Creative, CC BY 4.0".
+2. **Footer on every screen with chrome:** exact authorship text "Made by Neel Bansal and Anders Haroldson", plus separate "Student project. Not affiliated with SpaceX or xAI." and model credit "Falcon 9 - SpaceX by Stanley Creative, CC BY 4.0" with its licence link.
 3. **Our name is "Teardown"** (nav brand is plain text in `--font-display`; no logo image).
 4. **Tokens only.** Components outside `app/globals.css` use `var(--...)` tokens and never hard-code a hex value. New tokens go through this spec.
-5. **Accent discipline:** `--accent` marks the single next action, pressed state and earned stars; `--flame` marks fire, thrust and emissions as big numbers; status colours always come with a word.
+5. **Accent discipline:** `--accent` is off-white for primary controls, focus and active states. `--status-amber` is optional caution/pending status only. `--flame` is physical exhaust; no amber primary nav, branding or decorative HUD. Every semantic colour has a word.
 6. **Uppercase is for headings, labels and status words (four words or fewer).** Sentences (the motto, the legal line, captions, answers) stay sentence case. Use `.display--sentence` for a big sentence.
 7. **No hover-only controls**, no text below `--fs-small` (except legal and credits), no target below 48 x 48 px.
 8. **Lane ownership:** Neel edits `app/layout.tsx`, `app/globals.css` and `components/ui/useReducedMotion.ts`. Anders puts surface-specific CSS in his own folders as CSS Modules that only reference tokens and use the classes above.
-9. **Where this spec overrides a plan:** buttons follow plan 03 (2 px opaque border, invert on hover); the Kid · Curious · Engineer switch follows plan 03; "amber" engine colours follow section 7 (Engine panel); the footer wording follows section 3. Where this spec overrides SpaceX's measured values (1 px translucent button border, 12 px label sizes, 50% muted text) it is for exhibit legibility.
+9. **Where this spec overrides a plan:** the normative current-scope section above and current [07](07-replay.spec.md) supersede earlier mode, mission, launcher and colour examples. Buttons keep sharp opaque outlines and invert on hover; the footer wording follows current scope. Where this spec overrides SpaceX's measured values (1 px translucent button border, 12 px label sizes, 50% muted text) it is for exhibit legibility.
 
 ## 9. Verification checklist (for the implementer)
 
@@ -1012,6 +1039,10 @@ The mode owns the bottom content: idle explorer rail (including the flight/engin
 - [ ] Toggle "Emulate prefers-reduced-motion": no pulse, no slide-in, no auto-rotate, no flame flicker, tour cuts instead of flights.
 - [ ] Open the Imagine dialog: focus moves in, Tab stays inside, Escape closes, focus returns to the opener.
 - [ ] Put a white image behind a `.card`, `.hud` and `.btn`: text is still readable.
-- [ ] At 375, 720 and 1920 px wide: no two slots overlap, only `.sheet` scrolls.
+- [ ] At 375, 720, 1280 and 1920 px wide: no title/scene/control/guide/footer overlaps or horizontal overflow; internal sheets remain usable.
+- [ ] Primary nav contains only Explore, Flight replay and Your mission; no standalone Engines/Emissions controls.
+- [ ] Pointer/touch drag and keyboard orbit work; drag does not select; intentional input cancels camera/tour movement without snapping back.
+- [ ] Guide launcher/expanded guide never blocks flight controls and truthfully identifies its runtime service.
+- [ ] Exact authorship credit, separate student disclaimer and GLB creator/licence are readable.
 - [ ] At 1280x720 and 1920x1080 the part card and HUD text are readable from 1 m.
 - [ ] `grep -ri "d-din\|xvf\|spacex.com/\|x.ai/" app components public` finds no asset references.

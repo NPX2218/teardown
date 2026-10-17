@@ -1,5 +1,28 @@
 # 11 · Rocket Link + Gestures — Implementation Spec
 
+## Current scope revision — 17 October 2026
+
+**This section supersedes the checkpoint, gesture, orientation, and mission-writing instructions below.** [07 — Replay + Mission](07-replay.spec.md) owns the current simulation state, input types, physics clock, fail/success rules, and reset seams. Those contracts must be settled before implementation. This is a documentation revision; no new game or phone-controller implementation has been verified.
+
+| Area | Current build requirement |
+|---|---|
+| Your mission | Manually launch a rocket from an Earth pad into orbit, against an Earth and space backdrop. Steering and throttle must affect the flight; failed launches/crashes are possible, with retry. No docking, rendezvous, interplanetary mission, or playable booster-landing mission. |
+| Complete local path | Desktop keyboard and on-screen touch controls must support the entire launch-to-orbit run, including launch, steering, throttle, pause/resume, and retry. A phone, microphone, or relay is never required to finish. |
+| Included phone controller; optional visitor use | Pairing provides **continuous calibrated pitch input** through the same command seam as local controls. Calibration establishes a neutral pose; bounded relative tilt maps to the pitch command/rate specified in 07. It does not directly rotate the rendered mesh or apply a second transform on top of simulated attitude. Throttle remains available through local controls unless 07 explicitly defines an additional phone control. |
+| Input ownership | Exactly one active steering source feeds the simulation at a time. Selecting phone control releases held desktop/touch steering; switching back clears the previous phone command. Camera orbit is a viewing control and must not steer the rocket. |
+| Disconnect / stale input | If an active phone controller disconnects or its readings become stale, clear its command and pause physics. Show the disconnected/paused state and offer the complete local controls. A reconnect must not resume physics, throttle, or stale held inputs automatically; the visitor explicitly resumes after calibration/source selection. Never award a successful orbit because a controller disappeared. |
+| New run / reset | Cancel physics scheduling, held keys/touches, queued phone commands, calibration for the previous session, narration, vibration/looping sounds, and stale emissions updates. New input is associated with the new run; late frames from an old run cannot mutate it. |
+
+### Retired bridges and evidence
+
+The old six checkpoint gestures (lift, lean, steady, flip, upright, land), `completeCheckpoint`, `decideMove`, shake-to-restart, participation stars, and the direct phone-quaternion-to-rocket mesh transform below are retired. Do not wire them into the orbital game. Any retained transport, pairing, sequence validation, or calibration utility must be re-reviewed against 07's current input seam before reuse; the old gesture detector is not required for the new continuous controller.
+
+The compile/test counts reported below describe a previous scratch fixture and checkpoint contract. They are historical evidence only and **do not** establish a passing orbital game, current phone control, or current cross-document integration. Older snippets below are reference material, not instructions to implement the retired bridge.
+
+Current acceptance must cover neutral calibration, bounded turn-rate mapping, source handoff without double application, held-input release on blur/cancel, stale/out-of-order frame rejection, disconnect pause, explicit reconnect resume, reset rejection of late frames, and a complete desktop/touch run without pairing. Phone movement cannot bypass physics, crash detection, fuel use, or the orbit-success predicate. Simulation warp must not multiply the real-time steering control rate.
+
+---
+
 **Plan:** `docs/plans/11-rocket-link.md` · **Owner:** Neel · **Needs:** 01, 03, 10 Tasks 1–2; Task 5 also Neel's 07 Tasks 5 and 7 (`checkpointsFor`, `notYet`). **Target:** Sat 6:00 PM.
 **Contract:** `docs/specs/01-setup-contract.spec.md` is the source of truth (types, store, seams). **Theme:** `docs/specs/00-theme.spec.md` (tokens and classes only, no hard-coded colours).
 

@@ -1,5 +1,7 @@
 # 05 · Voice + Sounds — Implementation Spec
 
+**Scope revision — 2026-10-17:** [07](07-replay.spec.md) replaces the six-checkpoint/star mission with player-controlled Earth launch to orbit. Keep the reviewed speech/relay/cancellation mechanisms below. Replace mandatory checkpoint/landing celebration caches and coach consumers with once-per-run flight-status callouts. Narration cannot advance physics, apply steering or decide success; late replies must match the current run. The game works with narration unavailable. Historical replay callouts remain sourced and distinguish approximate milestones from telemetry.
+
 **Plan:** `docs/plans/05-voice.md` · **Owner:** Anders · **Needs:** 01 (seams), 04 Task 2 (`lib/timeout.ts`), 04 Task 4 (`askAgent`), 04 Task 5 (`AgentBox`), 04 Task 0 notes (`docs/xai-notes.md`).
 **Contract:** `docs/specs/01-setup-contract.spec.md` is the source of truth. This spec replaces the body of `lib/voice/speak.ts` (signature unchanged), keeps the 01 ordering rules SP1–SP3 and the four `ListenErrorReason` strings, and adds keys to `lib/voice/lines.ts`. **Theme:** `docs/specs/00-theme.spec.md` §7 "Voice / Ask (05)"; UI uses only its tokens and classes (`.dock`, `.card`, `.btn`, `.btn-accent`, `.btn-lg`, `.btn-outline`, `.chip`, `.chip--bad`, `.lead`).
 

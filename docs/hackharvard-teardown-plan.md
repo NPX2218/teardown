@@ -1,5 +1,7 @@
 # Teardown: HackHarvard 2026 Plan
 
+**Current scope — 2026-10-17:** the [reviewed spec index](specs/README.md), [07 orbital mission](specs/07-replay.spec.md) and [07 build plan](plans/07-replay.md) supersede older feature lists and demo beats below. Current navigation is Explore / Flight replay / Your mission. Your mission is player-controlled Earth launch to orbit, not checkpoint gestures or booster landing. Engine-out is deferred; emissions are integrated into flight. Follow 00 for the SpaceX/xAI redesign, corner guide mascot and “Made by Neel Bansal and Anders Haroldson” credit. This source plan is background; do not build its obsolete scope.
+
 **Team:** 2 people, building in parallel
 **Event:** HackHarvard 2026, Oct 16–18, Harvard. Hacking starts Fri ~4:00 PM; Devpost closes **Sun 8:00 AM** (aim for 7:00).
 **Motto:** **Bringing rocket science down to Earth.**

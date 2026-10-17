@@ -1,5 +1,7 @@
 # 10 · Phone Rocket — Implementation Spec
 
+**Build scope — 2026-10-17:** the phone controller is an included build deliverable, not a deferred feature. Visitors scan the pairing QR to open `/rocket` over HTTPS, enable motion/orientation sensors, calibrate, and use continuous tilt to steer. Audio/voice and supported vibration remain included. [07](07-replay.spec.md) and [11](11-rocket-link.spec.md) define the current orbital-game input contract. “Optional phone” means optional for the visitor: complete local controls must also exist; it does not authorize omitting phone support from the build.
+
 **Plan:** `docs/plans/10-phone-rocket.md` · **Owner:** Neel · **Needs:** 01, plus 03 for `components/ui/useReducedMotion.ts` (Task 4 also 11 Task 1) · **Target:** Sat 1:00 PM.
 **Contract:** `docs/specs/01-setup-contract.spec.md` is the source of truth for `Quat`, `Vec3`, `RocketFrame`, `SoundId`, `SOUND_IDS`, `RocketMessage` (incl. `say.cacheKey` and `stopSay`), `ListenErrorReason`. **Theme:** `docs/specs/00-theme.spec.md` row "/rocket phone page (10)"; no raw colours.
 
