@@ -11,8 +11,11 @@ export interface Instance {
   rotation?: [number, number, number];
   /** Linear RGB. */
   color: [number, number, number];
-  /** Shared rendering/collision meaning; deck tops define the resting bell plane. */
-  role?: "launchDeck" | "tank";
+  /**
+   * Shared rendering/collision meaning. Deck tops define the resting bell plane.
+   * `holder` is the tower, erector, clamps, or mount that keeps the rocket on the pad.
+   */
+  role?: "launchDeck" | "tank" | "holder";
 }
 
 function srgb(r: number, g: number, b: number): [number, number, number] {
@@ -35,7 +38,7 @@ const WINDOW = srgb(0.12, 0.2, 0.27);
  * A 2.6 m fairing radius plus the arm's 1.3 m half-width needs 3.9 m.
  * Place each arm another 0.5 m outboard for visible physical clearance.
  * This geometry is used by rendering and collisions, so neither needs a grace timer.
- * Upright ascent remains open while contact with an arm remains solid.
+ * Upright ascent stays open. The arms are part of the pad holder and do not end the flight.
  */
 const ARM_CENTER_M = 4.4;
 
@@ -79,6 +82,8 @@ export function starbaseKit(): SiteKit {
       [Math.cos(theta) * 11, y0 + 4, Math.sin(theta) * 11],
       [2.4, 8, 2.4],
       OLM,
+      undefined,
+      "holder",
     ));
   }
   cylinders.push({
@@ -104,25 +109,25 @@ export function starbaseKit(): SiteKit {
     [-span / 2, towerZ - span / 2],
   ];
   for (const [x, z] of corners) {
-    boxes.push(box([x, y0 + height / 2, z], [2.3, height, 2.3], TOWER));
+    boxes.push(box([x, y0 + height / 2, z], [2.3, height, 2.3], TOWER, undefined, "holder"));
   }
   for (let level = 1; level <= 8; level += 1) {
     const y = y0 + level * 16;
-    boxes.push(box([0, y, towerZ + span / 2], [span + 2, 1.5, 1.5], TOWER));
-    boxes.push(box([0, y, towerZ - span / 2], [span + 2, 1.5, 1.5], TOWER));
-    boxes.push(box([span / 2, y, towerZ], [1.5, 1.5, span + 2], TOWER));
-    boxes.push(box([-span / 2, y, towerZ], [1.5, 1.5, span + 2], TOWER));
+    boxes.push(box([0, y, towerZ + span / 2], [span + 2, 1.5, 1.5], TOWER, undefined, "holder"));
+    boxes.push(box([0, y, towerZ - span / 2], [span + 2, 1.5, 1.5], TOWER, undefined, "holder"));
+    boxes.push(box([span / 2, y, towerZ], [1.5, 1.5, span + 2], TOWER, undefined, "holder"));
+    boxes.push(box([-span / 2, y, towerZ], [1.5, 1.5, span + 2], TOWER, undefined, "holder"));
     const diagonal = Math.hypot(span, 16);
     const angle = Math.atan2(span, 16) * (level % 2 === 0 ? 1 : -1);
     for (const side of [-1, 1]) {
-      boxes.push(box([0, y - 8, towerZ + side * span / 2], [0.75, diagonal, 0.75], STEEL, [0, 0, angle]));
-      boxes.push(box([side * span / 2, y - 8, towerZ], [0.75, diagonal, 0.75], STEEL, [angle, 0, 0]));
+      boxes.push(box([0, y - 8, towerZ + side * span / 2], [0.75, diagonal, 0.75], STEEL, [0, 0, angle], "holder"));
+      boxes.push(box([side * span / 2, y - 8, towerZ], [0.75, diagonal, 0.75], STEEL, [angle, 0, 0], "holder"));
     }
   }
-  boxes.push(box([0, y0 + 132, towerZ], [14, 10, 13], TOWER));
+  boxes.push(box([0, y0 + 132, towerZ], [14, 10, 13], TOWER, undefined, "holder"));
   // Chopsticks reach from the tower over the mount.
-  boxes.push(box([ARM_CENTER_M, y0 + 108, -6], [2.6, 3.2, 36], ARM));
-  boxes.push(box([-ARM_CENTER_M, y0 + 114, -6], [2.6, 3.2, 36], ARM));
+  boxes.push(box([ARM_CENTER_M, y0 + 108, -6], [2.6, 3.2, 36], ARM, undefined, "holder"));
+  boxes.push(box([-ARM_CENTER_M, y0 + 114, -6], [2.6, 3.2, 36], ARM, undefined, "holder"));
 
   for (let row = 0; row < 3; row += 1) {
     for (let col = 0; col < 7; col += 1) {
@@ -161,9 +166,9 @@ export function falconKit(): SiteKit {
   const y0 = SURFACE_LIFT_M;
   const boxes: Instance[] = [
     box([0, y0 + 1.2, 0], [28, 2.4, 22], srgb(0.55, 0.54, 0.5), undefined, "launchDeck"),
-    box([0, y0 + 26, -14], [4, 48, 3], STRONGBACK, [-0.22, 0, 0]),
-    box([-16, y0 + 28, 0], [3.2, 52, 3.2], STEEL),
-    box([-16, y0 + 40, 6], [2.4, 2.4, 14], STEEL),
+    box([0, y0 + 26, -14], [4, 48, 3], STRONGBACK, [-0.22, 0, 0], "holder"),
+    box([-16, y0 + 28, 0], [3.2, 52, 3.2], STEEL, undefined, "holder"),
+    box([-16, y0 + 40, 6], [2.4, 2.4, 14], STEEL, undefined, "holder"),
     box([18, y0 + 22, 14], [1.6, 44, 1.6], GREY),
     box([-18, y0 + 22, 14], [1.6, 44, 1.6], GREY),
   ];

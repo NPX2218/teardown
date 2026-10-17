@@ -16,10 +16,12 @@ export function launchObstacles(site: LaunchSiteSpec): readonly CollisionObstacl
   if (cached) return cached;
   const kit = kitFor(site);
   const center = (at: Vec3): Vec3 => [at[0], EARTH_RADIUS_M + at[1], at[2]];
+  // The tower, erector, clamps, and pad mount are drawn, but grazing them at liftoff is not a crash.
+  const crashes = (item: { role?: string }) => item.role !== "holder" && item.role !== "launchDeck";
   const result: CollisionObstacle[] = [
-    ...kit.boxes.map((item, i): CollisionObstacle => ({ id: `${kind}-box-${i}`, kind: "box", centerM: center(item.position), sizeM: item.size, rotationRad: item.rotation })),
-    ...kit.cylinders.map((item, i): CollisionObstacle => ({ id: `${kind}-cylinder-${i}`, kind: "cylinder", centerM: center(item.position), radiusM: item.size[0], heightM: item.size[1], rotationRad: item.rotation })),
-    ...kit.spheres.map((item, i): CollisionObstacle => ({ id: `${kind}-cap-${i}`, kind: "sphere", centerM: center(item.position), radiusM: item.size[0] })),
+    ...kit.boxes.flatMap((item, i): CollisionObstacle[] => crashes(item) ? [{ id: `${kind}-box-${i}`, kind: "box", centerM: center(item.position), sizeM: item.size, rotationRad: item.rotation }] : []),
+    ...kit.cylinders.flatMap((item, i): CollisionObstacle[] => crashes(item) ? [{ id: `${kind}-cylinder-${i}`, kind: "cylinder", centerM: center(item.position), radiusM: item.size[0], heightM: item.size[1], rotationRad: item.rotation }] : []),
+    ...kit.spheres.flatMap((item, i): CollisionObstacle[] => crashes(item) ? [{ id: `${kind}-cap-${i}`, kind: "sphere", centerM: center(item.position), radiusM: item.size[0] }] : []),
   ];
   solids.set(kind, result);
   return result;
