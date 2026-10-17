@@ -2,6 +2,7 @@
 // Phone samples and keyboard holds both enter through the functions in this file.
 import { useAppMode, type AppMode } from "@/lib/flight/app-mode";
 import { heldAxes, stepHeld } from "@/lib/flight/local-controls";
+import { prefersScreenPitch, releasePhoneThrottle } from "@/lib/flight/phone-pitch";
 import { useScene } from "@/lib/store";
 import type { FlightAxisCommand, ToolResult } from "@/lib/types";
 
@@ -48,9 +49,14 @@ export function commitPhoneAxes(sample: PhoneAxes, mode: ControlMode = currentCo
     );
     if (!pitched.ok && sample.throttle === null) return pitched;
   }
-  if (sample.throttle === null) return { ok: true };
-  if (sample.throttlePush && store.rocket.connected && useScene.getState().flight.owners.throttle !== "phone") {
-    store.setFlightAxisOwner("throttle", "phone");
+  if (sample.throttle === null) return releasePhoneThrottle();
+  if (sample.throttlePush && sample.calibrated && store.rocket.connected && useScene.getState().flight.owners.throttle !== "phone") {
+    const moved = store.setFlightAxisOwner("throttle", "phone");
+    if (!moved.ok) return moved;
+    // The deliberate push is consent to take power. Arm the newly owned axis
+    // at neutral before applying this sample; the following rest is null.
+    const armed = store.setFlightInput({ throttle: 0, calibrated: true }, "phone", live.runId);
+    if (!armed.ok) return armed;
   }
   const owned = useScene.getState().flight;
   if (!owned.runId || owned.owners.throttle !== "phone") return { ok: true };
@@ -112,6 +118,7 @@ export function launchControlledFlight(mode: ControlMode = currentControlMode())
   if (mode === "replay" && store.flight.status === "idle") {
     const replay = store.replay;
     const missionId = replay.missionId;
+    if (!missionId) return { ok: false, error: "choose a replay mission first" };
     const started = store.startFlight("classroom");
     if (!started.ok) return started;
     useScene.setState({ replay });
@@ -123,6 +130,11 @@ export function launchControlledFlight(mode: ControlMode = currentControlMode())
       ? { ok: true }
       : { ok: false, error: "flight is not ready" };
   }
-  if (store.rocket.connected) useScene.getState().setFlightAxisOwner("pitch", "phone");
-  return useScene.getState().launchFlight();
+  const ready = useScene.getState().flight;
+  if (store.rocket.connected && (ready.owners.pitch === "phone" || !prefersScreenPitch(ready.runId))) {
+    useScene.getState().setFlightAxisOwner("pitch", "phone");
+  }
+  const launched = useScene.getState().launchFlight();
+  if (launched.ok && mode === "replay") useScene.getState().resumeReplay();
+  return launched;
 }

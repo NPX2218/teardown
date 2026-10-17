@@ -53,7 +53,7 @@ export function KerbalWorld() {
       <Atmosphere altitudeKm={draw.altitudeKm} sunDirection={sun} />
       <CloudLayer altitudeKm={draw.altitudeKm} pad={draw.up} ignited={draw.throttle > 0 || draw.altitudeKm > 0.05} />
       <Vehicle stage={draw.stage} throttle={draw.throttle} altitudeKm={draw.altitudeKm} elapsedS={draw.elapsedS} />
-      <OrbitPath state={draw.orbit} />
+      <OrbitPath state={draw.orbit} showMarkers={view === "overview"} />
       <Explosion position={boom} active={status === "crashed" && impact !== null} />
       <MapOverlay visible={view === "overview"} labels={labels} />
     </group>

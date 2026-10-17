@@ -3,7 +3,7 @@
 import { useEffect, useMemo } from "react";
 import * as THREE from "three";
 import { FLIGHT_SCENE, SCENE_COLORS } from "@/lib/viewer/colors";
-import { FALCON_M, boosterPose, fairingPose, merlinNozzles, mvacIgnition } from "./falcon";
+import { FALCON_M, boosterPose, clamp01, fairingPose, merlinNozzles, mvacIgnition } from "./falcon";
 import { plumeFragment, plumeVertex } from "./shaders";
 import { downwardCone } from "./softTexture";
 import type { StageSeparationProps } from "./types";
@@ -16,10 +16,10 @@ const NOZZLES = merlinNozzles();
  * on `elapsedS` and lights the MVac. `fairingSep` opens the nose halves on
  * that same clock.
  */
-export function StageSeparation({ stage, elapsedS, fairingSep = false }: StageSeparationProps) {
+export function StageSeparation({ stage, elapsedS, throttle = 1, fairingSep = false }: StageSeparationProps) {
   const pose = boosterPose(stage, elapsedS);
   const fairing = fairingPose(fairingSep, elapsedS);
-  const ignition = mvacIgnition(stage, elapsedS);
+  const ignition = mvacIgnition(stage, elapsedS) * clamp01(throttle);
 
   const cone = useMemo(() => downwardCone(18), []);
   const plumeMat = useMemo(() => new THREE.ShaderMaterial({

@@ -123,7 +123,7 @@ export function EnginePlume({ throttle, altitudeKm, reducedMotion }: EnginePlume
     fragmentShader: smokeFragment,
     transparent: true,
     depthWrite: false,
-    depthTest: false,
+    depthTest: true,
     toneMapped: false,
   }), [cream, flame, map]);
 

@@ -524,12 +524,14 @@ function burnAndMove(state: FlightBody, dt: number, burnKg: number): FlightBody 
   });
   let next: FlightBody = { ...state, stages, simulatedTimeS: state.simulatedTimeS + dt };
   if (!(massKg(next) > 0)) return stop(next, "Simulation stopped.");
+  // The fuel ledger is already debited; this slice still receives its paid impulse.
+  const powered = burnKg > 0;
 
   if (!next.airborne) {
-    const radial = radialAccel(next);
+    const radial = radialAccel(next, powered);
     if (radial > 0) {
       next = { ...next, airborne: true };
-      const moved = translate(next, dt);
+      const moved = translate(next, dt, powered);
       if (moved.outcome) return moved;
       if (segmentHitsEarth(next.x, next.y, moved.x, moved.y)) {
         return stop(moved, "The rocket hit the ground.", "crashed");
@@ -539,25 +541,25 @@ function burnAndMove(state: FlightBody, dt: number, burnKg: number): FlightBody 
       next = { ...next, x: 0, y: EARTH_RADIUS_M, vx: 0, vy: 0 };
     }
   } else {
-    const moved = translate(next, dt);
+    const moved = translate(next, dt, powered);
     if (moved.outcome) return moved;
     if (segmentHitsEarth(next.x, next.y, moved.x, moved.y)) {
       return stop(moved, "The rocket hit the ground.", "crashed");
     }
     next = moved;
   }
-  return judge(next, dt);
+  return judge(next, dt, powered);
 }
 
-function translate(state: FlightBody, dt: number): FlightBody {
-  const a = acceleration(state);
+function translate(state: FlightBody, dt: number, powered: boolean): FlightBody {
+  const a = acceleration(state, powered);
   if (!Number.isFinite(a.x) || !Number.isFinite(a.y)) return stop(state, "Simulation stopped.");
   const vx = state.vx + a.x * dt;
   const vy = state.vy + a.y * dt;
   return { ...state, vx, vy, x: state.x + vx * dt, y: state.y + vy * dt };
 }
 
-function acceleration(state: FlightBody): Vec2 {
+function acceleration(state: FlightBody, powered: boolean): Vec2 {
   const r = Math.hypot(state.x, state.y);
   if (r < 1) return { x: Number.NaN, y: Number.NaN };
   const rx = state.x / r;
@@ -568,7 +570,7 @@ function acceleration(state: FlightBody): Vec2 {
   const mass = massKg(state);
   const stage = state.stages[state.activeStageIndex];
   const plan = state.stagePlan[state.activeStageIndex];
-  if (mass > 0 && state.throttle > 0 && stage && plan && stage.propellantRemainingKg > 0) {
+  if (mass > 0 && state.throttle > 0 && stage && plan && powered) {
     const thrust = (state.throttle * plan.thrustN) / mass;
     const c = Math.cos(state.pitchRad);
     const s = Math.sin(state.pitchRad);
@@ -590,8 +592,8 @@ function acceleration(state: FlightBody): Vec2 {
   return { x: ax, y: ay };
 }
 
-function radialAccel(state: FlightBody): number {
-  const a = acceleration(state);
+function radialAccel(state: FlightBody, powered: boolean): number {
+  const a = acceleration(state, powered);
   const r = Math.hypot(state.x, state.y);
   if (!Number.isFinite(a.x) || r < 1) return Number.NaN;
   return (a.x * state.x + a.y * state.y) / r;
@@ -616,7 +618,7 @@ export function segmentHitsEarth(x0: number, y0: number, x1: number, y1: number)
   return r0 >= EARTH_RADIUS_M - SURFACE_EPS_M && (crosses(tEnter) || crosses(tExit));
 }
 
-function judge(state: FlightBody, dt: number): FlightBody {
+function judge(state: FlightBody, dt: number, thrusting: boolean): FlightBody {
   if (!finiteBody(state)) return stop(state, "Simulation stopped.");
   const orbit = orbitFromState(state);
   if (!orbit.finite) return stop(state, "Simulation stopped.");
@@ -624,7 +626,6 @@ function judge(state: FlightBody, dt: number): FlightBody {
   if (state.airborne && orbit.energy !== null && orbit.energy > ESCAPE_ENERGY && alt > 1_000) {
     return stop(state, "You are leaving Earth. This goal is an orbit around Earth.");
   }
-  const thrusting = isThrusting(state);
   const inWindow = state.airborne
     && orbit.bound
     && !orbit.intersectsEarth
@@ -645,11 +646,6 @@ function judge(state: FlightBody, dt: number): FlightBody {
     return stop(next, "Out of fuel. Your path around Earth misses the goal.");
   }
   return next;
-}
-
-function isThrusting(state: FlightBody): boolean {
-  const stage = state.stages[state.activeStageIndex];
-  return state.throttle > 1e-6 && !!stage && stage.propellantRemainingKg > 1e-6;
 }
 
 function finiteBody(state: FlightBody): boolean {

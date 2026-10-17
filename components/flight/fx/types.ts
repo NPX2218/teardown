@@ -37,6 +37,8 @@ export interface StageSeparationProps {
   stage: number;
   /** Seconds since `stage` became 1. 0 while the vehicle is still stacked. */
   elapsedS: number;
+  /** Actual engine command. Zero keeps the upper stage dark while coasting. */
+  throttle?: number;
   /**
    * When true, the payload-fairing halves open on the same `elapsedS` clock.
    * Omit or pass false to keep the nose closed.

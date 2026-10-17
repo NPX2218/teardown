@@ -64,7 +64,7 @@ export function readFlightDraw(): FlightDraw {
   const mission = replayMission ?? tracked;
   const site = launchSiteFor({ missionId: mission?.id ?? null, launchSiteText: siteText(mission) });
 
-  const steered = scene.flight.status === "flying" || scene.flight.status === "paused";
+  const steered = scene.flight.status !== "idle";
   if (replayMission && !steered) {
     const pose = replayPose(replayMission, scene.replay.t);
     const sep = replayMission.events.find((event) => event.id === "stage_sep" || event.id === "staging");

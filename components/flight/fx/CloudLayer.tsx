@@ -43,7 +43,10 @@ export function CloudLayer({ altitudeKm, pad, ignited = true, reducedMotion }: C
   reducedRef.current = reduced;
 
   const map = useMemo(() => softParticleTexture(), []);
-  const shellGeo = useMemo(() => new THREE.SphereGeometry(1, 28, 18), []);
+  // PR #34: the old 28×18 faces cut 60 km below Earth and exposed polygon patches.
+  // This subdivision keeps every point on the lowest (3.2 km) deck outside Earth.
+  // All four decks share one geometry, so the extra vertices are allocated once.
+  const shellGeo = useMemo(() => new THREE.SphereGeometry(1, 128, 96), []);
   const puffGeo = useMemo(() => new THREE.PlaneGeometry(1, 1), []);
   const fogGeo = useMemo(() => new THREE.PlaneGeometry(1, 1), []);
   const color = useMemo(() => new THREE.Color(FLIGHT_SCENE.ice), []);
@@ -164,6 +167,8 @@ export function CloudLayer({ altitudeKm, pad, ignited = true, reducedMotion }: C
 
   useFrame(({ camera, clock }) => {
     const alt = altRef.current;
+    const cameraAltitudeKm = Math.max(0, (camera.position.length() / METRES_TO_SCENE - EARTH_RADIUS_M) / 1000);
+    const inAtmosphere = cloudDeckOpacity(cameraAltitudeKm, CLOUD_DECKS_KM[MAX_DECKS - 1]) > 0;
     const decks = reducedRef.current ? budget.cloudDecks : MAX_DECKS;
     const drift = reducedRef.current ? 0 : 0.12;
     for (let i = 0; i < MAX_DECKS; i += 1) {
@@ -171,15 +176,15 @@ export function CloudLayer({ altitudeKm, pad, ignited = true, reducedMotion }: C
       const mat = shellMats[i];
       const deckKm = CLOUD_DECKS_KM[i] ?? 0;
       if (!mesh || !mat) continue;
-      const shown = i < decks;
+      const shown = i < decks && inAtmosphere;
       mesh.visible = shown;
       mat.uniforms.uTime.value = clock.elapsedTime;
       mat.uniforms.uDrift.value = drift;
       mat.uniforms.uOpacity.value = shown ? cloudDeckOpacity(alt, deckKm) : 0;
     }
 
-    const punch = cloudPunch(alt);
-    const inBand = alt >= 1.6 && alt <= 12.6;
+    const punch = inAtmosphere ? cloudPunch(alt) : 0;
+    const inBand = inAtmosphere && alt >= 1.6 && alt <= 12.6;
     puffMat.uniforms.uOpacity.value = inBand ? 0.55 + punch * 0.4 : 0;
     fogMat.uniforms.uOpacity.value = punch * (reducedRef.current ? 0.22 : 0.5);
 

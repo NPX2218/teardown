@@ -2,7 +2,7 @@ import { defineConfig } from "@playwright/test";
 import { resolve } from "node:path";
 
 const appDir = resolve(process.env.KERBAL_APP_DIR || process.cwd());
-const artifacts = process.env.KERBAL_ARTIFACTS || "/opt/cursor/artifacts/kerbal";
+const artifacts = resolve(process.env.KERBAL_ARTIFACTS || "test-results/kerbal");
 const port = Number(process.env.KERBAL_PORT || 3222);
 
 export default defineConfig({
@@ -14,6 +14,7 @@ export default defineConfig({
   workers: 1,
   retries: 0,
   reporter: [["list"], ["json", { outputFile: resolve(artifacts, "playwright-report.json") }]],
+  outputDir: resolve(artifacts, "results"),
   use: {
     baseURL: `http://127.0.0.1:${port}`,
     viewport: { width: 1440, height: 900 },

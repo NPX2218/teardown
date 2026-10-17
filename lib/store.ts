@@ -241,12 +241,26 @@ export const useScene = create<SceneState>()((set, get) => {
       return { ok: true };
     },
 
-    pauseReplay: () => set({ replay: { ...get().replay, playing: false } }),
+    pauseReplay: () => {
+      const { replay, flight, missionTrackId } = get();
+      set({
+        replay: { ...replay, playing: false },
+        ...(replay.missionId && missionTrackId === replay.missionId && flight.status === "flying"
+          ? { flight: { ...flight, status: "paused" as const, frameAccumulatorS: 0 } }
+          : {}),
+      });
+    },
 
     resumeReplay: () => {
-      const { replay, flight } = get();
-      if (flight.status !== "idle" || !hasMission(replay.missionId)) return;
-      set({ replay: { ...replay, playing: true } });
+      const { replay, flight, missionTrackId, rocket } = get();
+      if (!hasMission(replay.missionId)) return;
+      if (flight.status !== "idle" && missionTrackId !== replay.missionId) return;
+      const phoneOwns = flight.owners.pitch === "phone" || flight.owners.throttle === "phone";
+      if (flight.status === "paused" && phoneOwns && !rocket.connected) return;
+      set({
+        replay: { ...replay, playing: true },
+        ...(flight.status === "paused" ? { flight: { ...flight, status: "flying" as const } } : {}),
+      });
     },
 
     stopReplay: () => set({ replay: { ...NO_REPLAY }, flight: idleFlight(), historicalEmissions: null }),
@@ -278,7 +292,16 @@ export const useScene = create<SceneState>()((set, get) => {
       const wasConnected = get().rocket.connected;
       const connected = r.connected === true;
       set({ rocket: { connected, code: r.code ?? null } });
-      if (wasConnected && !connected) set({ flight: releasePhoneControl(get().flight) });
+      if (wasConnected && !connected) {
+        const { flight, replay, missionTrackId } = get();
+        const released = releasePhoneControl(flight);
+        set({
+          flight: released,
+          ...(released.status === "paused" && replay.missionId && missionTrackId === replay.missionId
+            ? { replay: { ...replay, playing: false } }
+            : {}),
+        });
+      }
     },
 
     startFlight: (scenarioId = DEFAULT_SCENARIO_ID) => {

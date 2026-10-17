@@ -71,7 +71,9 @@ export function buildFlightDraw(input: FlightDrawInput): FlightDraw {
   const positionM = input.positionM ?? { x: 0, y: EARTH_RADIUS_M };
   const position = physicsMetersToEarthRadii(positionM.x, positionM.y, frame);
   const pitch = Number.isFinite(input.pitchRad) ? input.pitchRad : 0;
-  const nose = noseFromPitch(frame, pitch);
+  // Physics pitch is measured from the vertical underneath the moving vehicle.
+  const localVerticalRad = Math.atan2(positionM.x, positionM.y);
+  const nose = noseFromPitch(frame, pitch + (Number.isFinite(localVerticalRad) ? localVerticalRad : 0));
   const altitudeM = altitudeMetres(positionM, input.altitudeM);
   const stage = stageIndex(input.activeStageId);
   const elapsedS = stage >= 1 && input.separatedAtS !== null && Number.isFinite(input.separatedAtS)

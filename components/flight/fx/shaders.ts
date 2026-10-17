@@ -69,7 +69,8 @@ void main() {
   float spread = uRadius * life * 0.45;
   vec3 p = vec3(cos(ang) * spread, -life * uLength, sin(ang) * spread);
   vec4 mv = modelViewMatrix * vec4(p, 1.0);
-  gl_PointSize = max(1.0, (1.5 + (1.0 - life) * 4.5) * (28.0 / max(0.2, -mv.z)));
+  float localDistance = -mv.z / max(length(modelMatrix[0].xyz), 1e-12);
+  gl_PointSize = max(1.0, (1.5 + (1.0 - life) * 4.5) * (28.0 / max(0.2, localDistance)));
   gl_Position = projectionMatrix * mv;
   vAlpha = (1.0 - life) * step(0.001, uLength);
   #include <logdepthbuf_vertex>
@@ -110,7 +111,7 @@ void main() {
   vOrange = uOrange * (1.0 - smoothstep(8.0, 52.0, dist)) * (1.0 - life * 0.25);
   vec4 mv = modelViewMatrix * vec4(p, 1.0);
   float size = (42.0 + life * 130.0) * (0.8 + aSeed * 0.45);
-  mv.xy += position.xy * size;
+  mv.xy += position.xy * size * length(modelMatrix[0].xyz);
   gl_Position = projectionMatrix * mv;
   vAlpha = uSmoke * (0.55 + 0.45 * sin(clamp(life, 0.0, 1.0) * 3.14159265));
   #include <logdepthbuf_vertex>
@@ -150,7 +151,7 @@ void main() {
   vec3 p = aDir * (1.5 + life * 26.0) + vec3(0.0, rise, 0.0);
   vec4 mv = modelViewMatrix * vec4(p, 1.0);
   float size = (3.0 + life * 16.0) * (0.55 + aSeed);
-  mv.xy += position.xy * size;
+  mv.xy += position.xy * size * length(modelMatrix[0].xyz);
   gl_Position = projectionMatrix * mv;
   vAlpha = uSmoke * (1.0 - life) * (1.0 - life);
   #include <logdepthbuf_vertex>
@@ -191,7 +192,7 @@ void main() {
   );
   vec4 mv = modelViewMatrix * vec4(p, 1.0);
   float size = max(56.0, uLength * 0.062);
-  mv.xy += position.xy * size;
+  mv.xy += position.xy * size * length(modelMatrix[0].xyz);
   gl_Position = projectionMatrix * mv;
   float body = smoothstep(0.0, 0.06, along) * (1.0 - smoothstep(0.88, 1.0, along));
   vAlpha = uAmount * (0.4 + 0.6 * body);
@@ -325,7 +326,8 @@ varying float vAlpha;
 void main() {
   vec3 p = aVel * uAge + vec3(0.0, -6.0 * uAge * uAge, 0.0);
   vec4 mv = modelViewMatrix * vec4(p, 1.0);
-  gl_PointSize = max(1.0, (2.0 + aSeed * 3.0) * (18.0 / max(0.15, -mv.z)) * uFade);
+  float localDistance = -mv.z / max(length(modelMatrix[0].xyz), 1e-12);
+  gl_PointSize = max(1.0, (2.0 + aSeed * 3.0) * (18.0 / max(0.15, localDistance)) * uFade);
   gl_Position = projectionMatrix * mv;
   vAlpha = uFade * (1.0 - smoothstep(1.4, 2.6, uAge));
   #include <logdepthbuf_vertex>

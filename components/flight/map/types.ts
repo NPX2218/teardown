@@ -8,6 +8,8 @@ import type { EarthRadiiVec3, MapLabel, OrbitPathState } from "@/lib/flight/map"
 export interface OrbitPathProps {
   state: OrbitPathState;
   trail?: readonly EarthRadiiVec3[];
+  /** Globe-scale markers belong in overview, outside the metre-scale follow shot. */
+  showMarkers?: boolean;
 }
 
 /**

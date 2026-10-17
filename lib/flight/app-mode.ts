@@ -2,6 +2,7 @@
 // This is not a second flight clock. Physics stays in the scene store.
 import { create } from "zustand";
 import { useScene } from "@/lib/store";
+import { clearHeldAxes } from "@/lib/flight/local-controls";
 
 export type AppMode = "explore" | "replay" | "mission";
 export type FlightView = "overview" | "follow";
@@ -27,18 +28,26 @@ export const useAppMode = create<AppModeState>((set, get) => ({
   heardUntil: -1,
   cameraNonce: 0,
   openMission: (scenarioId = "classroom") => {
+    clearHeldAxes();
+    if (get().mode === "replay") {
+      useScene.getState().stopReplay();
+      useScene.getState().stopFlight();
+    }
     const scene = useScene.getState();
-    scene.stopReplay();
+    scene.stopTour();
     if (scene.flight.status === "idle" || scene.flight.scenarioId !== scenarioId) {
       scene.startFlight(scenarioId);
     }
     set({ mode: "mission", view: "follow" });
   },
   openReplay: () => {
+    clearHeldAxes();
     useScene.getState().stopFlight();
+    useScene.getState().stopTour();
     set({ mode: "replay", view: "follow", heardUntil: -1 });
   },
   openExplore: () => {
+    clearHeldAxes();
     const scene = useScene.getState();
     scene.stopFlight();
     scene.stopReplay();

@@ -135,7 +135,7 @@ export function handleRocketMessage(m: RocketMessage, now: number): void {
     const { flight } = store;
 
     // The mount locks on the first frame held near upright, and only then. Holding a lean still can never
-    // become the new "up", so the same physical pose always reads the same angle. Zero / a new run re-locks.
+    // become the new "up", so the same physical pose always reads the same angle. Zero re-locks.
     if (!basis) {
       const locked = snapUprightBasis(m.grav);
       if (locked) {
@@ -217,7 +217,11 @@ export function startRocketWatch(): () => void {
     }
     if (s.flight.runId !== was.flight.runId && s.flight.runId) {
       getDetector().reset();
-      clearMount();
+      // The mount describes the paired shell, not a flight. Keep its basis
+      // when opening a mission or retrying while the visitor holds a lean.
+      shell.reset();
+      flightAttitudeNow.current = null;
+      launchedAt = Number.NEGATIVE_INFINITY;
       lastStatus = "";
     }
     if (s.flight.status !== was.flight.status) {

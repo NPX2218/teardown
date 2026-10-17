@@ -36,7 +36,7 @@ function useHeldPitch(): number {
   return useSyncExternalStore(subscribeHeld, () => heldAxes.pitch, () => 0);
 }
 
-export function FlightHud() {
+export function FlightHud({ controlsOnly = false }: { controlsOnly?: boolean }) {
   const flight = useScene((s) => s.flight);
   const phoneConnected = useScene((s) => s.rocket.connected);
   const playMode = useScene((s) => s.playMode);
@@ -63,8 +63,15 @@ export function FlightHud() {
     launchControlledFlight();
     mark();
   };
+  const pause = () => {
+    clearHeldAxes();
+    if (useAppMode.getState().mode === "replay") useScene.getState().pauseReplay();
+    else useScene.getState().pauseFlight();
+    mark();
+  };
   const resume = () => {
     resumeFlightExplicit();
+    if (useAppMode.getState().mode === "replay") useScene.getState().resumeReplay();
     mark();
   };
   const pick = (id: string) => {
@@ -113,7 +120,7 @@ export function FlightHud() {
   return (
     <>
       {warningLevel === "warning" && <div className={styles.vignette} aria-hidden="true" />}
-      <motion.section initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={motionPresets.out} id="flight-status" className={`hud ${styles.readout}`} data-status={status} data-warning={warningLevel} data-sim-time={flight.simulatedTimeS} aria-label="Flight readout">
+      {!controlsOnly && <motion.section initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={motionPresets.out} id="flight-status" className={`hud ${styles.readout}`} data-status={status} data-warning={warningLevel} data-sim-time={flight.simulatedTimeS} aria-label="Flight readout">
         {status === "ready" && (
           <div className={styles.stack}>
             <p className="hud__k">Your mission</p>
@@ -195,7 +202,7 @@ export function FlightHud() {
           </div>
         )}
         <EmissionsPlacement />
-      </motion.section>
+      </motion.section>}
       <section className={`hud ${styles.controls}`} aria-label="Flight controls">
         <div className={styles.stack}>
           {status === "ready" && (
@@ -204,13 +211,14 @@ export function FlightHud() {
           {status === "paused" && (
             <button id="pause-flight" type="button" className="btn btn-accent" onClick={resume}>Resume</button>
           )}
+          {status === "flying" && <button id="pause-flight" type="button" className="btn" onClick={pause}>Pause flight</button>}
           {status === "paused" && !phoneConnected && (
             <p className="hud__v hud__v--bad">Phone disconnected. Flight paused. Tap Resume to fly with the screen.</p>
           )}
           {!compact && flight.owners.pitch === "phone" && phoneConnected && (
             <p className={styles.note}>The phone tilts the rocket. Engine power stays on this screen.</p>
           )}
-          {!compact && <div className={styles.actions}>
+          <div className={styles.actions}>
             {phoneConnected && status !== "idle" && flight.owners.pitch !== "phone" && (
               <button type="button" className="btn" onClick={() => { zeroRocket(); mark(); }}>
                 Use phone tilt
@@ -221,7 +229,7 @@ export function FlightHud() {
                 Use screen tilt
               </button>
             )}
-          </div>}
+          </div>
           <label className="range" htmlFor="pitch-control">
             Tilt
             <input
@@ -281,7 +289,8 @@ export function FlightHud() {
               onChange={(event) => steerThrottle(Number(event.target.value))}
             />
           </label>
-          {!compact && <>
+          <details className={styles.more} open={!compact}>
+          <summary>Flight options</summary>
           <details className={styles.more}>
             <summary>How tilt works</summary>
             <p className={styles.note}>0 tilt is straight up. A positive tilt turns downrange. Launch leaves the engines off until you set power.</p>
@@ -297,12 +306,13 @@ export function FlightHud() {
             <button type="button" className="btn" aria-pressed={view === "overview"} onClick={() => useAppMode.getState().setView("overview")}>Earth view</button>
             <button type="button" className="btn" aria-pressed={view === "follow"} onClick={() => useAppMode.getState().setView("follow")}>Follow rocket</button>
             <button type="button" className="btn" onClick={() => { clearCameraNudge(); resetChaseOrbit(); useAppMode.getState().resetCamera(); }}>Reset view</button>
-            {status !== "idle" && !flight.outcome && (
+            {!compact && status !== "idle" && !flight.outcome && (
               <button id="retry-flight" type="button" className="btn" onClick={() => { clearHeldAxes(); useScene.getState().retryFlight(); mark(); }}>Try again</button>
             )}
             <button type="button" className="btn" onClick={() => useAppMode.getState().openExplore()}>Exit</button>
           </div>
-          </>}
+          </details>
+          {compact && <button id="retry-flight" type="button" className="btn" onClick={() => { clearHeldAxes(); useScene.getState().retryFlight(); mark(); }}>Try again</button>}
         </div>
       </section>
     </>

@@ -69,6 +69,7 @@ export function FlightScene() {
   const mode = useAppMode((s) => s.mode);
   const status = useScene((s) => s.flight.status);
   const pitch = useScene((s) => s.flight.input.pitchRad);
+  const time = useScene((s) => s.flight.simulatedTimeS);
   return (
     <div
       className={styles.stage}
@@ -78,6 +79,7 @@ export function FlightScene() {
       data-flight-mode={mode}
       data-flight-status={status}
       data-flight-pitch={pitch.toFixed(4)}
+      data-flight-time={time.toFixed(4)}
     >
       <Canvas
         camera={{ fov: 42, near: 0.02, far: 200, position: [14, 8, 14] }}
