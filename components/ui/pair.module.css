@@ -1,0 +1,64 @@
+/* Pairing card. It stays off the header, the guide, and the flight controls. */
+.center {
+  position: fixed;
+  z-index: var(--z-hud);
+  top: calc(var(--target) + var(--sp-8));
+  right: var(--gutter);
+  width: min(22rem, calc(100% - 2 * var(--gutter)));
+  max-height: calc(100dvh - var(--target) - var(--sp-8) - 8rem);
+  overflow: auto;
+  overscroll-behavior: contain;
+  pointer-events: none;
+}
+
+.center > * { pointer-events: auto; }
+
+.card {
+  width: 100%;
+  text-align: center;
+}
+
+.chipWrap {
+  position: fixed;
+  z-index: var(--z-hud);
+  top: calc(var(--target) + var(--sp-5));
+  right: var(--gutter);
+  pointer-events: auto;
+}
+
+.linkBtn {
+  width: var(--target);
+  height: var(--target);
+  padding: 0;
+}
+
+.linkIcon { width: 22px; height: 22px; display: block; }
+
+.linkLabel {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+@media (min-width: 721px) {
+  .linkBtn { width: auto; min-width: var(--target); padding: 0 var(--sp-4); gap: var(--sp-2); }
+  .linkLabel { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
+}
+
+@media (max-width: 720px) {
+  .center {
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: auto;
+    max-height: 42dvh;
+    padding: var(--sp-3) var(--sp-3) max(var(--sp-3), env(safe-area-inset-bottom));
+  }
+}
+
+@media (min-width: 1920px) {
+  .center { width: min(24rem, calc(100% - 2 * var(--gutter))); }
+}

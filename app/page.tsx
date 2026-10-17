@@ -7,6 +7,7 @@
 //   components/imagine/ImagineSlot.tsx
 //   components/emissions/EmissionsSlot.tsx
 import type { CSSProperties } from "react";
+import { GuideLauncher } from "@/components/ui/GuideLauncher";
 import { ViewerSlot } from "@/components/viewer/ViewerSlot";
 import { MissionSlot } from "@/components/replay/MissionSlot";
 import { PairSlot } from "@/components/ui/PairSlot";
@@ -33,6 +34,7 @@ export default function Home() {
       <PairSlot />
       <VoiceSlot />
       <ImagineSlot />
+      <GuideLauncher />
     </main>
   );
 }

@@ -1,7 +1,7 @@
 /* Corner guide. Tokens only. */
 .wrap {
   position: fixed;
-  z-index: var(--z-chrome);
+  z-index: var(--z-overlay);
   top: max(var(--sp-3), env(safe-area-inset-top));
   right: var(--gutter);
   display: grid;
@@ -28,12 +28,15 @@
 }
 
 .panel {
+  position: relative;
   width: min(22rem, calc(100vw - 2 * var(--gutter) - var(--target)));
-  max-height: min(70dvh, 32rem);
+  max-height: min(78dvh, 40rem);
   overflow: auto;
   overscroll-behavior: contain;
   text-align: left;
 }
+
+.close { position: absolute; top: var(--sp-3); right: var(--sp-3); }
 
 .questions {
   display: grid;

@@ -92,6 +92,7 @@
 .stats { display: flex; flex-wrap: wrap; gap: var(--sp-5); margin: var(--sp-2) 0 0; padding: 0; list-style: none; }
 .stats :global(.stat__value) { font-size: var(--fs-h3); }
 .headerControls { pointer-events: auto; margin-top: var(--sp-2); }
+.headerControls :global(.seg) { background: var(--bg); }
 .modeNav {
   display: flex;
   flex-wrap: wrap;

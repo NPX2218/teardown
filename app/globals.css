@@ -445,7 +445,7 @@ a.chip, button.chip { min-height: var(--target); min-width: var(--target); paddi
   max-width: 100%;
   overflow-wrap: anywhere;
 }
-.legal a { color: var(--text-90); }
+.legal a { color: var(--text-90); white-space: nowrap; }
 
 /* Motion: reveal on load, attract pulse for the idle screen */
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
@@ -669,8 +669,14 @@ dialog.overlay::backdrop { background: var(--scrim-80); }
 body.kiosk { touch-action: pan-x pan-y; }
 body[data-exhibit-phase="attract"] .dock,
 body[data-exhibit-phase="attract"] .nav,
-body[data-exhibit-phase="attract"] [data-slot="pair"] {
+body[data-exhibit-phase="attract"] [data-slot="pair"],
+body[data-exhibit-phase="attract"] [data-guide] {
   visibility: hidden;
+}
+
+@media (max-width: 720px) {
+  body[data-pair-open="1"] [data-explore-rail] { visibility: hidden; }
+  body[data-pair-open="1"] .legal { margin-bottom: 46dvh; }
 }
 
 @media (max-width: 720px) {

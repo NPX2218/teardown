@@ -128,6 +128,10 @@
   }
 }
 
+@media (max-width: 420px) {
+  .readout { top: 10.75rem; max-height: 22dvh; }
+}
+
 @media (min-width: 1280px) {
   .readout { top: 6.5rem; max-height: calc(100dvh - 9rem); }
   .controls { max-height: calc(100dvh - 8rem); }

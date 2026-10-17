@@ -9,7 +9,9 @@ import { newPairCode } from "@/lib/rocket/protocol";
 import { demoPairCode, parseFlags } from "@/lib/viewer/exhibit";
 import { qrSvgPath, rocketUrl } from "@/lib/rocket/qr";
 import { useRocket, zeroRocket } from "@/lib/rocket/useRocket";
+import { useAppMode } from "@/lib/flight/app-mode";
 import { useScene } from "@/lib/store";
+import styles from "./pair.module.css";
 
 // Retry the relay this often while it is unreachable, always with the SAME code. Arbitrary: tune on the day.
 const RELAY_RETRY_MS = 5000;
@@ -30,11 +32,13 @@ function safeStorage(): Storage | null {
 export function PairRocket() {
   useRocket();
   const rocket = useScene((s) => s.rocket);
+  const mode = useAppMode((s) => s.mode);
   const [code, setCode] = useState<string | null>(null);
   const [origin, setOrigin] = useState<string | null>(null);
   const [localhostOnly, setLocalhostOnly] = useState(false);
   const [relayDown, setRelayDown] = useState(false);
   const [open, setOpen] = useState(true); // false = collapsed to the "Connect rocket" chip
+  const [pinned, setPinned] = useState(false);
   const [justConnected, setJustConnected] = useState(false);
   const retryNow = useRef<() => void>(() => {});
 
@@ -108,6 +112,14 @@ export function PairRocket() {
     return () => clearTimeout(t);
   }, [justConnected]);
 
+  const showCard = !rocket.connected && (pinned || (open && mode === "explore"));
+  useEffect(() => {
+    document.body.dataset.pairOpen = showCard ? "1" : "0";
+    return () => {
+      delete document.body.dataset.pairOpen;
+    };
+  }, [showCard]);
+
   const qr = useMemo(() => (code && origin ? qrSvgPath(rocketUrl(origin, code)) : null), [code, origin]);
   const tryNow = useCallback(() => retryNow.current(), []);
 
@@ -126,7 +138,7 @@ export function PairRocket() {
 
   if (rocket.connected) {
     return (
-      <div style={SMALL_WRAP}>
+      <div className={styles.chipWrap}>
         {live}
         {justConnected ? (
           <div className="card card--solid">
@@ -145,21 +157,27 @@ export function PairRocket() {
     );
   }
 
-  if (!open) {
+  if (!showCard) {
     return (
-      <div style={SMALL_WRAP}>
+      <div className={styles.chipWrap}>
         {live}
-        <button type="button" className="chip" onClick={() => setOpen(true)}>
-          Connect rocket
+        <button type="button" className={`btn btn-icon ${styles.linkBtn}`} aria-label="Connect rocket" onClick={() => { setPinned(true); setOpen(true); }}>
+          <svg className={styles.linkIcon} viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="4" y="4" width="6" height="6" fill="none" stroke="currentColor" strokeWidth="2" />
+            <rect x="14" y="4" width="6" height="6" fill="none" stroke="currentColor" strokeWidth="2" />
+            <rect x="4" y="14" width="6" height="6" fill="none" stroke="currentColor" strokeWidth="2" />
+            <path d="M14 16h2v2h-2zM18 14h2v6h-6v-2h4z" fill="currentColor" />
+          </svg>
+          <span className={styles.linkLabel}>Connect rocket</span>
         </button>
       </div>
     );
   }
 
   return (
-    <div style={CENTER_WRAP}>
+    <div className={styles.center}>
       {live}
-      <div className="card card--solid" style={CARD}>
+      <div className={`card card--solid ${styles.card}`}>
         <p className="eyebrow">PAIR YOUR ROCKET</p>
         <p className="lead">Slide your phone into the rocket. Scan to connect.</p>
         {relayDown ? (
@@ -195,7 +213,7 @@ export function PairRocket() {
             <p className="small">Developer note: a phone can&apos;t open localhost. Use the tunnel or deployed URL, or set NEXT_PUBLIC_ROCKET_ORIGIN.</p>
           </div>
         )}
-        <button type="button" className="btn btn-outline" onClick={() => setOpen(false)}>
+        <button type="button" className="btn btn-outline" onClick={() => { setOpen(false); setPinned(false); }}>
           Hide
         </button>
       </div>
@@ -203,24 +221,5 @@ export function PairRocket() {
   );
 }
 
-// Layout uses tokens only. Centre card (theme 7.1: "centre card when no rocket is linked"); the wrapper ignores
-// pointer events so the 3D scene stays draggable around the card.
-const CENTER_WRAP = {
-  position: "fixed",
-  inset: 0,
-  zIndex: "var(--z-hud)",
-  display: "grid",
-  placeItems: "center",
-  padding: "var(--gutter)",
-  pointerEvents: "none",
-} as const;
-const CARD = { pointerEvents: "auto", width: "min(24rem, 100%)", textAlign: "center" } as const;
 // QR paper: white square, 16 px quiet zone (theme 7), at least 12 rem wide inside the card.
 const PAPER = { background: "var(--qr-paper)", padding: "var(--sp-4)", minWidth: "12rem", margin: "0 auto" } as const;
-// Compact status / reopen chip: below the nav at the left, clear of the lens switch (top-right) and HUDs (bottom).
-const SMALL_WRAP = {
-  position: "fixed",
-  zIndex: "var(--z-hud)",
-  left: "var(--gutter)",
-  top: "calc(var(--sp-4) + var(--target) + var(--sp-3))",
-} as const;

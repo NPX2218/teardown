@@ -6,6 +6,7 @@
 import { useId, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { motionPresets } from "@/lib/ui/motion";
+import { useExhibit } from "@/lib/viewer/exhibit";
 import styles from "./guide.module.css";
 
 const ANSWERS = [
@@ -24,6 +25,7 @@ const ANSWERS = [
 ] as const;
 
 export function GuideLauncher() {
+  const attract = useExhibit((s) => s.phase === "attract");
   const [open, setOpen] = useState(false);
   const [answer, setAnswer] = useState<number | null>(null);
   const titleId = useId();
@@ -31,8 +33,9 @@ export function GuideLauncher() {
     setOpen(false);
     setAnswer(null);
   };
+  if (attract) return null;
   return (
-    <div className={styles.wrap}>
+    <div className={styles.wrap} data-guide>
       <button
         type="button"
         className={`btn btn-icon ${styles.launch}`}
@@ -56,6 +59,9 @@ export function GuideLauncher() {
             exit={{ opacity: 0, y: 8 }}
             transition={motionPresets.out}
           >
+            <button type="button" className={`btn btn-icon overlay__close ${styles.close}`} aria-label="Close the guide" onClick={close}>
+              ×
+            </button>
             <p className="eyebrow">Guide</p>
             <h2>Ask in plain words.</h2>
             <p>
@@ -76,7 +82,6 @@ export function GuideLauncher() {
               ))}
             </div>
             {answer !== null && <p className="lead">{ANSWERS[answer].a}</p>}
-            <button type="button" className="btn btn-outline" onClick={close}>Close</button>
           </motion.section>
         )}
       </AnimatePresence>
