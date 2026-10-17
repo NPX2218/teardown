@@ -4,7 +4,9 @@ import dynamic from "next/dynamic";
 import { useAppMode } from "@/lib/flight/app-mode";
 import { FlightHud } from "@/components/flight/FlightHud";
 import { FlightResult } from "@/components/flight/FlightResult";
+import { useExhibit } from "@/lib/viewer/exhibit";
 import styles from "@/components/flight/flight.module.css";
+import { ExhibitRuntime } from "./ExhibitRuntime";
 import { ReplayPanel } from "./ReplayPanel";
 
 const FlightScene = dynamic(
@@ -14,12 +16,14 @@ const FlightScene = dynamic(
 
 export function MissionSlot() {
   const mode = useAppMode((s) => s.mode);
-  if (mode === "explore") return <div data-slot="mission" />;
+  const quiet = useExhibit((s) => s.phase !== "off");
   return (
-    <div data-slot="mission" className={styles.slot}>
-      <FlightScene />
-      {mode === "replay" ? <ReplayPanel /> : <FlightHud />}
+    <div data-slot="mission" className={mode === "explore" ? undefined : styles.slot}>
+      {mode !== "explore" && <FlightScene />}
+      {mode === "replay" && !quiet && <ReplayPanel />}
+      {mode === "mission" && !quiet && <FlightHud />}
       {mode === "mission" && <FlightResult />}
+      <ExhibitRuntime />
     </div>
   );
 }

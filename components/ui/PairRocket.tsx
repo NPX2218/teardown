@@ -6,6 +6,7 @@ import { attachLink, checkRocketTimeout, receiveRocketMessage } from "@/lib/rock
 import { openLink } from "@/lib/rocket/link";
 import type { RocketLink } from "@/lib/rocket/link";
 import { newPairCode } from "@/lib/rocket/protocol";
+import { demoPairCode, parseFlags } from "@/lib/viewer/exhibit";
 import { qrSvgPath, rocketUrl } from "@/lib/rocket/qr";
 import { useRocket, zeroRocket } from "@/lib/rocket/useRocket";
 import { useScene } from "@/lib/store";
@@ -17,6 +18,14 @@ const CONNECTED_TOAST_MS = 2000;
 // How often the silence check runs. 250 ms keeps "QR is back" within DISCONNECT_MS + 250 ms (~2.25 s).
 const TIMEOUT_CHECK_MS = 250;
 const LOCAL_HOSTS = ["localhost", "127.0.0.1", "[::1]"];
+
+function safeStorage(): Storage | null {
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
 
 export function PairRocket() {
   useRocket();
@@ -36,7 +45,7 @@ export function PairRocket() {
     let current: RocketLink | null = null;
     let connecting = false; // "Try now" while a join is in flight must not open a second link
     let retryTimer: ReturnType<typeof setTimeout> | undefined;
-    const pairCode = newPairCode();
+    const pairCode = demoPairCode(parseFlags(window.location.search), safeStorage()) ?? newPairCode();
     // Public, browser-safe setting: the page the phone should open (a tunnel or the deployed URL).
     const publicOrigin = process.env.NEXT_PUBLIC_ROCKET_ORIGIN;
     setCode(pairCode);
