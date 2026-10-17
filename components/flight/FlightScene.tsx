@@ -11,13 +11,13 @@ import { useReducedMotion } from "@/components/ui/useReducedMotion";
 import { CLASSROOM_SCENARIOS } from "@/lib/flight/classroom";
 import { useAppMode } from "@/lib/flight/app-mode";
 import { EARTH_RADIUS_M, bodyFromFlightState, coastPreview } from "@/lib/flight.helpers";
-import { METRES_TO_SCENE, toScene } from "@/lib/flight/scene-scale";
+import { toScene } from "@/lib/flight/scene-scale";
 import { illustratedTrack, replayPose } from "@/lib/replay";
 import { useScene } from "@/lib/store";
 import { FLIGHT_SCENE, SCENE_COLORS } from "@/lib/viewer/colors";
 import type { FlightScenario } from "@/lib/types";
 import { cameraNudge } from "./cameraNudge";
-import { drawEarthMap } from "./earthMap";
+import { Earth } from "./Earth";
 import { FlightController } from "./FlightController";
 import styles from "./flight.module.css";
 
@@ -30,7 +30,6 @@ const scratch = {
   look: new THREE.Vector3(),
 };
 
-const EARTH_R = EARTH_RADIUS_M * METRES_TO_SCENE;
 const LINE_LIMIT = 200;
 
 function scenarioFor(id: string | null): FlightScenario | null {
@@ -55,49 +54,6 @@ function writeLine(line: THREE.Line, points: { x: number; y: number }[], color: 
   const material = line.material as THREE.LineBasicMaterial;
   material.color.set(color);
   line.visible = count >= 2;
-}
-
-function Earth() {
-  const reduce = useReducedMotion();
-  const map = useMemo(() => {
-    if (typeof document === "undefined") return null;
-    const canvas = document.createElement("canvas");
-    canvas.width = 1024;
-    canvas.height = 512;
-    drawEarthMap(canvas);
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.colorSpace = THREE.SRGBColorSpace;
-    texture.anisotropy = 8;
-    return texture;
-  }, []);
-  useEffect(() => () => map?.dispose(), [map]);
-  return (
-    <group>
-      <mesh>
-        <sphereGeometry args={[EARTH_R, 48, 32]} />
-        <meshStandardMaterial
-          map={map ?? undefined}
-          color={map ? FLIGHT_SCENE.untinted : FLIGHT_SCENE.ocean}
-          roughness={1}
-          metalness={0}
-        />
-      </mesh>
-      <mesh>
-        <sphereGeometry args={[EARTH_R * 1.025, 48, 32]} />
-        <meshBasicMaterial
-          color={FLIGHT_SCENE.atmosphere}
-          transparent
-          opacity={reduce ? 0.22 : 0.28}
-          side={THREE.BackSide}
-          depthWrite={false}
-        />
-      </mesh>
-      <mesh position={[0, EARTH_R + 0.012, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[0.18, 28]} />
-        <meshBasicMaterial color={FLIGHT_SCENE.pad} />
-      </mesh>
-    </group>
-  );
 }
 
 function SceneBodies() {
