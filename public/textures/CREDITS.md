@@ -11,4 +11,4 @@ The flight globe uses four equirectangular maps, each stored at 4096×2048 and 2
 
 A phone, a small window, or a low-density display loads the 2K set. A large desktop with a device pixel ratio of at least 1.5 loads the 4K set. If any texture fails to load, the globe keeps the painted map.
 
-Follow-up: `components/ui/Credits.tsx` is owned by the mascot branch. When these branches merge, add this line to that footer: Earth imagery: NASA Visible Earth (Blue Marble, Black Marble, clouds, and the land/water mask), public domain.
+The global footer (`components/ui/Credits.tsx`) includes: Earth imagery: NASA Visible Earth (Blue Marble, Black Marble, clouds, and the land/water mask), public domain.

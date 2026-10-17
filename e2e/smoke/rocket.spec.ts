@@ -250,6 +250,7 @@ test("free-flight crash", async ({ browser }) => {
 });
 
 test("mission drift warning then failure", async ({ browser }) => {
+  test.setTimeout(240_000);
   const view = await pair(browser);
   await readyMission(view.laptop);
   await view.laptop.getByRole("button", { name: "Mission", exact: true }).click();
@@ -258,10 +259,24 @@ test("mission drift warning then failure", async ({ browser }) => {
   try {
     await view.laptop.locator("#launch-flight").click();
     await expect(view.laptop.locator("#flight-status")).toHaveAttribute("data-status", "flying");
-    await view.laptop.locator("#warp-8").click();
-    await expect(view.laptop.getByText(/Drifting off track|Return to trajectory|Mission failed: off nominal/)).toBeVisible({
-      timeout: 20_000,
-    });
+    // The upright hold stays on the pad while the PRACTICE corridor climbs.
+    // 4× keeps the caution and warning banners on screen long enough to photograph;
+    // the failure is still about 5 simulated seconds after "Return to trajectory".
+    await view.laptop.locator("#warp-4").click();
+    await expect(view.laptop.locator("#warp-4")).toHaveAttribute("aria-pressed", "true");
+    await expect(view.laptop.getByText("Estimate unavailable")).toHaveCount(0);
+    await expect(view.laptop.getByText(/CO₂|carbon dioxide/i).first()).toBeVisible();
+    const caution = view.laptop.getByText("Drifting off track");
+    await expect(caution).toBeVisible({ timeout: 45_000 });
+    await view.laptop.locator("#flight-status").screenshot({ path: resolve(ART, "drift-warning-hud.png") });
+    await shot(view, "drift-warning");
+    const warning = view.laptop.locator("[data-banner='warning']");
+    await expect(warning).toHaveText("Return to trajectory", { timeout: 30_000 });
+    await view.laptop.locator("#flight-status").screenshot({ path: resolve(ART, "drift-return-hud.png") });
+    await shot(view, "drift-return");
+    const failed = view.laptop.locator("[data-banner='failed']");
+    await expect(failed).toHaveText("Mission failed: off nominal", { timeout: 20_000 });
+    await view.laptop.locator("#flight-status").screenshot({ path: resolve(ART, "drift-failed-hud.png") });
   } finally {
     await finish(view, sim, "drift");
   }

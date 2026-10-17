@@ -35,7 +35,8 @@ function Legal() {
   );
 }
 
-export function Deck({ pdfHref = "/presentation/teardown.pdf" }: { pdfHref?: string }) {
+/** mediaBase must end in "/". The Next route serves public/presentation/media/; the offline page uses a relative path. */
+export function Deck({ mediaBase = "/presentation/media/" }: { mediaBase?: string }) {
   const reduced = useReducedMotion();
   const rootRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<DeckPos>({ index: 0, reveal: 1 });
@@ -146,7 +147,7 @@ export function Deck({ pdfHref = "/presentation/teardown.pdf" }: { pdfHref?: str
             slide={item}
             active={index === pos.index}
             reveal={index === pos.index ? pos.reveal : item.beats.length}
-            pdfHref={pdfHref}
+            mediaBase={mediaBase}
           />
         ))}
         {menuOn ? (
@@ -210,22 +211,25 @@ function SlideView({
   slide,
   active,
   reveal,
-  pdfHref,
+  mediaBase,
 }: {
   slide: Slide;
   active: boolean;
   reveal: number;
-  pdfHref: string;
+  mediaBase: string;
 }) {
   return (
     <section
-      className={slide.figure === "poster" ? "deck-slide deck-poster" : "deck-slide"}
+      className={slide.figure === "hero" ? "deck-slide deck-poster" : "deck-slide"}
       id={slide.id}
       data-active={active ? "true" : "false"}
       data-figure={slide.figure}
       aria-hidden={active ? undefined : true}
       aria-labelledby={`${slide.id}-title`}
     >
+      {slide.figure === "hero" ? (
+        <img className="deck-hero" src={`${mediaBase}hero.jpg`} alt="" aria-hidden="true" />
+      ) : null}
       <header>
         <p className="deck-kicker">{slide.part === "appendix" ? `Appendix · ${slide.kicker}` : slide.kicker}</p>
         <h1 id={`${slide.id}-title`} className={slide.titleCase === "sentence" ? "deck-title--sentence" : undefined}>
@@ -235,25 +239,15 @@ function SlideView({
       <div className="deck-body">
         <div className="deck-copy">
           {slide.beats.map((beat, index) => (
-            <p key={beat.id} className="deck-beat" data-shown={index < reveal ? "true" : "false"}>
+            <p key={beat.id} className={beat.strong ? "deck-beat deck-beat--strong" : "deck-beat"} data-shown={index < reveal ? "true" : "false"}>
               {beat.text}
             </p>
           ))}
-          {slide.id === "close" ? (
-            <p className="deck-links">
-              <a className="btn" href={pdfHref}>
-                Static PDF
-              </a>
-              <a className="btn" href="#title">
-                Title slide
-              </a>
-            </p>
-          ) : null}
           <div className="deck-print-legal">
             <Legal />
           </div>
         </div>
-        <Figure slide={slide} reveal={reveal} />
+        <Figure slide={slide} reveal={reveal} mediaBase={mediaBase} />
       </div>
     </section>
   );

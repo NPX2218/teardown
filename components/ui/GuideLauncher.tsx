@@ -5,8 +5,9 @@ import { useEffect, useId, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { GrokMascot } from "@/components/ui/GrokMascot";
 import { useReducedMotion } from "@/components/ui/useReducedMotion";
-import { useMascotActivity } from "@/lib/mascot/activity";
-import { connectVoiceActivity } from "@/lib/mascot/voice-bridge";
+import { setVoiceState, useMascotActivity } from "@/lib/mascot/activity";
+import { bindVoiceActivity } from "@/lib/mascot/voice-bridge";
+import { onVoiceState } from "@/lib/voice/activity";
 import { readFlightResult, readWarningLevel } from "@/lib/mascot/flight-cue";
 import { moodFor } from "@/lib/mascot/mood";
 import { outcomeFace, type FlightFace, type ResultStamp } from "@/lib/mascot/outcome";
@@ -62,7 +63,15 @@ export function GuideLauncher() {
     setAnswer(null);
   }, [attract]);
 
-  useEffect(() => connectVoiceActivity(), []);
+  useEffect(() => {
+    const stop = bindVoiceActivity(onVoiceState);
+    const hook = window as unknown as { __teardownSetVoiceState?: typeof setVoiceState };
+    hook.__teardownSetVoiceState = setVoiceState;
+    return () => {
+      stop();
+      hook.__teardownSetVoiceState = undefined;
+    };
+  }, []);
 
   return (
     <div className={styles.wrap} data-guide>
