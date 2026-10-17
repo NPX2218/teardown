@@ -27,8 +27,9 @@ export function routePhoneMessage(m: RocketMessage, h: PhoneHandlers): void {
     case "sound": h.playSound(m.id, m.loop ? { loop: true } : undefined); return;
     case "stop": h.stopSound(m.id); return;
     case "vibrate": h.vibrate(m.pattern); return;
-    case "say": h.say({ id: m.id, cacheKey: m.cacheKey, text: m.text }); return;
-    case "stopSay": h.stopSay(m.id); return;
+    case "say":
+    case "stopSay":
+      return;
     case "listen": h.listen(); return;
     case "stopListen": h.stopListen(); return;
     case "status": h.showStatus(m.word, m.level, m.flash === true); return;

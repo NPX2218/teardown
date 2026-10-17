@@ -2,7 +2,7 @@ import type { PartGroup, PartId, PartsFile } from "@/lib/types";
 import * as voice from "@/lib/voice/speak";
 import type { SpeakOptions } from "@/lib/voice/speak";
 
-/** The 01 speak seam, plus the stop functions 05 may add. stopSpeaking sends stopSay to the phone. */
+/** The 01 speak seam, plus the stop functions 05 may add. stopSpeaking cuts laptop audio. */
 export interface SpeechSeam {
   speakLine(text: string, opts?: SpeakOptions): Promise<void>;
   stopSpeaking?: () => void;

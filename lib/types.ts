@@ -228,9 +228,9 @@ export type RocketMessage =
   | { k: "sound"; id: SoundId; loop?: boolean } // laptop → phone
   | { k: "stop"; id?: SoundId } // laptop → phone
   | { k: "vibrate"; pattern: number[] } // laptop → phone
-  | { k: "say"; id: string; cacheKey: string; text: string } // laptop → phone
-  | { k: "stopSay"; id?: string } // laptop → phone: stop speaking
-  | { k: "said"; id: string } // phone → laptop: request `id` ended
+  | { k: "say"; id: string; cacheKey: string; text: string } // not sent: Grok speech stays on the laptop
+  | { k: "stopSay"; id?: string } // not sent: nothing on the phone is speaking Grok
+  | { k: "said"; id: string } // legacy phone acknowledgement; laptop speech does not wait on it
   | { k: "listen" }
   | { k: "stopListen" } // laptop → phone: start / stop the phone mic
   | { k: "heard"; text: string } // phone → laptop: what the visitor said

@@ -100,8 +100,8 @@ export default function RocketPage() {
       playSound: (id, opts) => { playSound(id, opts); if (hasStatusWord(id)) setLastSound(id); },
       stopSound: (id) => { stopSound(id); if (id === undefined) setLastSound(null); }, // "stop all" = new flight
       vibrate,
-      say: (s) => voice.say(s),
-      stopSay: (id) => voice.stopSay(id),
+      say: () => {},
+      stopSay: () => {},
       listen: () => ear.listen(),
       stopListen: () => ear.stopListen(),
       showStatus: (word, level, flash) => {
@@ -121,7 +121,7 @@ export default function RocketPage() {
         setShellLevel("warn");
       },
     });
-  }, [voice, ear]);
+  }, [ear]);
 
   /** Close any old link and join the exhibit's channel again. Safe to call often. */
   const connect = useCallback(async () => {
@@ -230,7 +230,7 @@ export default function RocketPage() {
     unlockAudio();                                    // Web Audio needs a tap
     const sessionOk = setPlaybackSession();           // iPhone: play even with the silent switch on
     setSilentHint(ios && !sessionOk);
-    primeSpeech();                                    // iPhone: the built-in voice needs one tap-time utterance
+    primeSpeech();                                    // no-op: Grok speech stays on the laptop
     const motion = requestMotionPermission();         // iPhone: both motion prompts inside the tap
     void lockLandscape();                             // Android: landscape-primary after fullscreen, inside the tap
     // Start the mic prompt inside the tap too (iPhone drops user activation after a slow await); join both.
@@ -345,7 +345,7 @@ export default function RocketPage() {
       {flashing && <div className={`${css.flash} ${css[level]}`} aria-hidden="true" />}
 
       <footer>
-        {debugOn && <DebugPanel debug={debug} voice={voice} ear={ear} />}
+        {debugOn && <DebugPanel debug={debug} ear={ear} />}
         <Credits />
       </footer>
 
@@ -369,7 +369,7 @@ function Flame({ rumbling, reduce }: { rumbling: boolean; reduce: boolean }) {
 
 const LOOPED: readonly SoundId[] = ["liftoff_rumble", "maxq_rumble", "entry_burn", "music_launch"]; // plan 10 Task 3
 
-function DebugPanel({ debug, voice, ear }: { debug: SensorDebug; voice: RocketVoice; ear: RocketEar }) {
+function DebugPanel({ debug, ear }: { debug: SensorDebug; ear: RocketEar }) {
   const g = debug.grav?.map((v) => v.toFixed(1)).join(", ") ?? "none";
   return (
     <div className="card stack small">
@@ -381,7 +381,6 @@ function DebugPanel({ debug, voice, ear }: { debug: SensorDebug; voice: RocketVo
         ))}
         <button className="btn" onClick={() => stopSound()}>Stop all</button>
         <button className="btn" onClick={() => vibrate([400, 100, 400])}>Vibrate</button>
-        <button className="btn" onClick={() => voice.say({ id: "debug", cacheKey: "debug", text: "Liftoff! The rocket is talking." })}>Say</button>
         <button className="btn" onClick={() => ear.listen()}>Listen</button>
       </div>
     </div>

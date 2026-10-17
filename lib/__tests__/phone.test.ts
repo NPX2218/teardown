@@ -52,17 +52,14 @@ describe("phone glue (10 Task 4)", () => {
     expect(h.vibrate).toHaveBeenCalledWith([400, 100, 400]);
   });
 
-  it("PR4 say → say({ id, cacheKey, text })", () => {
+  it("PR4 say and stopSay do not play Grok speech on the phone", () => {
     const h = handlers();
     routePhoneMessage({ k: "say", id: "a1b2c3d4-1", cacheKey: "a1b2c3d4e5f6", text: "Liftoff!" }, h);
-    expect(h.say).toHaveBeenCalledWith({ id: "a1b2c3d4-1", cacheKey: "a1b2c3d4e5f6", text: "Liftoff!" });
-  });
-
-  it("PR5 stopSay → stopSay(id?)", () => {
-    const h = handlers();
     routePhoneMessage({ k: "stopSay", id: "a1b2c3d4-1" }, h);
     routePhoneMessage({ k: "stopSay" }, h);
-    expect(h.stopSay.mock.calls).toEqual([["a1b2c3d4-1"], [undefined]]);
+    expect(h.say).not.toHaveBeenCalled();
+    expect(h.stopSay).not.toHaveBeenCalled();
+    expect(calls(h)).toBe(0);
   });
 
   it("PR6 listen / stopListen", () => {

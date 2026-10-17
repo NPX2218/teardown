@@ -44,7 +44,7 @@ The engine-out build is deferred. Estimated emissions belong inside flight sessi
 | Mission selection | Public replay opens verified Sentinel-6 approximate milestones; unavailable real data requires an explicit visitor-selected practice fallback. No continuous-telemetry claim. |
 | Agent deadlines | 8 s upstream timeout, 9 s per browser route round, 15 s overall tool loop. Cancellation stays silent. |
 | Imagine tool | `runImagineTool` returns promptly; the image request finishes independently within its own budget. |
-| Voice | Rocket text is at most 500 characters. The laptop budget includes phone startup, 90 ms per character playback cap, and acknowledgement slack. `stopSay` precedes local fallback; delivery after a lost link cannot be guaranteed. |
+| Voice | Grok speech plays on the laptop, on the same machine as the mic, through the laptop audio output. The phone plays engine, staging, and abort sounds and haptics only. `say` and `stopSay` are not forwarded. |
 | Viewer | 03 provides the concrete `applyExplode` helper consumed by 07. Reduced motion uses event poses and camera cuts. |
 | Flight input | One validated owner per axis; phone pitch can coexist with local throttle. No checkpoint gestures or direct mesh overwrite during physical flight. Disconnect pauses; resume is explicit. |
 | Exhibit reset | The shared `teardown:exhibit-reset` event cancels local requests, speech and image state. Drift checks cover the agent, voice, image and exhibit consumers. |

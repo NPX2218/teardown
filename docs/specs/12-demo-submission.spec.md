@@ -1316,7 +1316,7 @@ Backup keys if voice or the phone fails: `M` start the mission, `Space` do the c
 ## How Grok is used
 
 - **Voice agent with function calling.** Grok decides which scene action to run; the browser runs it. Tools: {{TODO: tool list from lib/agent (04)}}. Bad tool arguments return an error and the scene does nothing.
-- **Grok Voice** speaks the tour, the answers and the mission callouts. Short callouts come out of the phone inside the rocket; longer answers come out of the laptop. Lines are cached in `public/audio/` so the demo works without Wi-Fi.
+- **Grok Voice** speaks the tour, the answers and the mission callouts on the laptop, the same machine as the mic. The phone does not play those lines. It plays the engine, staging, and abort sounds, and it buzzes. Lines are cached in `public/audio/` so the demo works without Wi-Fi.
 - **Grok Imagine** paints a part in action from the current 3D view. Four pictures are cached in `public/imagine/`.
 - **Facts only.** The system prompt forbids inventing numbers: {{TODO: path of the prompt file (04)}}. Every number comes from `data/parts/falcon9.json` or `data/missions/`.
 - **Safety nets.** Text and voice calls stop waiting after 8 seconds (a whole question gives up after 15) and fall back to a cached line or "I couldn't reach Grok". Image calls give up after 30 seconds. The key stays on the server (`XAI_API_KEY`, only used by server code behind `app/api/*`).
@@ -1350,7 +1350,7 @@ We built Teardown in Cursor Agent, one plan per stage and one task per agent run
 
 ## Phone rocket
 
-Your phone is the rocket's brain. Scan the QR code, slide the phone into the shell top-first with the screen facing out, and its motion sensors turn the 3D model while its speaker plays the rumbles, the clunks and Grok's voice. It works in Android Chrome and iPhone Safari, over HTTPS only.
+Your phone is the rocket's brain. Scan the QR code, slide the phone into the shell top-first with the screen facing out, and its motion sensors turn the 3D model while its speaker plays the rumbles and the clunks. Grok's voice stays on the laptop. It works in Android Chrome and iPhone Safari, over HTTPS only.
 
 - Pairing: a 4-character code joins the phone and the laptop through a hosted relay. If the phone goes quiet for 2 seconds, the QR code comes back and touch keeps working.
 - Sounds: CC0 and public-domain files only; see `public/sounds/CREDITS.md`.
@@ -1363,7 +1363,7 @@ Your phone is the rocket's brain. Scan the QR code, slide the phone into the she
  ┌──── Phone in the rocket ────┐   realtime   ┌──────── Laptop (Chrome, exhibit screen) ─────────┐     ┌── Next.js API routes ──┐
  │ /rocket page (HTTPS)        │    relay     │ 3D viewer: explode · select · tour · replay      │     │ (xAI key lives here)   │
  │ motion sensors → frames ────┼─────────────►│ gestures → guided mission → stars                │────►│ /api/agent → Grok      │
- │ speaker: sounds + Grok ◄────┼──────────────│ sound + "say" commands · "listen" (mic, optional)│◄────│ /api/voice → Grok Voice│
+ │ speaker: sounds + buzz ◄────┼──────────────│ sound + vibrate · Grok audio stays here          │◄────│ /api/voice → Grok Voice│
  └─────────────────────────────┘  (QR code    │ voice UI (push-to-talk) · engine panel · Imagine │     │ /api/imagine → Imagine │
                                     pairing)  └──────────────────────────────────────────────────┘     └────────────────────────┘
   Facts: data/parts/falcon9.json · data/missions/<id>.json   Assets: public/models · public/audio (Grok Voice cache) · public/sounds (CC0)
