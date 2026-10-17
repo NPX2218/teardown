@@ -13,13 +13,14 @@ Retrieved 2026-10-17 unless a row says otherwise. A value with no source is left
 | nasa-earth-factsheet | Equatorial radius 6378.137 km, polar radius 6356.752 km, GM 398600 km³/s², standard gravity 9.80665 m/s², mean surface gravity 9.820 m/s². | NASA, https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html | Stored in `data/flight/earth.json` | NASA public fact sheet. | Published. The flight code uses the equatorial radius as a sphere. |
 | practice-starlink-sfn | Practice event times only. | Spaceflight Now Starlink timeline, https://spaceflightnow.com/2020/03/15/timeline-for-falcon-9-launch-of-starlink-satellites-3/ | Already the practice file's source | Spaceflight Now article terms. | Practice placeholder. It is a different launch, kept as the sample script. Not Sentinel-6. |
 | classroom-tuning | Dry mass, propellant mass, and flow on the flyable presets. | This repo, `docs/specs/07-replay.spec.md`, same magnitudes Neel used for a classroom rocket | 2026-10-17 | Project spec, not a vehicle manual. | Gameplay tuning. Estimated for play. Not measured. |
+| webcast-search | Ascent speed and altitude, the series that would have filled `altKm`, `velMs`, `downrangeKm`, and `pitchDeg`. | Checked 2026-10-17. Shahar603, Telemetry-Data, https://github.com/shahar603/Telemetry-Data. Shahar603, Launch-Dashboard-API, https://github.com/shahar603/Launch-Dashboard-API and the archived catalog https://web.archive.org/web/20221012145631/http://api.launchdashboard.space/v2/launches/spacex. FlightClub result https://flightclub.io/result/2d?missionId=mis_1p167qzq1. | 2026-10-17 | Telemetry-Data is The Unlicense, but its mission folders stop at Bangabandhu-1 (flight 61, 2018) and there is no Sentinel-6 file. The API repository is MIT. That license covers the server code. The Oct 12 2022 catalog lists 75 SpaceX flights and does not list Sentinel-6 Michael Freilich. The live host `api.launchdashboard.space` did not answer. FlightClub showed "that simulation could not be found" and did not offer a reusable data file. | Not imported. No raw file under `data/missions/raw/`. Kinematic fields stay null. |
 
 ## Datasets that are not filled in
 
 - Launch-site coordinates. ESA names SLC-4E at Vandenberg and does not print a latitude or longitude on the page retrieved above. No coordinate is stored.
-- Trajectory and telemetry samples of altitude, downrange, speed, or pitch. Not in the ESA timeline, and not invented. Every sample leaves `altKm`, `downrangeKm`, `velMs`, and `pitchDeg` null.
+- Trajectory and telemetry samples of altitude, downrange, speed, or pitch. Not in the ESA timeline. The webcast search above also found no reusable series for this flight. Every sample leaves `altKm`, `downrangeKm`, `velMs`, and `pitchDeg` null.
 - Propellant mass, oxidizer mass, and fuel flow for the real Sentinel-6 launch. They stay null in `data/flight/sentinel-6-reference.json`. The flyable preset repeats them only as classroom tuning, with that label on each number.
-- A 1–2 second path from liftoff to insertion. There is no published kinematic anchor to interpolate between, so no interpolated points were added.
+- A 1–2 second path from liftoff to insertion. There is no measured speed and altitude series to resample, so no interpolated points were added.
 
 ## Source ids on the records
 

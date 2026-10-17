@@ -80,7 +80,14 @@ That drawing is labelled illustrated motion. It is not the reference corridor.
 
 ## 6. Interpolation and resampling
 
-None. `reference.interpolated` is false. Samples are not spaced every 1–2 seconds, because a dense series would have to invent altitude and speed. The gap between 480 s and 3195 s is left empty.
+None. `reference.interpolated` is false. Samples are the seven milestone times only. They are not spaced every 1–2 seconds.
+
+A dense path would have needed a measured speed and altitude series, then:
+
+- `downrangeKm` from integrating the horizontal part of speed
+- `pitchDeg` from the flight-path angle, `atan2` of the vertical and horizontal parts
+
+That step did not run. On 2026-10-17 the Shahar603 Telemetry-Data tree (Unlicense) had no Sentinel-6 folder, the archived Launch Dashboard catalog did not list this flight, the live API did not answer, and the FlightClub page for this mission no longer had a simulation. There is no raw file in `data/missions/raw/` and no worked kinematic example, because there is no input row to convert. The liftoff sample below stays the worked example: every kinematic field is null.
 
 ## 7. Smoothing and gap filling
 

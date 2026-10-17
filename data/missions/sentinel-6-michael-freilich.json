@@ -102,7 +102,7 @@
   "trajectory": null,
   "reference": {
     "id": "sentinel-6-michael-freilich-milestones",
-    "label": "Published milestone times only. Not a measured path. Altitude, downrange, speed, and pitch are null because no public series was found. Nothing was interpolated.",
+    "label": "Published milestone times only. Not a measured path. Altitude, downrange, speed, and pitch stay null: Telemetry-Data has no Sentinel-6 file, the archived Launch Dashboard catalog does not list this flight, and the FlightClub sim was gone. Nothing was interpolated.",
     "interpolated": false,
     "samples": [
       {
