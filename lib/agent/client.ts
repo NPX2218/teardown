@@ -2,7 +2,7 @@
 // Asks /api/agent, runs tool calls on the scene port, and falls back to keywords when Grok is down.
 // Checkpoint coach text is retired: it never calls the network and never moves the scene.
 import type { ChatMessage } from "@/lib/agent/types";
-import type { ToolResult } from "@/lib/agent/contract";
+import type { ToolResult } from "@/lib/types";
 import { runTool, type ToolName } from "@/lib/agent/tools";
 import {
   isAssistantMessage,
@@ -14,7 +14,8 @@ import {
 import { TEXT_TIMEOUT_MS, withTimeout } from "@/lib/timeout";
 import { LINES } from "@/lib/voice/lines";
 import { getScene } from "@/lib/agent/scene";
-import { MISSIONS, PARTS } from "@/lib/agent/fixtures/exhibit";
+import { MISSIONS } from "@/data/missions/index";
+import { PARTS } from "@/lib/agent/fixtures/exhibit";
 
 export const MAX_TOOL_ROUNDS = 4;
 export const CLIENT_ROUND_TIMEOUT_MS = TEXT_TIMEOUT_MS + 1000;
@@ -58,6 +59,8 @@ const PART_MATCHERS: { re: RegExp; id: string }[] = [
 const QUESTION = /^(what|why|how|when|where|who|which|is|are|does|do|can|could)\b/;
 
 function firstReplayId(): string | undefined {
+  const historical = Object.entries(MISSIONS).find(([, mission]) => mission.kind === "historical");
+  if (historical) return historical[0];
   const ids = Object.keys(MISSIONS);
   return ids.find((id) => id !== "practice") ?? ids[0];
 }

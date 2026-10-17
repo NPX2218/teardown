@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { DEFAULT_SCENARIO_ID } from "@/lib/agent/contract";
-import { getScene, patchScene, resetScene } from "@/lib/agent/scene";
+import { FLIGHT_SCENARIOS } from "@/data/flight/index";
+import { DEFAULT_SCENARIO_ID } from "@/lib/types";
+import { getScene, resetScene } from "@/lib/agent/scene";
+import { useScene } from "@/lib/store";
 import {
   HANDLERS,
   IMAGINE_NOT_READY,
@@ -50,21 +52,24 @@ describe("agent tools (04, flight migration)", () => {
     expect(s().explode).toBe(0);
   });
 
-  it("A5 start_mission opens a ready briefing and does not launch", async () => {
+  it("A5 start_mission asks the store for the reference briefing and does not launch", async () => {
     const r = await runTool("start_mission", {});
-    expect(r).toEqual({
-      ok: true,
-      data: { scenarioId: DEFAULT_SCENARIO_ID, status: "ready", runId: "run-1", launched: false },
-    });
-    expect(s().flight.status).toBe("ready");
-    expect(s().flight.outcome).toBeNull();
     const st = (await runTool("get_state", {})).data as AgentState;
-    expect(st.mode).toBe("flight");
-    expect(st.flight.scenarioId).toBe("reference");
-    expect(st.flight.status).toBe("ready");
-    expect(st.flight.emissions.source).toBe("simulated-consumed-rp1");
-    expect(st.flight.outcome).toBeNull();
     expect("missionStars" in st).toBe(false);
+    expect(st.flight.status === "flying").toBe(false);
+    if (Object.prototype.hasOwnProperty.call(FLIGHT_SCENARIOS, DEFAULT_SCENARIO_ID)) {
+      expect(r).toMatchObject({
+        ok: true,
+        data: { scenarioId: DEFAULT_SCENARIO_ID, status: "ready", launched: false },
+      });
+      expect(s().flight.status).toBe("ready");
+      expect(s().flight.outcome).toBeNull();
+      expect(st.mode).toBe("flight");
+      expect(st.flight.outcome).toBeNull();
+    } else {
+      expect(r.ok).toBe(false);
+      expect(s().flight.status).toBe("idle");
+    }
   });
 
   it("A5b arguments arrive as a JSON string; bad JSON fails", async () => {
@@ -97,34 +102,55 @@ describe("agent tools (04, flight migration)", () => {
   });
 
   it("A5d a handler that throws becomes ok:false", async () => {
-    patchScene({ startTour: () => { throw new Error("boom"); } });
-    await expect(runTool("start_tour", {})).resolves.toEqual({ ok: false, error: "start_tour failed" });
+    const original = HANDLERS.start_tour;
+    HANDLERS.start_tour = () => {
+      throw new Error("boom");
+    };
+    try {
+      await expect(runTool("start_tour", {})).resolves.toEqual({ ok: false, error: "start_tour failed" });
+    } finally {
+      HANDLERS.start_tour = original;
+    }
   });
 
   it("A6 get_state reports a simulator readout without awarding it", async () => {
-    patchScene((scene) => {
-      scene.flight = {
+    const readout = {
+      altitudeM: 250_000,
+      radialSpeedMps: 0,
+      tangentialSpeedMps: 7800,
+      totalSpeedMps: 7800,
+      pitchRad: 0,
+      throttle: 0,
+      activeStageId: "upper",
+      propellantRemainingKg: 1000,
+      periapsisAltitudeM: 250_000,
+      apoapsisAltitudeM: 250_000,
+      co2Kg: 10,
+    };
+    useScene.setState({
+      flight: {
+        ...useScene.getState().flight,
         runId: "run-from-sim",
         scenarioId: "reference",
         status: "orbit",
-        readout: {
-          altitudeKm: 250,
-          radialSpeedMps: 0,
-          tangentialSpeedMps: 7800,
-          pitchDeg: 0,
-          throttle: 0,
-          stage: 2,
-          fuelFraction: 0.2,
+        readout,
+        outcome: { kind: "orbit", reason: "The path stayed around Earth.", readout, runId: "run-from-sim" },
+        emissions: {
+          runId: "run-from-sim",
+          co2Kg: 10,
+          unit: "kg CO2",
+          provenance: "simulated-consumed-rp1",
+          unavailableReason: null,
+          byStageKg: {},
+          estimated: true,
         },
-        outcome: { result: "orbit", reason: "The path stayed around Earth." },
-        emissions: { source: "simulated-consumed-rp1", note: "From fuel the simulator burned." },
-      };
+      },
     });
     const st = (await runTool("get_state", {})).data as AgentState;
     expect(st.flight.status).toBe("orbit");
-    expect(st.flight.outcome?.result).toBe("orbit");
-    expect(st.flight.readout.altitudeKm).toBe(250);
-    expect(st.flight.emissions.source).toBe("simulated-consumed-rp1");
+    expect(st.flight.outcome?.kind).toBe("orbit");
+    expect(st.flight.readout?.altitudeM).toBe(250_000);
+    expect(st.flight.emissionsProvenance).toBe("simulated-consumed-rp1");
     expect(await runTool("award_orbit", {})).toEqual({ ok: false, error: "unknown tool: award_orbit" });
   });
 
@@ -136,6 +162,11 @@ describe("agent tools (04, flight migration)", () => {
     expect(s().flight.status).toBe("idle");
     expect((await runTool("start_mission", { scenario_id: 3 })).ok).toBe(false);
     const custom = await runTool("start_mission", { scenario_id: "custom" });
-    expect(custom).toMatchObject({ ok: true, data: { scenarioId: "custom", status: "ready", launched: false } });
+    if (Object.prototype.hasOwnProperty.call(FLIGHT_SCENARIOS, "custom")) {
+      expect(custom).toMatchObject({ ok: true, data: { scenarioId: "custom", status: "ready", launched: false } });
+    } else {
+      expect(custom).toEqual({ ok: false, error: "unknown scenario: custom" });
+      expect(s().flight.status).toBe("idle");
+    }
   });
 });

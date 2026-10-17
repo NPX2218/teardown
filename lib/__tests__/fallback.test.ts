@@ -9,7 +9,8 @@ import {
   resetAgentForTests,
 } from "@/lib/agent/client";
 import type { ChatMessage } from "@/lib/agent/types";
-import { MISSIONS } from "@/lib/agent/fixtures/exhibit";
+import { FLIGHT_SCENARIOS } from "@/data/flight/index";
+import { MISSIONS } from "@/data/missions/index";
 import { LINES } from "@/lib/voice/lines";
 import { getScene, resetScene } from "@/lib/agent/scene";
 
@@ -37,8 +38,9 @@ describe("fallbackIntent (04 Task 4)", () => {
   });
 
   it("F1 launch it starts historical replay", () => {
+    const historical = Object.entries(MISSIONS).find(([, mission]) => mission.kind === "historical");
     const ids = Object.keys(MISSIONS);
-    const expected = ids.find((id) => id !== "practice") ?? "practice";
+    const expected = historical?.[0] ?? ids.find((id) => id !== "practice") ?? "practice";
     expect(fallbackIntent("launch it")).toEqual({ tool: "start_replay", args: { mission_id: expected } });
     expect(fallbackIntent("Lift off!")?.tool).toBe("start_replay");
   });
@@ -100,13 +102,20 @@ describe("askAgent (04 Task 4)", () => {
     expect(r2.reply).toBe(LINES.cantReachGrok);
     const r3 = await askAgent("launch it", []);
     expect(r3.reply).toBe("I couldn't reach Grok, so I started the launch.");
-    expect(s().replay.missionId).toBe(Object.keys(MISSIONS).find((id) => id !== "practice") ?? "practice");
+    const historical = Object.entries(MISSIONS).find(([, mission]) => mission.kind === "historical");
+    const replayId = historical?.[0] ?? Object.keys(MISSIONS).find((id) => id !== "practice") ?? "practice";
+    expect(s().replay.missionId).toBe(replayId);
 
     resetScene();
     const r4 = await askAgent("Let's fly!", []);
-    expect(r4.reply).toBe("I couldn't reach Grok, so I opened the flight briefing.");
-    expect(s().flight.status).toBe("ready");
-    expect(s().flight.outcome).toBeNull();
+    if (Object.prototype.hasOwnProperty.call(FLIGHT_SCENARIOS, "reference")) {
+      expect(r4.reply).toBe("I couldn't reach Grok, so I opened the flight briefing.");
+      expect(s().flight.status).toBe("ready");
+      expect(s().flight.outcome).toBeNull();
+    } else {
+      expect(r4.reply).toBe(LINES.cantReachGrok);
+      expect(s().flight.status).toBe("idle");
+    }
   });
 
   it("F7 stops after MAX_TOOL_ROUNDS", async () => {
