@@ -104,7 +104,7 @@ interface ExhibitState {
   guardUntil: number;
   helpOpen: boolean;
   setFlags(flags: ExhibitFlags): void;
-  enterAttract(now: number): void;
+  enterAttract(now: number, missions?: Record<string, Mission>): void;
   noteBusy(now: number): void;
   wake(how: "touch" | "rocket"): void;
   toggleHelp(): void;
@@ -118,8 +118,8 @@ export const useExhibit = create<ExhibitState>()((set, get) => ({
   guardUntil: 0,
   helpOpen: false,
   setFlags: (flags) => set({ flags }),
-  enterAttract: (now) => {
-    const id = exhibitIllustrationId(MISSIONS);
+  enterAttract: (now, missions = MISSIONS) => {
+    const id = exhibitIllustrationId(missions);
     useAppMode.getState().openReplay();
     if (id) useScene.getState().startReplay(id);
     set({ phase: "attract", attractSince: now, lastBusyAt: 0, guardUntil: 0, helpOpen: false });
@@ -176,7 +176,7 @@ function sceneIsBusy(): boolean {
     || scene.flight.status === "ready";
 }
 
-export function idleTick(now: number): "reset" | "reanchor" | "none" {
+export function idleTick(now: number, missions: Record<string, Mission> = MISSIONS): "reset" | "reanchor" | "none" {
   const exhibit = useExhibit.getState();
   const scene = useScene.getState();
   const lastBusyAt = nextBusyAt({
@@ -193,7 +193,7 @@ export function idleTick(now: number): "reset" | "reanchor" | "none" {
   }
   if (action === "reset") {
     resetExhibit();
-    useExhibit.getState().enterAttract(now);
+    useExhibit.getState().enterAttract(now, missions);
   }
   return action;
 }
@@ -256,7 +256,7 @@ export const SHORTCUT_HELP: readonly { keys: string; text: string }[] = [
   { keys: "?", text: "Show this list" },
 ];
 
-export function runShortcut(id: ShortcutId, now: number): ToolResult {
+export function runShortcut(id: ShortcutId, now: number, missions: Record<string, Mission> = MISSIONS): ToolResult {
   const scene = useScene.getState();
   switch (id) {
     case "mission":
@@ -273,7 +273,7 @@ export function runShortcut(id: ShortcutId, now: number): ToolResult {
       return { ok: false, error: "nothing to fly" };
     }
     case "replay": {
-      const missionId = exhibitIllustrationId(MISSIONS);
+      const missionId = exhibitIllustrationId(missions);
       if (!missionId) return { ok: false, error: "no mission" };
       useAppMode.getState().openReplay();
       return useScene.getState().startReplay(missionId);
@@ -289,7 +289,7 @@ export function runShortcut(id: ShortcutId, now: number): ToolResult {
       return useScene.getState().setExplode(scene.explode > 0.5 ? 0 : 1);
     case "reset":
       resetExhibit();
-      if (useExhibit.getState().flags.kiosk) useExhibit.getState().enterAttract(now);
+      if (useExhibit.getState().flags.kiosk) useExhibit.getState().enterAttract(now, missions);
       return { ok: true };
     case "help":
       return { ok: true };

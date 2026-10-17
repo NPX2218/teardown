@@ -58,19 +58,32 @@ describe("exhibit walk-up", () => {
     expect(DEMO_CODE_STORAGE).toBe("teardown.demoPairCode");
   });
 
-  it("illustrates a historical mission when one exists, otherwise the labelled practice sample", () => {
+  it("illustrates the labelled practice sample when that is the only registered mission", () => {
     const practiceOnly = { practice: MISSIONS.practice };
     expect(exhibitIllustrationId(practiceOnly)).toBe("practice");
+  });
+
+  it("illustrates sentinel-6-michael-freilich when that historical mission is registered", () => {
     const historical: Mission = {
       ...MISSIONS.practice,
-      id: "sentinel-6",
+      id: "sentinel-6-michael-freilich",
+      name: "Sentinel-6 Michael Freilich",
       kind: "historical",
-      label: "Real mission · approximate milestones.",
+      label: "Real mission · published approximate milestones.",
     };
-    const registered = { practice: MISSIONS.practice, "sentinel-6": historical };
-    expect(exhibitIllustrationId(registered)).toBe("sentinel-6");
-    const attract = Object.values(MISSIONS).find((mission) => mission.kind === "historical")?.id ?? "practice";
-    expect(exhibitIllustrationId(MISSIONS)).toBe(attract);
+    const registered = { practice: MISSIONS.practice, "sentinel-6-michael-freilich": historical };
+    expect(exhibitIllustrationId(registered)).toBe("sentinel-6-michael-freilich");
+    MISSIONS["sentinel-6-michael-freilich"] = historical;
+    try {
+      useExhibit.getState().setFlags({ demo: false, kiosk: true });
+      useScene.getState().markActivity(0);
+      expect(idleTick(IDLE_MS + 5)).toBe("reset");
+      expect(useScene.getState().replay.missionId).toBe("sentinel-6-michael-freilich");
+      expect(runShortcut("replay", 40).ok).toBe(true);
+      expect(useScene.getState().replay.missionId).toBe("sentinel-6-michael-freilich");
+    } finally {
+      delete MISSIONS["sentinel-6-michael-freilich"];
+    }
   });
 
   it("does not reset while the attract screen is up, and does reset after a long quiet", () => {
@@ -115,10 +128,12 @@ describe("exhibit walk-up", () => {
     useExhibit.getState().setFlags({ demo: false, kiosk: true });
     useScene.getState().markActivity(0);
     useScene.getState().setExplode(0.4);
-    const action = idleTick(IDLE_MS + 5);
+    const practiceOnly = { practice: MISSIONS.practice };
+    const action = idleTick(IDLE_MS + 5, practiceOnly);
     expect(action).toBe("reset");
     expect(useExhibit.getState().phase).toBe("attract");
-    expect(useScene.getState().replay.missionId).toBe(exhibitIllustrationId(MISSIONS));
+    expect(useScene.getState().replay.missionId).toBe(exhibitIllustrationId(practiceOnly));
+    expect(useScene.getState().replay.missionId).toBe("practice");
     expect(useScene.getState().replay.playing).toBe(true);
     expect(useScene.getState().flight.status).toBe("idle");
     expect(MISSIONS.practice.kind).not.toBe("historical");
@@ -138,8 +153,10 @@ describe("exhibit walk-up", () => {
     expect(useScene.getState().flight.status).toBe("flying");
     expect(runShortcut("fly", 30).ok).toBe(true);
     expect(useScene.getState().flight.status).toBe("paused");
-    expect(runShortcut("replay", 40).ok).toBe(true);
-    expect(useScene.getState().replay.missionId).toBe(exhibitIllustrationId(MISSIONS));
+    const practiceOnly = { practice: MISSIONS.practice };
+    expect(runShortcut("replay", 40, practiceOnly).ok).toBe(true);
+    expect(useScene.getState().replay.missionId).toBe(exhibitIllustrationId(practiceOnly));
+    expect(useScene.getState().replay.missionId).toBe("practice");
     expect(runShortcut("reset", 50).ok).toBe(true);
     expect(useExhibit.getState().phase).toBe("attract");
   });
