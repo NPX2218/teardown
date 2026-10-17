@@ -221,5 +221,5 @@ export function PairRocket() {
   );
 }
 
-// QR paper: white square, 16 px quiet zone (theme 7), at least 12 rem wide inside the card.
-const PAPER = { background: "var(--qr-paper)", padding: "var(--sp-4)", minWidth: "12rem", margin: "0 auto" } as const;
+// QR paper: white rounded square, 24 px quiet zone, at least 12 rem wide inside the card.
+const PAPER = { background: "var(--qr-paper)", padding: "var(--sp-5)", borderRadius: "var(--radius-md)", minWidth: "12rem", margin: "var(--sp-5) auto" } as const;
