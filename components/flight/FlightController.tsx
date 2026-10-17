@@ -7,19 +7,17 @@ import { MISSIONS } from "@/data/missions/index";
 import { MAX_WALL_DELTA_S } from "@/lib/flight.helpers";
 import { useAppMode } from "@/lib/flight/app-mode";
 import { shouldAdvanceFlight } from "@/lib/flight/integrate";
+import { commitHeldAxes, currentControlMode } from "@/lib/flight/controls";
 import { resumeFlightExplicit } from "@/lib/flight/phone-pitch";
 import {
   clearHeldAxes,
-  heldAxes,
   setKeyAxes,
   shortcutFor,
-  stepHeld,
   type AppMode,
 } from "@/lib/flight/local-controls";
 import { narrationEvents, replayDuration, tickReplay } from "@/lib/replay";
 import { useExhibit } from "@/lib/viewer/exhibit";
 import { useScene } from "@/lib/store";
-import type { FlightAxisCommand } from "@/lib/types";
 import { speakLine } from "@/lib/voice/speak";
 import { cameraNudge, clearCameraNudge } from "./cameraNudge";
 import { resetChaseOrbit } from "./chaseOrbit";
@@ -150,27 +148,10 @@ export function FlightController() {
     }
     const wall = Math.min(Math.max(delta, 0), MAX_WALL_DELTA_S);
     const mode = useAppMode.getState().mode;
-    if (mode === "replay") {
-      playReplay(wall);
-      return;
-    }
-    if (mode !== "mission") return;
-    const scene = useScene.getState();
-    const flight = scene.flight;
-    if (flight.status === "flying" && flight.runId && (heldAxes.pitch !== 0 || heldAxes.throttle !== 0)) {
-      const owned = {
-        pitch: flight.owners.pitch === "local" ? heldAxes.pitch : 0,
-        throttle: flight.owners.throttle === "local" ? heldAxes.throttle : 0,
-      };
-      const next = stepHeld(flight.input, owned, wall);
-      const command: FlightAxisCommand = {};
-      if (owned.pitch !== 0) command.pitchRad = next.pitchRad;
-      if (owned.throttle !== 0) command.throttle = next.throttle;
-      if (command.pitchRad !== undefined || command.throttle !== undefined) {
-        scene.setFlightInput(command, "local", flight.runId);
-        scene.markActivity(performance.now());
-      }
-    }
+    if (mode === "replay") playReplay(wall);
+    const controls = currentControlMode(mode);
+    if (controls === "explore") return;
+    commitHeldAxes(wall, controls);
     if (shouldAdvanceFlight(useScene.getState().flight.status, false)) {
       useScene.getState().advanceFlight(wall);
     }
