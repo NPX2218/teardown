@@ -1,4 +1,4 @@
-// Corner-mascot voice session. It uses the same listen → agent → laptop speech path as VoiceSlot.
+// Corner-mascot voice session. It uses the same listen → agent → laptop speech path the old "Ask the rocket" dock used.
 import type { ChatMessage } from "@/lib/agent/types";
 import { answerQuestion, listenWithFallback, MIC_SOURCE, type AnswerResult, type ListenDeps } from "@/lib/voice/ask";
 import { holdVoiceState } from "@/lib/voice/activity";

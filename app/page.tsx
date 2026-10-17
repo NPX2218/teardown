@@ -5,7 +5,6 @@ import { GuideLauncher } from "@/components/ui/GuideLauncher";
 import { ViewerSlot } from "@/components/viewer/ViewerSlot";
 import { MissionSlot } from "@/components/replay/MissionSlot";
 import { PairSlot } from "@/components/ui/PairSlot";
-import { VoiceSlot } from "@/components/voice/VoiceSlot";
 import { ImagineSlot } from "@/components/imagine/ImagineSlot";
 import { LiftoffLoader } from "@/components/ui/LiftoffLoader";
 
@@ -27,7 +26,6 @@ export default function Home() {
       <ViewerSlot />
       <MissionSlot />
       <PairSlot />
-      <VoiceSlot />
       <ImagineSlot />
       <GuideLauncher />
       <LiftoffLoader />

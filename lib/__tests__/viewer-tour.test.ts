@@ -8,9 +8,10 @@ import type { PartGroup, PartsFile } from "@/lib/types";
 describe("camera math (03 Task 5)", () => {
   it("CM1 home framing pulls back 1.5x when fully exploded", () => {
     expect(homeView(0).distance).toBeCloseTo(27, 6);
-    expect(homeView(0).targetY).toBeCloseTo(-0.84, 6);
+    // Aim sits slightly above centre so the rocket starts lower on screen (moved down 2026-10-17).
+    expect(homeView(0).targetY).toBeCloseTo(0.24, 6);
     expect(homeView(1).distance).toBeCloseTo(40.5, 6);
-    expect(homeView(1).targetY).toBeCloseTo(-1.26, 6);
+    expect(homeView(1).targetY).toBeCloseTo(0.36, 6);
   });
 
   it("CM2 home framing clamps bad explode values", () => {

@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { AGENT_STARTERS, readAgentKiosk } from "@/lib/agent/starters";
+import { readAgentKiosk } from "@/lib/agent/starters";
 
 describe("agent starters (04 Task 5)", () => {
   it("ST2 kiosk parsing matches the flag contract", () => {
@@ -10,21 +10,14 @@ describe("agent starters (04 Task 5)", () => {
     expect(readAgentKiosk("?kiosk=0", false)).toBe(false);
   });
 
-  it("ST1 three to five short, kid-friendly, digit-free questions", () => {
-    expect(AGENT_STARTERS.length).toBeGreaterThanOrEqual(3);
-    expect(AGENT_STARTERS.length).toBeLessThanOrEqual(5);
-    expect(new Set(AGENT_STARTERS.map((q) => q.label)).size).toBe(AGENT_STARTERS.length);
-    for (const q of AGENT_STARTERS) {
-      expect(q.label.trim().length).toBeGreaterThan(0);
-      expect(q.text.trim().length).toBeGreaterThan(0);
-      expect(q.label.length).toBeLessThanOrEqual(32);
-      expect(q.label + q.text).not.toMatch(/\d/);
-    }
-    expect(AGENT_STARTERS.map((q) => q.text).join(" ")).not.toMatch(/engines stop/i);
+  it("ST3 the Grok guide panel (which replaced the Ask the rocket box, 2026-10-17) has no raw hex colors", () => {
+    const src = readFileSync(new URL("../../components/ui/GuidePanel.tsx", import.meta.url), "utf8");
+    expect(src).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
   });
 
-  it("ST3 the text box source has no raw hex colors", () => {
-    const src = readFileSync(new URL("../../components/voice/AgentBox.tsx", import.meta.url), "utf8");
-    expect(src).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
+  it("ST4 kiosk hides typing in the guide but keeps the question chips", () => {
+    const src = readFileSync(new URL("../../components/ui/GuidePanel.tsx", import.meta.url), "utf8");
+    expect(src).toMatch(/\{!kiosk && <form/);
+    expect(src).toMatch(/GUIDE_SUGGESTIONS\.map/);
   });
 });

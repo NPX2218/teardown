@@ -100,7 +100,8 @@ export function ImagineSlot() {
         targetType: (target as HTMLInputElement | null)?.type ?? "",
         targetEditable: !!target?.isContentEditable,
       };
-      const voiceOpen = !!document.querySelector('details[data-slot="voice"][open]');
+      // The Grok guide's panel is open: the visitor is talking to it, not picking parts.
+      const voiceOpen = !!document.querySelector('[data-guide] [role="dialog"]');
       const overlayOpen = open || !!document.querySelector("dialog[open]");
       if (!triggerAllowed || selectedId === null || voiceOpen || !shouldImagineOnKey(info, selectedId, overlayOpen)) return;
       event.preventDefault();

@@ -251,7 +251,7 @@ export const SHORTCUT_HELP: readonly { keys: string; text: string }[] = [
   { keys: "T", text: "Start or stop the tour" },
   { keys: "E", text: "Pull the rocket apart, or put it back" },
   { keys: "Esc", text: "Start over" },
-  { keys: "V", text: "Hold V, then talk" },
+  { keys: "V", text: "Talk to the Grok guide" },
   { keys: "I", text: "Show the picked part in action" },
   { keys: "?", text: "Show this list" },
 ];
