@@ -1,6 +1,6 @@
 # Teardown: read this first
 
-`#8`, `#9`, `#10`, and `#12` are already on `main`. This is what is still open as of 17 October 2026. Review and merge it in the order below. Budget **about 16 minutes**. Repo: https://github.com/NPX2218/hackharvard-teardown
+`#8`, `#9`, `#10`, and `#12` are already on `main`. This is what is still open as of 17 October 2026. Review and merge it in the order below. Budget **about 16 minutes**. Repo: https://github.com/NPX2218/teardown
 
 Shared contract on `#8` is **2026-10-17.1**. The integration head (`#13`) is **2026-10-17.2** (`SHARED_CONTRACT_VERSION` in `lib/types.ts`).
 
