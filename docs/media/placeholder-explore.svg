@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t d">
+  <title id="t">Explore placeholder</title>
+  <desc id="d">Placeholder frame. Geometric stages, not the Falcon 9 model, and not a screenshot.</desc>
+  <rect width="1200" height="675" fill="#000"/>
+  <rect x="48" y="48" width="1104" height="579" fill="#0A0A0A" stroke="#F0F0FA" stroke-width="2" stroke-dasharray="8 8"/>
+  <text x="80" y="110" fill="#FFB547" font-family="ui-monospace, Menlo, monospace" font-size="20" letter-spacing="2">PLACEHOLDER · NOT A SCREENSHOT</text>
+  <rect x="560" y="160" width="80" height="50" fill="none" stroke="#F0F0FA" stroke-width="3"/>
+  <rect x="520" y="250" width="160" height="70" fill="none" stroke="#F0F0FA" stroke-width="3"/>
+  <rect x="575" y="360" width="50" height="70" fill="none" stroke="#F0F0FA" stroke-width="3"/>
+  <text x="80" y="560" fill="rgba(240,240,250,0.7)" font-family="Arial, Helvetica, sans-serif" font-size="24">A shape of stages pulled apart. Not the Falcon 9 model.</text>
+</svg>
