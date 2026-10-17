@@ -1,4 +1,4 @@
-/* Corner guide. Tokens only. */
+/* Corner guide. The launcher is the Grok Bot face, at least a 48px target. Tokens only. */
 .wrap {
   position: fixed;
   z-index: var(--z-overlay);
@@ -15,16 +15,46 @@
   pointer-events: auto;
 }
 
-.launch {
-  width: var(--target);
-  height: var(--target);
+button.launch {
+  width: 96px;
+  height: 96px;
+  min-width: var(--target);
+  min-height: var(--target);
   padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  line-height: 0;
 }
 
-.mark {
-  width: 32px;
-  height: 32px;
+button.launch:hover,
+button.launch:active,
+button.launch[aria-expanded="true"] {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text);
+  transform: none;
+}
+
+.face {
   display: block;
+  width: 96px;
+  height: 96px;
+}
+
+.face svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Attract hides [data-guide]. The sleeping face stays; the open panel does not. */
+:global(body[data-exhibit-phase="attract"]) .launch {
+  visibility: visible;
+}
+
+:global(body[data-exhibit-phase="attract"]) .panel {
+  visibility: hidden;
 }
 
 .panel {
