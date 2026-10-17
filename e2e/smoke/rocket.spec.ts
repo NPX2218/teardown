@@ -72,7 +72,7 @@ async function pair(browser: Browser): Promise<Pair> {
   const laptop = await laptopContext.newPage();
   const phone = await phoneContext.newPage();
   await laptop.goto("/?demo=1");
-  await expect(laptop.locator("p.display")).toHaveText(CODE);
+  await expect(laptop.getByText(CODE, { exact: true })).toBeVisible();
   await phone.goto(`/rocket?code=${CODE}&debug=1`);
   await phone.getByRole("button", { name: "Tap to start your rocket" }).click();
   await expect(phone.getByText(`Connected to exhibit ${CODE}`)).toBeVisible();
@@ -144,6 +144,11 @@ async function setThrottle(page: Page, percent: number): Promise<void> {
   }, percent);
 }
 
+async function phoneWord(phone: Page, word: string): Promise<void> {
+  // role=status is not named in this Chromium build, so the accessible name lookup misses the shell word.
+  await expect(phone.getByText(word, { exact: true })).toBeVisible();
+}
+
 async function readyMission(laptop: Page): Promise<void> {
   await laptop.getByRole("button", { name: "Your mission" }).click();
   await expect(laptop.locator("#flight-status")).toHaveAttribute("data-status", "ready");
@@ -167,7 +172,7 @@ test("calibrate", async ({ browser }) => {
   try {
     await expect(view.laptop.getByRole("button", { name: "Calibrate" })).toBeVisible();
     await view.laptop.getByRole("button", { name: "Calibrate" }).click();
-    await expect(view.phone.getByRole("status", { name: "ARMED", exact: true })).toBeVisible();
+    await phoneWord(view.phone, "ARMED");
   } finally {
     await finish(view, sim, "calibrate");
   }
@@ -179,7 +184,7 @@ test("lift to launch", async ({ browser }) => {
   const sim = startSim("lift.json");
   try {
     await expect(view.laptop.locator("#flight-status")).toHaveAttribute("data-status", "flying");
-    await expect(view.phone.getByRole("status", { name: "LIFTOFF", exact: true })).toBeVisible();
+    await phoneWord(view.phone, "LIFTOFF");
   } finally {
     await finish(view, sim, "lift");
   }
@@ -218,7 +223,7 @@ test("nose-down abort", async ({ browser }) => {
   const sim = startSim("abort.json");
   try {
     await expect(view.laptop.getByText("Aborted: the rocket was held upside down.")).toBeVisible();
-    await expect(view.phone.getByRole("status", { name: "ABORT", exact: true })).toBeVisible();
+    await phoneWord(view.phone, "ABORT");
   } finally {
     await finish(view, sim, "abort");
   }
@@ -235,7 +240,7 @@ test("free-flight crash", async ({ browser }) => {
   const sim = startSim("crash.json");
   try {
     await view.laptop.getByRole("button", { name: "Use phone tilt" }).click();
-    await expect(view.phone.getByRole("status", { name: "ARMED", exact: true })).toBeVisible({ timeout: 15_000 });
+    await phoneWord(view.phone, "ARMED");
     await view.laptop.locator("#launch-flight").click();
     await setThrottle(view.laptop, 100);
     await expect(view.laptop.locator("[data-outcome='crashed']")).toBeVisible({ timeout: 30_000 });
@@ -251,6 +256,7 @@ test("mission drift warning then failure", async ({ browser }) => {
   await view.laptop.getByRole("button", { name: "Practice sample" }).click();
   const sim = startSim("drift.json");
   try {
+    await view.laptop.locator("#launch-flight").click();
     await expect(view.laptop.locator("#flight-status")).toHaveAttribute("data-status", "flying");
     await view.laptop.locator("#warp-8").click();
     await expect(view.laptop.getByText(/Drifting off track|Return to trajectory|Mission failed: off nominal/)).toBeVisible({
@@ -266,9 +272,11 @@ test("sentinel-6 milestones", async ({ browser }) => {
   await readyMission(view.laptop);
   await view.laptop.getByRole("button", { name: "Mission", exact: true }).click();
   await view.laptop.getByRole("button", { name: "Sentinel-6 Michael Freilich" }).click();
+  await view.laptop.locator("#flight-status summary", { hasText: "About this flight" }).click();
   await expect(view.laptop.getByText("Reference trajectory unavailable").first()).toBeVisible();
   const sim = startSim("sentinel.json");
   try {
+    await view.laptop.locator("#launch-flight").click();
     await expect(view.laptop.locator("#flight-status")).toHaveAttribute("data-status", "flying");
     await view.laptop.locator("#warp-8").click();
     await expect(view.laptop.locator("#warp-8")).toHaveAttribute("aria-pressed", "true");
