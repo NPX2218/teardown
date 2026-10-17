@@ -13,7 +13,7 @@ import {
 } from "@/lib/flight/fuel-readout";
 import { useAppMode } from "@/lib/flight/app-mode";
 import { useScene } from "@/lib/store";
-import styles from "./flight.module.css";
+import styles from "@/components/emissions/emissions.module.css";
 
 function kilograms(value: number): string {
   if (value >= 10000) return `${Math.round(value).toLocaleString("en-US")} kg`;
@@ -25,14 +25,15 @@ export function EmissionsPlacement() {
   const mode = useAppMode((s) => s.mode);
   const flight = useScene((s) => s.flight);
   const replay = useScene((s) => s.replay);
+  const interactive = mode !== "explore" && flight.status !== "idle";
 
   useEffect(() => {
-    if (mode !== "mission" || !flight.runId || !flight.fuel) {
-      if (mode !== "mission") resetFuelReadoutAdapter();
+    if (!interactive || !flight.runId || !flight.fuel) {
+      if (!interactive) resetFuelReadoutAdapter();
       return;
     }
     publishInteractiveFuel(flight.runId, flight.fuel, flight.outcome !== null);
-  }, [mode, flight.runId, flight.fuel, flight.outcome]);
+  }, [interactive, flight.runId, flight.fuel, flight.outcome]);
 
   useEffect(() => {
     if (mode !== "replay" || !replay.missionId) return;
@@ -40,25 +41,25 @@ export function EmissionsPlacement() {
     if (scene.flight.status !== "idle") return;
     scene.setHistoricalEmissions(historicalEmissionsUnavailable(replay.missionId));
     publishHistoricalFuel(replay.missionId, replay.t);
-  }, [mode, replay.missionId, replay.t]);
+  }, [mode, replay.missionId, replay.t, flight.status]);
 
   if (mode === "explore") return null;
 
-  const historical = mode === "replay" && replay.missionId
+  const historical = mode === "replay" && !interactive && replay.missionId
     ? historicalFuelReadout(replay.missionId, replay.t)
     : null;
   const rp1 = flight.fuel?.rp1ConsumedKg ?? 0;
 
   return (
-    <div className={styles.embedded}>
+    <div className={styles.placement}>
       <EmissionsSlot />
-      {mode === "mission" && flight.fuel && (
-        <p className={styles.note}>
+      {interactive && flight.fuel && (
+        <p className={styles.fuelNote}>
           RP-1 burned {kilograms(rp1)}. This is kerosene, not carbon dioxide.
         </p>
       )}
       {historical && (
-        <p className={styles.note}>{historical.assumption}</p>
+        <p className={styles.fuelNote}>{historical.assumption}</p>
       )}
     </div>
   );

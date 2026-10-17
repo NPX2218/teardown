@@ -14,6 +14,16 @@ export const ABOUT = {
     "Teardown is a hands-on way to learn how a real rocket works. You can look at the parts and try a flight.",
     "We built it at HackHarvard. A few weeks earlier, we talked with engineers and recruiters at a university event. Those talks made the mission even more fascinating to us than before.",
   ],
+  flightData: {
+    title: "How flight paths reach the globe",
+    paragraphs: [
+      "Your rocket's position comes from a three-dimensional simulation. The line ahead predicts where it would coast with its engines off.",
+      "A reference path uses height to set its distance from Earth's center, and distance along the ground to bend it around a spherical Earth. We rotate that path to the launch site and heading. This is a simplified map, not a measured latitude-and-longitude track.",
+      "Practice uses a simulated reference. For Sentinel-6 Michael Freilich, our sources provide approximate event times but no reusable measured trajectory. We show those milestones without inventing a real path.",
+    ],
+    sourceHref: "https://www.esa.int/Applications/Observing_the_Earth/Copernicus/Sentinel-6/Launch",
+    sourceLabel: "Sentinel-6 launch timeline — ESA",
+  },
   authors: "Made by Neel Bansal and Anders Haroldson",
   disclaimer: "Student project. Not affiliated with SpaceX or xAI.",
   model: "Model: “Falcon 9 - SpaceX” by Stanley Creative, CC BY 4.0",

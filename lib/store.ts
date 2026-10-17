@@ -29,6 +29,7 @@ import { loadParts } from "@/lib/parts-source";
 import { assignAxisOwner, mixFlightInput, NEUTRAL_FLIGHT_INPUT } from "@/lib/flight/input-mixer";
 import { clampFlightWallDelta } from "@/lib/flight/hold-step";
 import { integrateSession } from "@/lib/flight/integrate";
+import { launchSiteFor } from "@/lib/flight/launch-site";
 import { playFlightCue } from "@/lib/flight/cues";
 import { milestoneEvents, missionById, referenceFor } from "@/lib/flight/mission-select";
 import { validateFlightScenario } from "@/lib/flight/scenario";
@@ -241,12 +242,25 @@ export const useScene = create<SceneState>()((set, get) => {
       return { ok: true };
     },
 
-    pauseReplay: () => set({ replay: { ...get().replay, playing: false } }),
+    pauseReplay: () => {
+      const { replay, flight, missionTrackId } = get();
+      set({
+        replay: { ...replay, playing: false },
+        ...(replay.missionId && missionTrackId === replay.missionId && flight.status === "flying"
+          ? { flight: { ...flight, status: "paused" as const, frameAccumulatorS: 0 } }
+          : {}),
+      });
+    },
 
     resumeReplay: () => {
-      const { replay, flight } = get();
-      if (flight.status !== "idle" || !hasMission(replay.missionId)) return;
-      set({ replay: { ...replay, playing: true } });
+      const { replay, flight, missionTrackId, rocket } = get();
+      if (!hasMission(replay.missionId)) return;
+      if (flight.status !== "idle" && missionTrackId !== replay.missionId) return;
+      if ((flight.status === "paused" || flight.status === "flying") && !rocket.connected) return;
+      set({
+        replay: { ...replay, playing: true },
+        ...(flight.status === "paused" ? { flight: clearHeldInput(assignAxisOwner(flight, "pitch", "phone"), "flying") } : {}),
+      });
     },
 
     stopReplay: () => set({ replay: { ...NO_REPLAY }, flight: idleFlight(), historicalEmissions: null }),
@@ -278,7 +292,16 @@ export const useScene = create<SceneState>()((set, get) => {
       const wasConnected = get().rocket.connected;
       const connected = r.connected === true;
       set({ rocket: { connected, code: r.code ?? null } });
-      if (wasConnected && !connected) set({ flight: releasePhoneControl(get().flight) });
+      if (wasConnected && !connected) {
+        const { flight, replay, missionTrackId } = get();
+        const released = releasePhoneControl(flight);
+        set({
+          flight: released,
+          ...(released.status === "paused" && replay.missionId && missionTrackId === replay.missionId
+            ? { replay: { ...replay, playing: false } }
+            : {}),
+        });
+      }
     },
 
     startFlight: (scenarioId = DEFAULT_SCENARIO_ID) => {
@@ -351,6 +374,7 @@ export const useScene = create<SceneState>()((set, get) => {
         reference: referenceFor(tracked),
         events: milestoneEvents(tracked),
         phoneConnected: get().rocket.connected,
+        site: launchSiteFor({ missionId: tracked?.id ?? null }),
       });
       if (stepped.runId !== flight.runId) return;
       const cue = stepped.guide?.cue ?? null;
@@ -430,7 +454,7 @@ export const useScene = create<SceneState>()((set, get) => {
         },
         warningLevel: "failed",
         failureReason: text,
-        impact: position ? { x: position.x, y: position.y, t: flight.simulatedTimeS } : null,
+        impact: position ? { ...position, t: flight.simulatedTimeS } : null,
       });
       return { ok: true };
     },

@@ -13,7 +13,6 @@ import { EARTH_SUN_DIRECTION } from "./earthShaders";
 import { sunFromHorizon } from "./env/frame";
 import { flightDrawNow } from "./flightDraw";
 import { FLIGHT_SCENE, SCENE_COLORS } from "@/lib/viewer/colors";
-import { ChaseCamera } from "./ChaseCamera";
 import { Earth } from "./Earth";
 import { FlightController } from "./FlightController";
 import { GuidanceMarks } from "./GuidanceMarks";
@@ -25,7 +24,7 @@ import styles from "./flight.module.css";
 function PosePublisher() {
   useFrame(() => {
     flightDrawNow.current = readFlightDraw();
-  });
+  }, -2); // After the clock (-3), before camera (-1) and visual effects (0).
   return null;
 }
 
@@ -69,6 +68,7 @@ export function FlightScene() {
   const mode = useAppMode((s) => s.mode);
   const status = useScene((s) => s.flight.status);
   const pitch = useScene((s) => s.flight.input.pitchRad);
+  const time = useScene((s) => s.flight.simulatedTimeS);
   return (
     <div
       className={styles.stage}
@@ -78,6 +78,7 @@ export function FlightScene() {
       data-flight-mode={mode}
       data-flight-status={status}
       data-flight-pitch={pitch.toFixed(4)}
+      data-flight-time={time.toFixed(4)}
     >
       <Canvas
         camera={{ fov: 42, near: 0.02, far: 200, position: [14, 8, 14] }}
@@ -92,7 +93,6 @@ export function FlightScene() {
         <KerbalWorld />
         <GuidanceMarks />
         <ReleaseFlightGpu />
-        <ChaseCamera />
         <FlightController />
       </Canvas>
     </div>

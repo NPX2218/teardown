@@ -163,8 +163,10 @@ export function PairRocket() {
     </p>
   );
 
-  // One surface per state. Each grows out of the top-right corner where the "Connect rocket" button sits
-  // (bottom edge on phones, see pair.module.css). Opacity and scale only: no layout work, the 3D scene never re-renders.
+  // Flight owns its connection/calibration readout. Keep Explore's richer status
+  // here, and show only the pairing entry/card during a disconnected flight.
+  const flightMode = mode !== "explore";
+  const showSurface = !flightMode || !rocket.connected;
   const view = rocket.connected ? (justConnected ? "toast" : "status") : showCard ? "card" : "button";
   let surface: ReactNode;
   if (view === "toast") {
@@ -282,15 +284,16 @@ export function PairRocket() {
     <>
       {live}
       <AnimatePresence initial={false}>
-        <motion.div
+        {showSurface && <motion.div
           key={view}
-          className={view === "card" ? styles.center : styles.chipWrap}
+          data-pair-surface={view}
+          className={`${view === "card" ? styles.center : styles.chipWrap} ${flightMode ? styles.flight : ""}`}
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1, transition: motionPresets.out }}
           exit={{ opacity: 0, scale: 0.98, transition: motionPresets.ui }}
         >
           {surface}
-        </motion.div>
+        </motion.div>}
       </AnimatePresence>
     </>
   );

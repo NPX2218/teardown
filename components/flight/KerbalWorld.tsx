@@ -2,12 +2,9 @@
 // Composes the Earth-radii group: site, sky, rocket, coast line, map labels.
 import { useState } from "react";
 import { useFrame } from "@react-three/fiber";
-import { EARTH_SUN_DIRECTION } from "@/components/flight/earthShaders";
-import { sunFromHorizon } from "@/components/flight/env/frame";
 import { EARTH_RADIUS, globeFrameFor, physicsMetersToEarthRadii, type MapLabel } from "@/lib/flight/scene-types";
 import { useAppMode } from "@/lib/flight/app-mode";
 import { useScene } from "@/lib/store";
-import { Atmosphere } from "./env/Atmosphere";
 import { LaunchSite } from "./env/LaunchSite";
 import { flightDrawNow } from "./flightDraw";
 import { CloudLayer } from "./fx/CloudLayer";
@@ -16,6 +13,7 @@ import { MapOverlay } from "./map/MapOverlay";
 import { OrbitPath } from "./map/OrbitPath";
 import { readFlightDraw } from "./readFlightDraw";
 import { Vehicle } from "./Vehicle";
+import { ChaseCamera } from "./ChaseCamera";
 
 export function KerbalWorld() {
   const [tick, setTick] = useState(0);
@@ -41,19 +39,17 @@ export function KerbalWorld() {
     labels.push({ id: "apo", text: "Highest point", at: draw.orbit.apoapsis });
   }
   const boom = status === "crashed" && impact
-    ? physicsMetersToEarthRadii(impact.x, impact.y, globeFrameFor(draw.site))
+    ? physicsMetersToEarthRadii(impact.x, impact.y, globeFrameFor(draw.site), impact.z ?? 0)
     : draw.position;
-  const sun = draw.site.name === "Starbase"
-    ? sunFromHorizon(draw.site.lat, draw.site.lon, 248, 12)
-    : EARTH_SUN_DIRECTION;
 
   return (
     <group scale={EARTH_RADIUS}>
       <LaunchSite site={draw.site} launchCloudIntensity={draw.altitudeKm < 4 ? draw.throttle : 0} />
-      <Atmosphere altitudeKm={draw.altitudeKm} sunDirection={sun} />
-      <CloudLayer altitudeKm={draw.altitudeKm} pad={draw.up} />
-      <Vehicle stage={draw.stage} throttle={draw.throttle} altitudeKm={draw.altitudeKm} elapsedS={draw.elapsedS} />
-      <OrbitPath state={draw.orbit} />
+      <CloudLayer altitudeKm={draw.altitudeKm} />
+      {/* Share the committed stage with the mesh so its camera target cannot switch early. */}
+      <ChaseCamera stage={draw.stage} />
+      <Vehicle stage={draw.stage} throttle={draw.throttle} altitudeKm={draw.altitudeKm} elapsedS={draw.elapsedS} visible={status !== "crashed"} />
+      <OrbitPath state={draw.orbit} visible={view === "overview"} showMarkers={view === "overview"} />
       <Explosion position={boom} active={status === "crashed" && impact !== null} />
       <MapOverlay visible={view === "overview"} labels={labels} />
     </group>

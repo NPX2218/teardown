@@ -82,8 +82,10 @@ export function LaunchSite({ site, sunDirection, launchCloudIntensity = 0 }: Lau
 
   const groundGeometry = useMemo(() => buildGroundGeometry(), []);
   const boxGeometry = useMemo(() => new THREE.BoxGeometry(1, 1, 1), []);
-  const cylinderGeometry = useMemo(() => new THREE.CylinderGeometry(1, 1, 1, 12), []);
+  const cylinderGeometry = useMemo(() => new THREE.CylinderGeometry(1, 1, 1, 32), []);
+  const sphereGeometry = useMemo(() => new THREE.SphereGeometry(1, 24, 16), []);
   const boxes = useRef<THREE.InstancedMesh>(null);
+  const spheres = useRef<THREE.InstancedMesh>(null);
   const cylinders = useRef<THREE.InstancedMesh>(null);
   const anchor = useRef<THREE.Group>(null);
   const scratch = useMemo(() => ({ origin: new THREE.Vector3(), axis: new THREE.Vector3() }), []);
@@ -126,6 +128,7 @@ export function LaunchSite({ site, sunDirection, launchCloudIntensity = 0 }: Lau
 
   useLayoutEffect(() => {
     if (boxes.current) writeInstances(boxes.current, kit.boxes);
+    if (spheres.current) writeInstances(spheres.current, kit.spheres);
     if (cylinders.current && kit.cylinders.length > 0) writeInstances(cylinders.current, kit.cylinders);
   }, [kit]);
 
@@ -133,7 +136,8 @@ export function LaunchSite({ site, sunDirection, launchCloudIntensity = 0 }: Lau
     groundGeometry.dispose();
     boxGeometry.dispose();
     cylinderGeometry.dispose();
-  }, [groundGeometry, boxGeometry, cylinderGeometry]);
+    sphereGeometry.dispose();
+  }, [groundGeometry, boxGeometry, cylinderGeometry, sphereGeometry]);
 
   useEffect(() => () => {
     groundMaterial.dispose();
@@ -178,6 +182,14 @@ export function LaunchSite({ site, sunDirection, launchCloudIntensity = 0 }: Lau
           renderOrder={5}
           frustumCulled={false}
         />
+        {kit.spheres.length > 0 ? (
+          <instancedMesh
+            ref={spheres}
+            args={[sphereGeometry, structureMaterial, kit.spheres.length]}
+            renderOrder={5}
+            frustumCulled={false}
+          />
+        ) : null}
         {kit.cylinders.length > 0 ? (
           <instancedMesh
             ref={cylinders}

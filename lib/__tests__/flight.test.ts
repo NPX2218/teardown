@@ -123,7 +123,8 @@ describe("flight simulator F1–F24 (2026-10-17)", () => {
     const base = aloft(rocket({ thrust: 2_000_000, propellant: 500, flow: 1 }), 40_000);
     const coast = stepFlight(base, COAST, 1 / 60);
     const upward = stepFlight(base, { pitchRad: 0, throttle: 1 }, 1 / 60);
-    const sideways = stepFlight(base, { pitchRad: Math.PI / 2, throttle: 1 }, 1 / 60);
+    // The nose turns with torque, so start it already sideways.
+    const sideways = stepFlight({ ...base, pitchRad: Math.PI / 2 }, { pitchRad: Math.PI / 2, throttle: 1 }, 1 / 60);
     const upDelta = { x: upward.vx - coast.vx, y: upward.vy - coast.vy };
     const sideDelta = { x: sideways.vx - coast.vx, y: sideways.vy - coast.vy };
     expect(upDelta.y).toBeGreaterThan(0);
@@ -185,7 +186,8 @@ describe("flight simulator F1–F24 (2026-10-17)", () => {
     const flight = useScene.getState().flight;
     expect(flight.status).toBe("flying");
     expect(flight.outcome).toBeNull();
-    expect(flight.simulatedTimeS).toBeLessThanOrEqual(0.1 + 1e-9);
+    // Presentation scales the capped 0.1 wall second, preserving the same substeps.
+    expect(flight.simulatedTimeS).toBeLessThanOrEqual(0.8 + 1e-9);
     expect(flight.simulatedTimeS).toBeGreaterThan(0);
   });
 
@@ -336,11 +338,10 @@ describe("flight simulator F1–F24 (2026-10-17)", () => {
     useScene.getState().setRocket({ connected: true, code: "AB" });
     useScene.getState().setFlightAxisOwner("pitch", "phone");
     useScene.getState().launchFlight();
-    expect(submitPhonePitch(0.4, true).ok).toBe(false);
-    expect(submitPhonePitch(0, true).ok).toBe(true);
+    expect(submitPhonePitch(0.4, true).ok).toBe(true);
     expect(submitPhonePitch(0.3, true).ok).toBe(true);
     expect(useScene.getState().setFlightInput({ throttle: 0.7 }, "local", runId).ok).toBe(true);
-    expect(useScene.getState().flight.input).toEqual({ pitchRad: 0.3, throttle: 0.7 });
+    expect(useScene.getState().flight.input).toEqual({ pitchRad: 0.3, yawRad: 0, throttle: 0.7 });
     useScene.getState().setRocket({ connected: false, code: null });
     expect(useScene.getState().flight.status).toBe("paused");
     expect(submitPhonePitch(0.5, true).error).toBe("flight is paused");

@@ -52,11 +52,11 @@ describe("chase distance and sky", () => {
     expect(chaseRangeM(60_000)).toBeGreaterThan(chaseRangeM(10_000));
     expect(chaseRangeM(200_000)).toBeGreaterThan(chaseRangeM(60_000));
     expect(chaseRangeM(2_000_000)).toBeGreaterThan(EARTH_RADIUS_M * 2);
-    const mid = 5_000;
-    const geometric = Math.sqrt(650 * 2_800);
-    expect(chaseRangeM(mid)).toBeGreaterThan(650);
-    expect(chaseRangeM(mid)).toBeLessThan(2_800);
-    expect(chaseRangeM(mid)).not.toBeCloseTo(geometric, 0);
+    const mid = 20_000;
+    const geometric = Math.sqrt(250 * 300);
+    expect(chaseRangeM(mid)).toBeGreaterThan(250);
+    expect(chaseRangeM(mid)).toBeLessThan(300);
+    expect(chaseRangeM(mid)).not.toBeCloseTo(geometric, 1);
   });
 
   it("fades the sky from blue to black by 100 km and the clouds by 22 km", () => {
@@ -89,7 +89,7 @@ describe("camera shots", () => {
     expect(pad.target[1]).toBeGreaterThan(site[1]);
   });
 
-  it("frames the Starbase tower, tank farm, and coast from above", () => {
+  it("views the Starbase pad from behind, pilot right, and above, aimed at the stack", () => {
     const siteFrame = globeFrameFor(STARBASE);
     const pad = padShot(siteFrame);
     const site = earthRadiiToScene(siteFrame.up);
@@ -106,8 +106,8 @@ describe("camera shots", () => {
     expect(dot(offset, siteFrame.downrange)).toBeLessThan(0);
     expect(dot(offset, siteFrame.right)).toBeGreaterThan(0);
     expect(dot(offset, siteFrame.up)).toBeGreaterThan(0);
-    expect(dot(aim, siteFrame.right)).toBeLessThan(0);
-    expect(dot(aim, siteFrame.downrange)).toBeGreaterThan(0);
+    expect(dot(aim, siteFrame.right)).toBeCloseTo(0, 9);
+    expect(dot(aim, siteFrame.up) / 1e-6).toBeCloseTo(35.6, 3);
     const chase = chaseShot({
       frame: siteFrame,
       position: physicsMetersToEarthRadii(0, EARTH_RADIUS_M, siteFrame),
@@ -122,14 +122,15 @@ describe("camera shots", () => {
     )).toBeLessThan(0);
   });
 
-  it("pulls the chase camera back as the rocket climbs", () => {
+  it("pulls the chase camera back a little in the climb and to the globe in high orbit", () => {
     const onPad = physicsMetersToEarthRadii(0, EARTH_RADIUS_M, frame);
     const low = chaseShot({ frame, position: onPad, nose: noseFromPitch(frame, 0), altitudeM: 0 });
     const highPos = physicsMetersToEarthRadii(0, EARTH_RADIUS_M + 200_000, frame);
     const high = chaseShot({ frame, position: highPos, nose: noseFromPitch(frame, 0.4), altitudeM: 200_000 });
     const lowGap = Math.hypot(low.position[0] - earthRadiiToScene(onPad)[0], low.position[1] - earthRadiiToScene(onPad)[1], low.position[2] - earthRadiiToScene(onPad)[2]);
     const highGap = Math.hypot(high.position[0] - earthRadiiToScene(highPos)[0], high.position[1] - earthRadiiToScene(highPos)[1], high.position[2] - earthRadiiToScene(highPos)[2]);
-    expect(highGap).toBeGreaterThan(lowGap * 50);
+    expect(highGap).toBeGreaterThan(lowGap);
+    expect(highGap).toBeLessThan(lowGap * 3);
     expect(length(high.position)).toBeGreaterThan(EARTH_RADIUS);
     const orbit = chaseShot({
       frame,

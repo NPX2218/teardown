@@ -12,10 +12,6 @@ export const ANOMALY = {
   tipAltM: 1_500,
   tipPitchRad: 1.4,
   tipRateRadS: 1.2,
-  /** Pad strike in the first seconds, already off the vertical. */
-  towerTimeS: 5,
-  towerAltM: 100,
-  towerPitchRad: 1.2,
   /** Steep and fast after having been in space. */
   reentryAltM: 70_000,
   reentryPeakAltM: 100_000,
@@ -29,7 +25,6 @@ export const ANOMALY = {
 } as const;
 
 export const GROUND_REASON = "The rocket hit the ground.";
-export const TOWER_REASON = "Tower strike.";
 export const BREAKUP_REASON = "The rocket broke apart.";
 export const CONTROL_REASON = "Loss of control.";
 export const SUBORBITAL_REASON = "Suborbital: fell back";
@@ -38,10 +33,10 @@ export const ESCAPE_REASON = "Escape trajectory.";
 export const STABLE_ORBIT_REASON = "You are in a stable orbit.";
 export const LEAVING_EARTH_REASON = "You are leaving Earth. This goal is an orbit around Earth.";
 export const FUEL_MISS_REASON = "Out of fuel. Your path around Earth misses the goal.";
-export const MISSION_COMPLETE_REASON = "Mission complete.";
-export const OFF_NOMINAL_REASON = "Mission failed: off nominal";
 
 export interface AnomalySample {
+  /** True after an external body sweep has already judged ground contact. */
+  groundCollisionHandled?: boolean;
   t: number;
   dt: number;
   altM: number;
@@ -73,18 +68,10 @@ export interface AnomalyVerdict {
 /** Classify this sample. A ground impact already judged by the physics step is kept. */
 export function classifyAnomaly(sample: AnomalySample): AnomalyVerdict | null {
   const existing = sample.existing;
-  if (existing?.reason === GROUND_REASON) return existing;
+  if (existing?.kind === "crashed") return existing;
 
-  if (sample.airborne && sample.altM <= 0 && sample.t > 0.05) {
+  if (!sample.groundCollisionHandled && sample.airborne && sample.altM <= 0 && sample.t > 0.05) {
     return { kind: "crashed", reason: GROUND_REASON };
-  }
-  if (
-    sample.airborne
-    && sample.t < ANOMALY.towerTimeS
-    && sample.altM < ANOMALY.towerAltM
-    && Math.abs(sample.pitchRad) > ANOMALY.towerPitchRad
-  ) {
-    return { kind: "crashed", reason: TOWER_REASON };
   }
   if (
     sample.airborne

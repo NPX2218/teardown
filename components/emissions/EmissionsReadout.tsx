@@ -22,21 +22,26 @@ export function EmissionsReadout({
     <section className={`hud ${styles.readout}`} aria-label="Estimated carbon dioxide">
       <p className="hud__k">{copy.title}</p>
       <p className="hud__v hud__v--clock">{copy.valueText}</p>
-      {copy.badge ? <span className="chip chip--est">{copy.badge}</span> : null}
-      <p className={`caption ${styles.sentence}`}>{copy.sentence}</p>
-      <p className={`caption ${styles.note}`}>{copy.scopeNote}</p>
+      <p className={`caption ${styles.note}`}>
+        {copy.badge ? (view.status === "estimate" && view.scope === "interactive"
+          ? "Estimated from simulated RP-1. Not a measured plume."
+          : `Estimated. ${copy.scopeNote}`) : copy.sentence}
+      </p>
       {copy.frozenNote ? <p className={`caption ${styles.note}`}>{copy.frozenNote}</p> : null}
-      {copy.stageLines.length > 0 ? (
-        <ul className={styles.stages}>
-          {copy.stageLines.map((line) => (
-            <li key={line}>{line}</li>
-          ))}
-        </ul>
-      ) : null}
-      {cars ? <p className={`caption ${styles.note}`}>{cars}</p> : null}
-      <button type="button" className={`btn ${styles.details}`} onClick={onDetails}>
-        Where do these numbers come from?
-      </button>
+      <details className={styles.breakdown}>
+        <summary>Estimate details</summary>
+        <div className={styles.breakdownBody}>
+          {copy.stageLines.length > 0 ? (
+            <ul className={styles.stages}>
+              {copy.stageLines.map((line) => <li key={line}>{line}</li>)}
+            </ul>
+          ) : null}
+          {cars ? <p className={`caption ${styles.note}`}>{cars}</p> : null}
+          <button type="button" className={`btn ${styles.details}`} onClick={onDetails}>
+            Where do these numbers come from?
+          </button>
+        </div>
+      </details>
     </section>
   );
 }

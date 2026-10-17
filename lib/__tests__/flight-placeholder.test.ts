@@ -54,7 +54,8 @@ describe("flight frame cap", () => {
     const flight = useScene.getState().flight;
     expect(flight.status).toBe("flying");
     expect(flight.simulatedTimeS).toBeGreaterThan(0);
-    expect(flight.simulatedTimeS).toBeLessThanOrEqual(0.1 + 1e-9);
+    // The 0.1 wall-second cap contains 0.8 simulated seconds at presentation pace.
+    expect(flight.simulatedTimeS).toBeLessThanOrEqual(0.8 + 1e-9);
     expect(flight.outcome).toBeNull();
     expect(flight.fuel?.rp1ConsumedKg).toBe(0);
     expect(flight.state?.airborne).toBe(false);

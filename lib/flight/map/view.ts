@@ -117,7 +117,7 @@ export function frameFromLatLon(latDeg: number, lonDeg: number, azimuthDeg = 90)
 /** Free-flight frame. Pass another frame, or call `frameFromLatLon`, for any other pad. */
 export const STARBASE_FRAME: MapFrame = frameFromLatLon(STARBASE.lat, STARBASE.lon, STARBASE.azimuthDeg);
 
-export function physicsToEarth(point: MapVec2, frame: MapFrame = STARBASE_FRAME, zM = 0): EarthRadiiVec3 {
+export function physicsToEarth(point: MapVec2, frame: MapFrame = STARBASE_FRAME, zM = point.z ?? 0): EarthRadiiVec3 {
   const x = Number.isFinite(point.x) ? point.x : 0;
   const y = Number.isFinite(point.y) ? point.y : 0;
   const z = Number.isFinite(zM) ? zM : 0;

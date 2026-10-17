@@ -1,14 +1,13 @@
 "use client";
-// Ghost path and corridor edges, on the launch-site globe. Sibling of Earth, never inside it.
+// Optional reference line on the launch-site globe, available before liftoff.
 // The impact burst is the Explosion module.
 import { useEffect, useMemo } from "react";
 import * as THREE from "three";
 import { MISSIONS } from "@/data/missions/index";
 import { useAppMode } from "@/lib/flight/app-mode";
-import { CORRIDOR } from "@/lib/flight/corridor";
 import { launchSiteFor } from "@/lib/flight/launch-site";
 import { missionById } from "@/lib/flight/mission-select";
-import { corridorEdges, referencePath } from "@/lib/flight/reference";
+import { referencePath } from "@/lib/flight/reference";
 import { earthRadiiToScene, globeFrameFor, physicsMetersToEarthRadii, type GlobeFrame } from "@/lib/flight/scene-types";
 import { useScene } from "@/lib/store";
 import type { Mission } from "@/lib/types";
@@ -22,10 +21,10 @@ function siteText(mission: Mission | null): string | null {
   return typeof extra.launchSite?.text === "string" ? extra.launchSite.text : null;
 }
 
-function makeLine(points: { x: number; y: number }[], color: string, frame: GlobeFrame): THREE.Line {
+function makeLine(points: { x: number; y: number; z?: number }[], color: string, frame: GlobeFrame): THREE.Line {
   const data = new Float32Array(points.length * 3);
   points.forEach((point, index) => {
-    const [x, y, z] = earthRadiiToScene(physicsMetersToEarthRadii(point.x, point.y, frame));
+    const [x, y, z] = earthRadiiToScene(physicsMetersToEarthRadii(point.x, point.y, frame, point.z ?? 0));
     data[index * 3] = x;
     data[index * 3 + 1] = y;
     data[index * 3 + 2] = z;
@@ -40,7 +39,7 @@ export function GuidanceMarks() {
   const trackId = useScene((s) => s.missionTrackId);
   const replayId = useScene((s) => s.replay.missionId);
   const mode = useAppMode((s) => s.mode);
-  const corridorOn = useScene((s) => s.playMode === "mission" && s.flight.guide?.corridor === true);
+  const view = useAppMode((s) => s.view);
   const trail = useScene((s) => (s.warningLevel === "failed" ? s.flight.guide?.trail ?? EMPTY : EMPTY));
   const mission = mode === "replay"
     ? missionById(MISSIONS, replayId)
@@ -54,18 +53,12 @@ export function GuidanceMarks() {
   );
   const marks = useMemo(() => {
     const objects: THREE.Line[] = [];
-    if (corridorOn) {
-      const ghost = referencePath(reference);
-      const edges = corridorEdges(reference, CORRIDOR.altM);
-      if (ghost && ghost.length > 1) objects.push(makeLine(ghost, FLIGHT_SCENE.path, frame));
-      if (edges) {
-        objects.push(makeLine(edges.inner, FLIGHT_SCENE.pathHit, frame));
-        objects.push(makeLine(edges.outer, FLIGHT_SCENE.pathHit, frame));
-      }
-    }
+    if (view !== "overview") return objects;
+    const ghost = referencePath(reference);
+    if (ghost && ghost.length > 1) objects.push(makeLine(ghost, FLIGHT_SCENE.path, frame));
     if (trail.length > 1) objects.push(makeLine(trail, FLIGHT_SCENE.boom, frame));
     return objects;
-  }, [corridorOn, reference, trail, frame]);
+  }, [reference, trail, frame, view]);
 
   useEffect(() => () => {
     marks.forEach((item) => {

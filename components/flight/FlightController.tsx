@@ -6,7 +6,7 @@ import { useFrame } from "@react-three/fiber";
 import { MISSIONS } from "@/data/missions/index";
 import { useAppMode } from "@/lib/flight/app-mode";
 import { shouldAdvanceFlight } from "@/lib/flight/integrate";
-import { commitHeldAxes, currentControlMode } from "@/lib/flight/controls";
+import { commitHeldAxes, currentControlMode, launchControlledFlight } from "@/lib/flight/controls";
 import { frameWallSlices } from "@/lib/flight/frame-budget";
 import { resumeFlightExplicit } from "@/lib/flight/phone-pitch";
 import {
@@ -45,13 +45,10 @@ export function FlightController() {
         setKeyAxes(0, 0);
         return;
       }
-      const left = down.has("KeyA") || down.has("ArrowLeft");
-      const right = down.has("KeyD") || down.has("ArrowRight");
       const up = down.has("KeyW") || down.has("ArrowUp");
       const downKey = down.has("KeyS") || down.has("ArrowDown");
-      const pitch = left && right ? 0 : left ? -1 : right ? 1 : 0;
       const throttle = up && downKey ? 0 : up ? 1 : downKey ? -1 : 0;
-      setKeyAxes(axis(pitch), axis(throttle));
+      setKeyAxes(0, axis(throttle));
     };
     const release = () => {
       down.clear();
@@ -76,6 +73,7 @@ export function FlightController() {
         return;
       }
       if (!typing && event.shiftKey && event.code.startsWith("Arrow")) {
+        syncKeys(true);
         const step = 0.55;
         if (event.code === "ArrowLeft") cameraNudge.x -= step;
         if (event.code === "ArrowRight") cameraNudge.x += step;
@@ -84,7 +82,7 @@ export function FlightController() {
         event.preventDefault();
         return;
       }
-      const steers = event.code === "KeyA" || event.code === "KeyD" || event.code === "KeyW" || event.code === "KeyS" || event.code.startsWith("Arrow");
+      const steers = event.code === "KeyW" || event.code === "KeyS" || event.code === "ArrowUp" || event.code === "ArrowDown";
       if (!typing && !event.shiftKey && steers) {
         down.add(event.code);
         syncKeys(false);
@@ -97,7 +95,7 @@ export function FlightController() {
       if (action === "briefing") useAppMode.getState().openMission();
       if (action === "launch") {
         release();
-        useScene.getState().launchFlight();
+        launchControlledFlight();
         useScene.getState().markActivity(performance.now());
       }
       if (action === "pause") {
@@ -115,7 +113,7 @@ export function FlightController() {
         const replay = useScene.getState().replay;
         if (!replay.missionId) return;
         if (replay.playing) useScene.getState().pauseReplay();
-        else useScene.getState().resumeReplay();
+        else if (useScene.getState().flight.status !== "paused" || resumeFlightExplicit().ok) useScene.getState().resumeReplay();
       }
       if (event.code === "Space") event.preventDefault();
     };
@@ -131,7 +129,18 @@ export function FlightController() {
     window.addEventListener("keyup", onKeyUp);
     window.addEventListener("blur", release);
     document.addEventListener("visibilitychange", onVis);
+    const unMode = useAppMode.subscribe((state, prev) => {
+      if (state.mode !== prev.mode) release();
+    });
+    const unFlight = useScene.subscribe((state, prev) => {
+      // Replay's first steering key creates its initial run. Keep that key
+      // for the launch frame; replacing a previous run must release it.
+      if ((prev.flight.runId !== null && state.flight.runId !== prev.flight.runId)
+        || (state.flight.status !== prev.flight.status && state.flight.status !== "flying" && prev.flight.status !== "idle")) release();
+    });
     return () => {
+      unMode();
+      unFlight();
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
       window.removeEventListener("blur", release);
@@ -154,12 +163,12 @@ export function FlightController() {
       for (const wall of slices) playReplay(wall);
     }
     if (controls === "explore") return;
-    commitHeldAxes(slices[0], controls);
     for (const wall of slices) {
+      commitHeldAxes(wall, controls);
       if (!shouldAdvanceFlight(useScene.getState().flight.status, false)) break;
       useScene.getState().advanceFlight(wall);
     }
-  });
+  }, -3); // Advance the clock before publishing the frame's draw sample (-2).
 
   return null;
 }

@@ -34,7 +34,7 @@ export function buildGroundGeometry(liftM = SURFACE_LIFT_M): THREE.BufferGeometr
   const indices: number[] = [];
   const ringStart = (ring: number) => 1 + (ring - 1) * SEGS;
   for (let i = 0; i < SEGS; i += 1) {
-    indices.push(0, ringStart(1) + i, ringStart(1) + ((i + 1) % SEGS));
+    indices.push(0, ringStart(1) + ((i + 1) % SEGS), ringStart(1) + i);
   }
   for (let ring = 1; ring < RINGS.length - 1; ring += 1) {
     const inner = ringStart(ring);
