@@ -56,7 +56,7 @@ function Scattered({ reveal }: { reveal: number }) {
           No way to touch it
         </Show>
       </div>
-      <figcaption>Spread over three sites in three formats, and you can't hold any of it.</figcaption>
+      <figcaption>Spread over three sites in three formats, and you can’t hold any of it.</figcaption>
     </figure>
   );
 }
