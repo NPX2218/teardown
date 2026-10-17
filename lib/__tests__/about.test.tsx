@@ -22,8 +22,10 @@ describe("about copy", () => {
     expect(ABOUT.motto).toBe("Bringing rocket science down to Earth.");
     const why = ABOUT.why.join(" ");
     expect(why).toMatch(/hands-on/i);
-    expect(why).toMatch(/HackHarvard/);
-    expect(why).toMatch(/engineers and recruiters/);
+    expect(why).toContain(
+      "We built it at HackHarvard. A few weeks earlier, we talked with engineers and recruiters at a university event. Those talks made the mission even more fascinating to us than before.",
+    );
+    expect(why).not.toMatch(/recruiters there/);
   });
 
   it("credits the makers, the model licence, and the student disclaimer", () => {

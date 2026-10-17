@@ -8,13 +8,14 @@ import { MOTION_EASE } from "@/lib/ui/motion";
 import { useReducedMotion } from "./useReducedMotion";
 import styles from "./liftoff.module.css";
 
-// Per-number tick. Arbitrary: tune on the day. Three ticks + headline + exit lands near 2.7 s.
+// Per-number tick. Arbitrary: tune on the day. Three ticks + headline hold + exit lands near 4 s.
 const TICK_MS = 450;
-// Headline hold before the lift. Arbitrary.
-const HOLD_MS = 550;
+// Headline hold before the wipe. 550 ms was too short to read "Time for liftoff" (2026-10-17 feedback).
+const HOLD_MS = 1500;
 // Reduced motion: headline hold before a plain fade.
 const REDUCED_HOLD_MS = 800;
-const EXIT_S = 0.9;
+// Slower wipe so the headline stays readable while it leaves.
+const EXIT_S = 1.2;
 const STEPS = ["T−3", "T−2", "T−1"] as const;
 
 export function LiftoffLoader() {
