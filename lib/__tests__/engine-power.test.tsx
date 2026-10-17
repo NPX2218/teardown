@@ -1,7 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
+import * as THREE from "three";
 import { EnginePowerSlider } from "@/components/viewer/EnginePowerSlider";
-import { explorePlumeScale, PLUME_LENGTH } from "@/lib/viewer/engine-plume";
+import { disposeExplorePlumeResources, explorePlumeScale, PLUME_LENGTH } from "@/lib/viewer/engine-plume";
 import { applyEngineTone, ENGINE_RAMP_S, engineTone } from "@/lib/rocket/engine-rumble";
 import { engineBroadcast, enginePercent, enginePowerFromPercent } from "@/lib/rocket/engine-power";
 import { decodeMessage } from "@/lib/rocket/protocol";
@@ -107,5 +108,20 @@ describe("engine power", () => {
     expect(still.brightness).toBe(1);
     expect(still.flicker).toBe(0);
     expect(explorePlumeScale(Number.NaN, false).length).toBe(0);
+  });
+
+  it("releases the explore plume cone and both materials", () => {
+    const geometry = new THREE.ConeGeometry(1, 1, 8);
+    const flame = new THREE.MeshBasicMaterial();
+    const core = new THREE.MeshBasicMaterial();
+    const geometryDispose = vi.spyOn(geometry, "dispose");
+    const flameDispose = vi.spyOn(flame, "dispose");
+    const coreDispose = vi.spyOn(core, "dispose");
+
+    disposeExplorePlumeResources(geometry, flame, core);
+
+    expect(geometryDispose).toHaveBeenCalledOnce();
+    expect(flameDispose).toHaveBeenCalledOnce();
+    expect(coreDispose).toHaveBeenCalledOnce();
   });
 });
