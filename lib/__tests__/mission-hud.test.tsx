@@ -5,8 +5,13 @@ import { MissionHud } from "@/components/flight/MissionHud";
 import { useAppMode } from "@/lib/flight/app-mode";
 import { formatKm, formatSpeed } from "@/lib/flight/format";
 import {
+  formatApogee,
+  formatFuelPercent,
+  fuelIsLow,
   missionHudLines,
   missionHudVisible,
+  orbitInRange,
+  orbitTargetLine,
   setMissionHud,
   shouldAnnounceHud,
 } from "@/lib/flight/mission-hud";
@@ -112,14 +117,18 @@ describe("mission hud formatting", () => {
     const flying = missionHudLines(readout, "flying");
     expect(flying.height).toBe(formatKm(readout.altitudeM));
     expect(flying.speed).toBe(formatSpeed(readout.totalSpeedMps));
-    expect(flying.live).toBe(`Height ${flying.height}. Speed ${flying.speed}.`);
+    expect(flying.apogee).toBe("—");
+    expect(flying.perigee).toBe("—");
+    expect(flying.live).toBe(`Height ${flying.height}. Speed ${flying.speed}. Apogee —. Perigee —. Fuel —.`);
     expect(formatKm(12_345)).toBe("12.3 km");
     expect(formatSpeed(1_500)).toBe("1.50 km/s");
 
-    expect(missionHudLines(null, "ready")).toEqual({
+    expect(missionHudLines(null, "ready")).toMatchObject({
       height: "0.00 km",
       speed: "0.00 km/s",
-      live: "Height 0.00 km. Speed 0.00 km/s.",
+      apogee: "—",
+      perigee: "—",
+      live: "Height 0.00 km. Speed 0.00 km/s. Apogee —. Perigee —. Fuel —.",
     });
     expect(missionHudLines(null, "crashed").height).toBe("—");
     expect(missionHudLines({ ...readout, altitudeM: 400_000, totalSpeedMps: 7_600 }, "crashed").height).toBe("400 km");
@@ -128,6 +137,82 @@ describe("mission hud formatting", () => {
     expect(shouldAnnounceHud(0, 1_000, "a", "b")).toBe(true);
     expect(shouldAnnounceHud(1_000, 1_500, "a", "b")).toBe(false);
     expect(shouldAnnounceHud(1_000, 2_000, "a", "b")).toBe(true);
+  });
+});
+
+describe("mission hud orbit window", () => {
+  it("shows the predicted apogee, a dash when there is none, and the classroom target", () => {
+    expect(formatApogee(null)).toBe("—");
+    expect(formatApogee(Number.NaN)).toBe("—");
+    expect(orbitTargetLine()).toBe("Target 200–2,000 km");
+
+    const suborbital = missionHudLines(readout, "flying");
+    expect(suborbital.apogee).toBe("—");
+    expect(suborbital.inRange).toBe(false);
+    expect(suborbital.cutEngines).toBe(false);
+
+    const apex = missionHudLines({ ...readout, apoapsisAltitudeM: 80_000, periapsisAltitudeM: -20_000 }, "flying");
+    expect(apex.apogee).toBe(formatKm(80_000));
+    expect(apex.inRange).toBe(false);
+
+    const inside = { ...readout, periapsisAltitudeM: 250_000, apoapsisAltitudeM: 800_000, throttle: 0.6 };
+    const lined = missionHudLines(inside, "flying");
+    expect(lined.apogee).toBe("800 km");
+    expect(lined.perigee).toBe("250 km");
+    expect(lined.inRange).toBe(true);
+    expect(lined.cutEngines).toBe(true);
+    expect(orbitInRange({ ...inside, throttle: 0 })).toBe(true);
+    expect(missionHudLines({ ...inside, throttle: 0 }, "flying").cutEngines).toBe(false);
+    expect(orbitInRange({ ...inside, apoapsisAltitudeM: 2_100_000 })).toBe(false);
+    expect(orbitInRange({ ...inside, periapsisAltitudeM: 150_000 })).toBe(false);
+
+    useAppMode.setState({ mode: "mission" });
+    useScene.setState({ flight: { ...scene.flight, status: "flying", readout: inside } });
+    const html = renderToStaticMarkup(<MissionHud />);
+    expect(html).toContain("Apogee");
+    expect(html).toContain("Perigee");
+    expect(html).toContain("Target 200–2,000 km");
+    expect(html).toContain("IN RANGE");
+    expect(html).toContain("Cut the engines.");
+    expect(html).toContain('data-in-range="true"');
+    expect(html).toContain("chip--ok");
+  });
+
+  it("shows remaining fuel and warns under 20 percent", () => {
+    expect(formatFuelPercent(null)).toBe("—");
+    expect(formatFuelPercent(100)).toBe("100%");
+    expect(formatFuelPercent(19.4)).toBe("19%");
+    expect(fuelIsLow(19.4)).toBe(true);
+    expect(fuelIsLow(20)).toBe(false);
+    expect(fuelIsLow(19.6)).toBe(false);
+    const low = missionHudLines(readout, "flying", undefined, 12);
+    expect(low.fuel).toBe("12%");
+    expect(low.fuelLow).toBe(true);
+    expect(low.live).toContain("Fuel 12%");
+    useAppMode.setState({ mode: "mission" });
+    useScene.setState({
+      flight: {
+        ...scene.flight,
+        status: "flying",
+        readout: { ...readout, propellantRemainingKg: 10 },
+        fuel: {
+          runId: "run",
+          simulatedTimeS: 1,
+          rp1ConsumedKg: 40,
+          stages: [{
+            id: "booster",
+            dryMassKg: 1,
+            propellantRemainingKg: 10,
+            rp1ConsumedKg: 40,
+            loxConsumedKg: 50,
+          }],
+        },
+      },
+    });
+    const html = renderToStaticMarkup(<MissionHud />);
+    expect(html).toContain(">Fuel<");
+    expect(html).toContain("chip--warn");
+    expect(html).toContain('data-fuel-low="true"');
   });
 });
 
