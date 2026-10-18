@@ -17,6 +17,7 @@ import {
   type RealtimeConnectors,
 } from "@/lib/voice/realtime";
 import { defaultRealtimeConnect } from "@/lib/voice/realtime-connect";
+import { GROK_VOICE } from "@/lib/voice/format";
 
 const GUIDE_TOOL_NAMES = ["start_tour", "set_level"] as const;
 
@@ -32,7 +33,7 @@ export class VoiceUnavailable extends Error {
 }
 
 /** Flat realtime function tools. The chat TOOLS shape nests the schema under `function`. */
-export function sessionUpdateForGuide(voice = "eve"): Record<string, unknown> {
+export function sessionUpdateForGuide(voice = GROK_VOICE): Record<string, unknown> {
   const tools = TOOLS.filter((tool) =>
     (GUIDE_TOOL_NAMES as readonly string[]).includes(tool.function.name),
   ).map((tool) => ({
@@ -111,6 +112,14 @@ function playPcm16(b64: string, playbackEndsAt: { ms: number }): void {
   } catch {
     /* No output device. The tool result still goes back. */
   }
+}
+
+/** Cuts any Grok audio still queued. Closing the context stops every scheduled buffer. */
+function stopGuidePlayback(): void {
+  const ctx = playbackCtx;
+  playbackCtx = null;
+  playbackNext = 0;
+  void ctx?.close().catch(() => {});
 }
 
 function pcm16FromFloat(data: Float32Array): Uint8Array {
@@ -200,6 +209,7 @@ export async function runRealtimeGuideSession(opts: {
   const pending: PendingCall[] = [];
   const playbackEndsAt = { ms: 0 };
   let closed = false;
+  let handedOff = false;
   const send = (event: unknown) => {
     if (closed) return;
     try { socket.send(JSON.stringify(event)); } catch { /* socket already gone */ }
@@ -230,7 +240,7 @@ export async function runRealtimeGuideSession(opts: {
   };
   opts.signal?.addEventListener("abort", onAbort, { once: true });
 
-  send(sessionUpdateForGuide(opts.voice ?? "eve"));
+  send(sessionUpdateForGuide(opts.voice ?? GROK_VOICE));
 
   const micTask = (async () => {
     if (!opts.captureMic) return;
@@ -254,6 +264,13 @@ export async function runRealtimeGuideSession(opts: {
       const call = functionCall(parsed);
       if (call) {
         const result = await runTool(call.name, call.arguments);
+        // The tour narrates itself. If Grok keeps talking (and the mic keeps hearing the tour),
+        // the two voices overlap, so a started tour ends this session.
+        if (call.name === "start_tour" && result.ok) {
+          stopGuidePlayback();
+          handedOff = true;
+          break;
+        }
         pending.push({ call_id: call.callId, output: JSON.stringify(result) });
       }
       const delta = audioDelta(parsed);
@@ -261,7 +278,7 @@ export async function runRealtimeGuideSession(opts: {
       const type = typeof parsed === "object" && parsed !== null ? (parsed as { type?: unknown }).type : undefined;
       if (type === "response.done") await flush();
     }
-    if (!opts.signal?.aborted) await flush();
+    if (!opts.signal?.aborted && !handedOff) await flush();
   } finally {
     opts.signal?.removeEventListener("abort", onAbort);
     micAbort.abort();

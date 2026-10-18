@@ -122,14 +122,22 @@ export function GuideLauncher() {
     if (step !== "voice") return;
     const ac = new AbortController();
     setVoiceError(null);
-    void startMascotVoice({ signal: ac.signal }).catch((err: unknown) => {
-      if (ac.signal.aborted) return;
-      if (err instanceof VoiceUnavailable) setVoiceError(err.message);
-      else setVoiceError(voiceErrorCopy("network"));
-    });
+    // True when the session ended on its own, e.g. it handed off to the tour. Leave the tour's line playing.
+    let ended = false;
+    void startMascotVoice({ signal: ac.signal })
+      .then(() => {
+        if (ac.signal.aborted) return;
+        ended = true;
+        setStep((s) => stepGuide(s, "stop"));
+      })
+      .catch((err: unknown) => {
+        if (ac.signal.aborted) return;
+        if (err instanceof VoiceUnavailable) setVoiceError(err.message);
+        else setVoiceError(voiceErrorCopy("network"));
+      });
     return () => {
       ac.abort();
-      stopSpeaking();
+      if (!ended) stopSpeaking();
       cancelAgent();
       resetVoiceActivity();
     };

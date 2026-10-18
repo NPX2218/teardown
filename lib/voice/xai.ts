@@ -2,7 +2,7 @@
 // TTS for narration bytes. Ephemeral tokens for the browser realtime socket.
 // The key is never logged and never returned to the client.
 import "server-only";
-import { AUDIO_MIME } from "@/lib/voice/format";
+import { AUDIO_MIME, GROK_VOICE } from "@/lib/voice/format";
 import {
   CLIENT_SECRETS_URL,
   clientSecretBody,
@@ -25,7 +25,7 @@ export class VoiceError extends Error {
 export const XAI_TTS_URL = process.env.XAI_TTS_URL ?? "https://api.x.ai/v1/tts";
 
 export function voiceId(): string {
-  return process.env.XAI_VOICE ?? "eve";
+  return process.env.XAI_VOICE ?? GROK_VOICE;
 }
 
 /** Confirmed text-to-speech body. `language` is required by the current docs. */

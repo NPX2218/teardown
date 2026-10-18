@@ -69,7 +69,7 @@ describe("voice demo tools", () => {
     expect(captureMic).not.toHaveBeenCalled();
   });
 
-  it("token route then a fake socket runs start_tour and returns the tool output", async () => {
+  it("token route then a fake socket runs start_tour and hands off to the tour", async () => {
     process.env.XAI_API_KEY = "voice-test-key";
     const upstream = vi.fn(async (url: string, init?: RequestInit) => {
       expect(url).toBe(CLIENT_SECRETS_URL);
@@ -83,21 +83,13 @@ describe("voice demo tools", () => {
     const token = (await minted.json() as { value: string }).value;
     expect(token).toBe("ephemeral");
 
-    const socket = scriptedSocket(async function* (sent) {
+    const socket = scriptedSocket(async function* () {
       yield JSON.stringify({
         type: "response.function_call_arguments.done",
         name: "start_tour",
         call_id: "call-tour",
         arguments: "{}",
       });
-      expect(getScene().tour.active).toBe(true);
-      expect(getScene().explode).toBe(1);
-      expect(sent.some((line) => line.includes("function_call_output"))).toBe(false);
-      yield JSON.stringify({ type: "response.done" });
-      const output = sent.map((line) => JSON.parse(line)).find((event) => event?.item?.type === "function_call_output");
-      expect(output.item.call_id).toBe("call-tour");
-      expect(JSON.parse(output.item.output).ok).toBe(true);
-      expect(sent.map((line) => JSON.parse(line)).at(-1)).toEqual({ type: "response.create" });
     });
 
     await runRealtimeGuideSession({ token, connect: socket.connect });
@@ -113,6 +105,7 @@ describe("voice demo tools", () => {
     expect(update.session.tools.every((tool) => tool.type === "function" && tool.function === undefined)).toBe(true);
     expect(JSON.stringify(update)).not.toContain("start_mission");
     expect(getScene().tour.active).toBe(true);
+    expect(getScene().explode).toBe(1);
   });
 
   it("set_level reaches kid, curious, and engineer and each output goes back", async () => {
@@ -141,9 +134,9 @@ describe("voice demo tools", () => {
     const socket = scriptedSocket(async function* () {
       yield JSON.stringify({
         type: "response.function_call_arguments.done",
-        name: "start_tour",
+        name: "set_level",
         call_id: "call-end",
-        arguments: "",
+        arguments: JSON.stringify({ level: "curious" }),
       });
     });
     await runRealtimeGuideSession({ token: "ephemeral", connect: socket.connect });
@@ -152,7 +145,29 @@ describe("voice demo tools", () => {
     expect(output.item.call_id).toBe("call-end");
     expect(JSON.parse(output.item.output).ok).toBe(true);
     expect(events.at(-1)).toEqual({ type: "response.create" });
+    expect(getScene().level).toBe("curious");
+  });
+
+  // REGRESSION GUARD (2026-10-18): voice "start the tour" played Grok's reply over the cached tour lines,
+  // and the open mic heard the tour and answered it. A started tour must end the voice session.
+  it("H1: start_tour hands off to the tour: no tool output, no follow-up reply, later events ignored", async () => {
+    let resumed = false;
+    const socket = scriptedSocket(async function* () {
+      yield JSON.stringify({
+        type: "response.function_call_arguments.done",
+        name: "start_tour",
+        call_id: "call-handoff",
+        arguments: "{}",
+      });
+      resumed = true;
+      yield JSON.stringify({ type: "response.done" });
+    });
+    await runRealtimeGuideSession({ token: "ephemeral", connect: socket.connect });
+    const events = socket.sent.map((line) => JSON.parse(line));
     expect(getScene().tour.active).toBe(true);
+    expect(events.some((event) => event?.item?.type === "function_call_output")).toBe(false);
+    expect(events.some((event) => event?.type === "response.create")).toBe(false);
+    expect(resumed).toBe(false);
   });
 
   it("text path runs start_tour and each set_level from mocked tool calls", async () => {

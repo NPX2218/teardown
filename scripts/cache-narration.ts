@@ -3,6 +3,7 @@
 // Checkpoint and coach modules are not required assets (07 migration).
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { loadParts } from "../lib/parts-source";
 import { flightCalloutLines } from "../lib/voice/flight-callouts";
 import { AUDIO_EXT } from "../lib/voice/format";
 import { LINES } from "../lib/voice/lines";
@@ -29,7 +30,8 @@ const jsonFiles = (dir: string): string[] =>
 
 function collectSources(): string[] {
   const sources: string[] = [...Object.values(LINES), ...flightCalloutLines()];
-  for (const f of jsonFiles(path.join(ROOT, "data", "parts"))) sources.push(...linesFromParts(readJson(f)));
+  // Cache what the tour actually speaks: the bundled catalog from loadParts(), not data/parts (their lines differ).
+  sources.push(...linesFromParts(loadParts()));
   for (const f of jsonFiles(path.join(ROOT, "data", "missions"))) sources.push(...linesFromMission(readJson(f)));
   return sources;
 }

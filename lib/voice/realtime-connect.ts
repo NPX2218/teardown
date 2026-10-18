@@ -6,6 +6,11 @@ export const defaultRealtimeConnect: RealtimeConnectors["connect"] = (url, proto
   if (typeof WebSocket === "undefined") throw new Error("no websocket");
   const ws = new WebSocket(url, protocols);
   const queue: string[] = [];
+  // The guide sends session.update right away. Sending while CONNECTING throws, so hold it until open.
+  const outbox: string[] = [];
+  ws.addEventListener("open", () => {
+    for (const data of outbox.splice(0)) ws.send(data);
+  });
   let waiter: ((value: IteratorResult<string>) => void) | null = null;
   let closed = false;
   const push = (value: string) => {
@@ -43,7 +48,10 @@ export const defaultRealtimeConnect: RealtimeConnectors["connect"] = (url, proto
   };
   return {
     socket: {
-      send(data: string) { ws.send(data); },
+      send(data: string) {
+        if (ws.readyState === WebSocket.CONNECTING) outbox.push(data);
+        else ws.send(data);
+      },
       close() { ws.close(); },
     },
     messages,

@@ -2,6 +2,7 @@
 // Browser clients use an ephemeral token. The API key never appears in this module.
 // The listen session registers no tools. The mascot guide session (realtime-guide.ts)
 // registers start_tour and set_level only.
+import { GROK_VOICE } from "@/lib/voice/format";
 
 export const REALTIME_MODEL = "grok-voice-latest";
 export const REALTIME_WS_URL = "wss://api.x.ai/v1/realtime";
@@ -114,7 +115,7 @@ export async function runListenSession(opts: {
   const { socket, messages } = opened;
   const timer = setTimeout(() => socket.close(), opts.timeoutMs);
   try {
-    socket.send(JSON.stringify(sessionUpdateForListen(opts.voice ?? "eve")));
+    socket.send(JSON.stringify(sessionUpdateForListen(opts.voice ?? GROK_VOICE)));
     for (const event of listenAudioEvents(opts.pcm)) socket.send(JSON.stringify(event));
     const seen: unknown[] = [];
     for await (const raw of messages) {
