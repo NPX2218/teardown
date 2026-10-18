@@ -118,7 +118,13 @@
   align-self: flex-start;
 }
 
-.missionHud :global(.hud__v) { white-space: nowrap; }
+.missionHud :global(.hud__v),
+.missionHud .note { white-space: nowrap; }
+
+.hudTag {
+  justify-self: start;
+  margin: 0;
+}
 .controlTop > :only-child { grid-column: 1 / -1; }
 .collapsible { overflow: hidden; min-height: 0; }
 .compactEmissions { display: grid; gap: 8px; }

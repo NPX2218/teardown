@@ -51,11 +51,19 @@ export function MissionHud() {
       data-status={status}
       data-motion={reduce ? "reduce" : "full"}
       aria-label="Altitude and speed"
+      data-in-range={lines.inRange ? "true" : "false"}
     >
       <p className="hud__k" aria-hidden="true">Height</p>
       <p className="hud__v hud__v--clock" aria-hidden="true">{lines.height}</p>
       <p className="hud__k" aria-hidden="true">Speed</p>
       <p className="hud__v hud__v--clock" aria-hidden="true">{lines.speed}</p>
+      <p className="hud__k" aria-hidden="true">Apogee</p>
+      <p className={`hud__v hud__v--clock${lines.inRange ? " chip--ok" : ""}`} aria-hidden="true">{lines.apogee}</p>
+      <p className="hud__k" aria-hidden="true">Perigee</p>
+      <p className={`hud__v hud__v--clock${lines.inRange ? " chip--ok" : ""}`} aria-hidden="true">{lines.perigee}</p>
+      <p className={styles.note} aria-hidden="true">{lines.target}</p>
+      {lines.inRange && <p className={`chip chip--ok ${styles.hudTag}`} aria-hidden="true">IN RANGE</p>}
+      {lines.cutEngines && <p className={styles.note} aria-hidden="true">Cut the engines.</p>}
       <p className="sr-only" aria-live="polite">{spoken}</p>
     </section>
   );

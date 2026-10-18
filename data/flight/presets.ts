@@ -14,7 +14,7 @@ function assumption(value: number, unit: string, source: string): ClassifiedNumb
   return { value, unit, classification: "model-assumption", source };
 }
 
-const OBJECTIVE = {
+export const OBJECTIVE = {
   minPeriapsisAltitudeM: 200_000,
   maxApoapsisAltitudeM: 2_000_000,
   thrustOffS: 10,
