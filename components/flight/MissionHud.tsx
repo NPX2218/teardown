@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "@/components/ui/useReducedMotion";
 import { useAppMode } from "@/lib/flight/app-mode";
+import { fuelPercent } from "@/lib/flight/format";
 import { HUD_ANNOUNCE_MS, missionHudLines, missionHudVisible, shouldAnnounceHud } from "@/lib/flight/mission-hud";
 import { useSettings } from "@/lib/settings/prefs";
 import { useScene } from "@/lib/store";
@@ -38,9 +39,13 @@ export function MissionHud() {
   const phase = useExhibit((s) => s.phase);
   const enabled = useSettings().hud;
   const readout = useScene((s) => s.flight.readout);
+  const fuelLedger = useScene((s) => s.flight.fuel);
   const status = useScene((s) => s.flight.status);
   const reduce = useReducedMotion();
-  const lines = missionHudLines(readout, status);
+  const fuelPct = readout
+    ? (fuelLedger ? fuelPercent(readout.propellantRemainingKg, fuelLedger.stages) : 100)
+    : null;
+  const lines = missionHudLines(readout, status, undefined, fuelPct);
   const spoken = useThrottledHud(lines.live);
   if (!missionHudVisible({ mode, phase, enabled })) return null;
 
@@ -61,6 +66,8 @@ export function MissionHud() {
       <p className={`hud__v hud__v--clock${lines.inRange ? " chip--ok" : ""}`} aria-hidden="true">{lines.apogee}</p>
       <p className="hud__k" aria-hidden="true">Perigee</p>
       <p className={`hud__v hud__v--clock${lines.inRange ? " chip--ok" : ""}`} aria-hidden="true">{lines.perigee}</p>
+      <p className="hud__k" aria-hidden="true">Fuel</p>
+      <p className={`hud__v hud__v--clock${lines.fuelLow ? " chip--warn" : ""}`} aria-hidden="true" data-fuel-low={lines.fuelLow ? "true" : "false"}>{lines.fuel}</p>
       <p className={styles.note} aria-hidden="true">{lines.target}</p>
       {lines.inRange && <p className={`chip chip--ok ${styles.hudTag}`} aria-hidden="true">IN RANGE</p>}
       {lines.cutEngines && <p className={styles.note} aria-hidden="true">Cut the engines.</p>}

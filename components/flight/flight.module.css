@@ -121,6 +121,9 @@
 .missionHud :global(.hud__v),
 .missionHud .note { white-space: nowrap; }
 
+.missionHud :global(p.chip--warn) { color: var(--warn); }
+.missionHud :global(p.chip--ok) { color: var(--ok); }
+
 .hudTag {
   justify-self: start;
   margin: 0;

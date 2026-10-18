@@ -6,6 +6,8 @@ import { useAppMode } from "@/lib/flight/app-mode";
 import { formatKm, formatSpeed } from "@/lib/flight/format";
 import {
   formatApogee,
+  formatFuelPercent,
+  fuelIsLow,
   missionHudLines,
   missionHudVisible,
   orbitInRange,
@@ -117,7 +119,7 @@ describe("mission hud formatting", () => {
     expect(flying.speed).toBe(formatSpeed(readout.totalSpeedMps));
     expect(flying.apogee).toBe("—");
     expect(flying.perigee).toBe("—");
-    expect(flying.live).toBe(`Height ${flying.height}. Speed ${flying.speed}. Apogee —. Perigee —.`);
+    expect(flying.live).toBe(`Height ${flying.height}. Speed ${flying.speed}. Apogee —. Perigee —. Fuel —.`);
     expect(formatKm(12_345)).toBe("12.3 km");
     expect(formatSpeed(1_500)).toBe("1.50 km/s");
 
@@ -126,7 +128,7 @@ describe("mission hud formatting", () => {
       speed: "0.00 km/s",
       apogee: "—",
       perigee: "—",
-      live: "Height 0.00 km. Speed 0.00 km/s. Apogee —. Perigee —.",
+      live: "Height 0.00 km. Speed 0.00 km/s. Apogee —. Perigee —. Fuel —.",
     });
     expect(missionHudLines(null, "crashed").height).toBe("—");
     expect(missionHudLines({ ...readout, altitudeM: 400_000, totalSpeedMps: 7_600 }, "crashed").height).toBe("400 km");
@@ -174,6 +176,43 @@ describe("mission hud orbit window", () => {
     expect(html).toContain("Cut the engines.");
     expect(html).toContain('data-in-range="true"');
     expect(html).toContain("chip--ok");
+  });
+
+  it("shows remaining fuel and warns under 20 percent", () => {
+    expect(formatFuelPercent(null)).toBe("—");
+    expect(formatFuelPercent(100)).toBe("100%");
+    expect(formatFuelPercent(19.4)).toBe("19%");
+    expect(fuelIsLow(19.4)).toBe(true);
+    expect(fuelIsLow(20)).toBe(false);
+    expect(fuelIsLow(19.6)).toBe(false);
+    const low = missionHudLines(readout, "flying", undefined, 12);
+    expect(low.fuel).toBe("12%");
+    expect(low.fuelLow).toBe(true);
+    expect(low.live).toContain("Fuel 12%");
+    useAppMode.setState({ mode: "mission" });
+    useScene.setState({
+      flight: {
+        ...scene.flight,
+        status: "flying",
+        readout: { ...readout, propellantRemainingKg: 10 },
+        fuel: {
+          runId: "run",
+          simulatedTimeS: 1,
+          rp1ConsumedKg: 40,
+          stages: [{
+            id: "booster",
+            dryMassKg: 1,
+            propellantRemainingKg: 10,
+            rp1ConsumedKg: 40,
+            loxConsumedKg: 50,
+          }],
+        },
+      },
+    });
+    const html = renderToStaticMarkup(<MissionHud />);
+    expect(html).toContain(">Fuel<");
+    expect(html).toContain("chip--warn");
+    expect(html).toContain('data-fuel-low="true"');
   });
 });
 
