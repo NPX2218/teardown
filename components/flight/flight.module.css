@@ -51,6 +51,54 @@
 .readout[data-compact="true"] { width: min(18rem, calc(100vw - 48px)); }
 
 .controlTop { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+
+.hudSelect {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.hudSelect select {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-pill);
+  background: #0a0a0a;
+  color: var(--text);
+  font: inherit;
+}
+
+.missionHud {
+  top: 80px;
+  left: 50%;
+  bottom: auto;
+  display: flex;
+  gap: 28px;
+  transform: translateX(-50%);
+  background: #0a0a0a;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.missionHudPair { display: grid; gap: 2px; }
+.missionHudPair p { margin: 0; }
+
+.missionHud :global(.hud__v) {
+  font-family: var(--font-display-sx);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.missionHud[data-motion="reduce"] { transition: none; }
 .controlTop > :only-child { grid-column: 1 / -1; }
 .collapsible { overflow: hidden; min-height: 0; }
 .compactEmissions { display: grid; gap: 8px; }
@@ -150,6 +198,16 @@
 
   .controls[data-compact="true"],
   .readout[data-compact="true"] { width: auto; }
+
+  .missionHud {
+    top: 76px;
+    left: 12px;
+    transform: none;
+    gap: 16px;
+    padding: 10px 14px;
+  }
+
+  .missionHud :global(.hud__v) { font-size: 24px; }
 
   .result {
     top: auto;

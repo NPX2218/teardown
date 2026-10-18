@@ -52,6 +52,7 @@ describe("settings persistence", () => {
       masterPercent: 40,
       vibration: false,
       musicPercent: 40,
+      hud: true,
     };
     const storage = memoryStorage();
     saveSettings(storage, stored);
@@ -62,6 +63,7 @@ describe("settings persistence", () => {
       masterPercent: 40,
       vibration: true,
       musicPercent: 40,
+      hud: true,
     });
     expect(readSettings(null)).toEqual(DEFAULT_SETTINGS);
     expect(readSettings("{")).toEqual(DEFAULT_SETTINGS);
@@ -82,10 +84,10 @@ describe("settings persistence", () => {
 
   it("keeps one live copy and ignores a no-op write", () => {
     const seen: number[] = [];
-    commitSettings({ engineSound: false, masterPercent: 80, vibration: true, musicPercent: 40 });
+    commitSettings({ engineSound: false, masterPercent: 80, vibration: true, musicPercent: 40, hud: true });
     const stop = subscribeSettings(() => seen.push(getSettings().masterPercent));
-    commitSettings({ engineSound: false, masterPercent: 80, vibration: true, musicPercent: 40 });
-    commitSettings({ engineSound: false, masterPercent: 25, vibration: true, musicPercent: 40 });
+    commitSettings({ engineSound: false, masterPercent: 80, vibration: true, musicPercent: 40, hud: true });
+    commitSettings({ engineSound: false, masterPercent: 25, vibration: true, musicPercent: 40, hud: true });
     expect(getSettings().masterPercent).toBe(25);
     expect(seen).toEqual([25]);
     stop();
@@ -122,7 +124,7 @@ describe("master gain mapping", () => {
 
   it("sends master, the engine switch, and the buzz switch to a paired phone", () => {
     const quiet = settingsBroadcast(
-      { engineSound: true, masterPercent: 50, vibration: true, musicPercent: 40 },
+      { engineSound: true, masterPercent: 50, vibration: true, musicPercent: 40, hud: true },
       false,
       "",
     );
@@ -130,13 +132,13 @@ describe("master gain mapping", () => {
     expect(quiet.key).toBe("off");
 
     const live = settingsBroadcast(
-      { engineSound: false, masterPercent: 50, vibration: true, musicPercent: 40 },
+      { engineSound: false, masterPercent: 50, vibration: true, musicPercent: 40, hud: true },
       true,
       quiet.key,
     );
     expect(live.message).toEqual({ k: "settings", engineSound: false, master: 0.5, vibrate: true });
     const again = settingsBroadcast(
-      { engineSound: false, masterPercent: 50, vibration: true, musicPercent: 40 },
+      { engineSound: false, masterPercent: 50, vibration: true, musicPercent: 40, hud: true },
       true,
       live.key,
     );
@@ -156,7 +158,7 @@ describe("master gain mapping", () => {
       setVibrationEnabled: vi.fn(),
     };
     const settings = pushWireSettings({ engineSound: false, master: 0.25, vibrate: false }, sink);
-    expect(settings).toEqual({ engineSound: false, masterPercent: 25, vibration: false, musicPercent: 40 });
+    expect(settings).toEqual({ engineSound: false, masterPercent: 25, vibration: false, musicPercent: 40, hud: true });
     expect(settingsFromWire({ engineSound: true, master: 1, vibrate: true })).toEqual(DEFAULT_SETTINGS);
     expect(sink.setEnabled).toHaveBeenCalledWith(false);
     expect(sink.setMasterGain).toHaveBeenCalledWith(0.25);

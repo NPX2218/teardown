@@ -9,6 +9,8 @@ import { MISSIONS } from "@/data/missions/index";
 import { historicalMissions, missionById } from "@/lib/flight/mission-select";
 import { referenceTrajectoryNote } from "@/lib/replay";
 import { useAppMode } from "@/lib/flight/app-mode";
+import { setMissionHud } from "@/lib/flight/mission-hud";
+import { useSettings } from "@/lib/settings/prefs";
 import {
   formatKm,
   formatSpeed,
@@ -41,6 +43,8 @@ export function FlightHud({ controlsOnly = false }: { controlsOnly?: boolean }) 
   const warningLevel = useScene((s) => s.warningLevel);
   const guidanceNote = useScene((s) => s.guidanceNote);
   const view = useAppMode((s) => s.view);
+  const mode = useAppMode((s) => s.mode);
+  const hudOn = useSettings().hud;
   const status = flight.status;
   const readout = flight.readout;
   const steering = status === "flying";
@@ -197,6 +201,23 @@ export function FlightHud({ controlsOnly = false }: { controlsOnly?: boolean }) 
               </div>
             </motion.div>}
           </AnimatePresence>
+          {mode === "mission" && (
+            <label className={styles.hudSelect}>
+              HUD
+              <select
+                id="mission-hud"
+                aria-label="HUD"
+                value={hudOn ? "on" : "off"}
+                onChange={(event) => {
+                  setMissionHud(event.target.value === "on", window.localStorage);
+                  mark();
+                }}
+              >
+                <option value="on">On</option>
+                <option value="off">Off</option>
+              </select>
+            </label>
+          )}
           <label className="range" htmlFor="throttle-control">
             Engine power
             <input
