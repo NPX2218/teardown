@@ -11,6 +11,8 @@ import { vehiclePoseOffsets } from "@/lib/flight/vehicle-pose.helpers";
 import { FLIGHT_SCENE } from "@/lib/viewer/colors";
 import { flightDrawNow } from "./flightDraw";
 import { FALCON_HEIGHT_M, fitFalcon } from "./fitFalcon";
+import { ExplorePlumes } from "@/components/viewer/ExplorePlumes";
+import { readEffectiveEnginePower } from "@/lib/rocket/engine-feedback";
 import { EnginePlume } from "./fx/EnginePlume";
 import { StageSeparation } from "./fx/StageSeparation";
 
@@ -48,7 +50,10 @@ export function Vehicle({ stage, throttle, altitudeKm, elapsedS, visible = true 
 }) {
   const rig = useRef<THREE.Group>(null);
   const marker = useRef<THREE.Mesh>(null);
+  const liveThrottle = useRef(0);
+  liveThrottle.current = readEffectiveEnginePower();
   useFrame(({ camera }) => {
+    liveThrottle.current = readEffectiveEnginePower();
     const draw = flightDrawNow.current;
     const node = rig.current;
     if (!draw || !node) return;
@@ -87,8 +92,13 @@ export function Vehicle({ stage, throttle, altitudeKm, elapsedS, visible = true 
           <Suspense fallback={<FallbackRocket />}>
             <FalconModel />
           </Suspense>
-        ) : <StageSeparation stage={stage} throttle={throttle} elapsedS={elapsedS} />}
-        <EnginePlume throttle={stage < 1 ? throttle : 0} altitudeKm={altitudeKm} />
+        ) : <StageSeparation stage={stage} throttle={liveThrottle.current} elapsedS={elapsedS} />}
+        {stage < 1 && <ExplorePlumes variant="flight" />}
+        <EnginePlume
+          throttle={stage < 1 ? throttle : 0}
+          altitudeKm={altitudeKm}
+          liveThrottle={stage < 1 ? liveThrottle : undefined}
+        />
       </group>
       <mesh ref={marker} visible={false}>
         <ringGeometry args={[0.62, 1, 28]} />
