@@ -9,7 +9,9 @@ export interface CachedPatch {
 }
 
 const MAX_PATCHES = 32;
-const patches = new Map<string, CachedPatch>();
+// On globalThis: Next dev bundles each route separately, so a plain module Map made POST and GET see different caches.
+const store = globalThis as typeof globalThis & { __teardownPatches?: Map<string, CachedPatch> };
+const patches = (store.__teardownPatches ??= new Map<string, CachedPatch>());
 
 export function putPatch(id: string, patch: CachedPatch): void {
   patches.delete(id);
