@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none">
+  <rect width="1024" height="1024" fill="#000000"/>
+  <defs>
+    <clipPath id="disc"><circle cx="512" cy="512" r="452"/></clipPath>
+  </defs>
+  <g clip-path="url(#disc)">
+    <path d="M140 748 C 320 612, 704 612, 884 748" stroke="#F0F0FA" stroke-width="2" opacity="0.45"/>
+    <path d="M318 690 C 372 540, 448 410, 548 318" stroke="#F0F0FA" stroke-width="2.5"/>
+    <ellipse cx="512" cy="318" rx="268" ry="72" stroke="hsl(142 69% 58%)" stroke-width="8"/>
+    <g transform="translate(468 468) rotate(-28)" fill="#F0F0FA">
+      <path d="M0-88 L13-34 L13 52 L7 68 L0 60 L-7 68 L-13 52 L-13-34 Z"/>
+      <path d="M-13 32 L-40 80 L-11 58 Z"/>
+      <path d="M13 32 L40 80 L11 58 Z"/>
+    </g>
+  </g>
+  <circle cx="512" cy="512" r="460" stroke="hsl(142 69% 58%)" stroke-width="8"/>
+</svg>

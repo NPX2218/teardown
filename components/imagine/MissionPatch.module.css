@@ -67,7 +67,37 @@
 
 .frame[data-phase="loading"] {
   border-style: dashed;
-  border-color: var(--hairline-3);
+}
+
+/* Outcome colour sits on the frame, so a saved patch and a live picture share it. */
+.frame[data-tone="ok"] {
+  border-width: 2px;
+  border-color: var(--ok);
+  color: var(--ok);
+}
+
+.frame[data-tone="bad"] {
+  border-width: 2px;
+  border-color: var(--bad);
+  color: var(--bad);
+}
+
+.toneRing {
+  position: absolute;
+  inset: 10px;
+  z-index: 1;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.toneBadge {
+  position: absolute;
+  z-index: 2;
+  left: 12px;
+  bottom: 12px;
+  border-color: currentColor;
+  background: rgba(0, 0, 0, 0.72);
 }
 
 .picture {
@@ -81,6 +111,14 @@
   width: 64%;
   height: 64%;
   color: var(--text);
+}
+
+.frame[data-tone="ok"] .badge {
+  color: var(--ok);
+}
+
+.frame[data-tone="bad"] .badge {
+  color: var(--bad);
 }
 
 .drawing {

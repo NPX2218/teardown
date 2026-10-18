@@ -8,6 +8,7 @@ import { getEmissionsView, subscribeEmissionsView } from "@/lib/emissions-seam";
 import { IMAGINE_RESET_EVENT } from "@/lib/imagine/client";
 import { assignFlightNumber, buildPatchCard, patchShareUrl, scenarioLabel, type PatchCard } from "@/lib/imagine/patch";
 import { PATCH_OPEN_EVENT, requestMissionPatch } from "@/lib/imagine/patch-client";
+import { cachedPatchIdForOutcome, cachedPatchPath, patchToneForOutcome, type PatchTone } from "@/lib/imagine/patch-static";
 import { BADGE_ROCKET_PATH, downloadPatchPng } from "@/lib/imagine/patch-png";
 import { patchQrPath } from "@/lib/imagine/patch-qr";
 import { motionPresets } from "@/lib/ui/motion";
@@ -24,8 +25,10 @@ interface MissionPatchCardProps {
   imageUrl: string | null;
   shareUrl: string | null;
   localhostOnly?: boolean;
+  tone: PatchTone;
   onClose: () => void;
   onRetry: () => void;
+  onCacheError?: () => void;
 }
 
 function FallbackBadge() {
@@ -56,7 +59,7 @@ function DrawingBadge() {
   );
 }
 
-export function MissionPatchCard({ card, phase, imageUrl, shareUrl, localhostOnly = false, onClose, onRetry }: MissionPatchCardProps) {
+export function MissionPatchCard({ card, phase, imageUrl, shareUrl, localhostOnly = false, tone, onClose, onRetry, onCacheError }: MissionPatchCardProps) {
   const qr = phase === "ready" && shareUrl ? patchQrPath(shareUrl) : null;
   const [saving, setSaving] = useState<"idle" | "busy" | "failed">("idle");
   const download = () => {
@@ -88,7 +91,11 @@ export function MissionPatchCard({ card, phase, imageUrl, shareUrl, localhostOnl
         <h2 id="mission-patch-title" className={styles.title}>{card.title}</h2>
       </header>
       <div className={styles.body}>
-        <div className={styles.frame} data-phase={phase}>
+        <div className={styles.frame} data-phase={phase} data-tone={tone}>
+          <span className={styles.toneRing} aria-hidden="true" />
+          <span className={`chip ${tone === "ok" ? "chip--ok" : "chip--bad"} ${styles.toneBadge}`}>
+            {tone === "ok" ? "In orbit" : "Flight ended"}
+          </span>
           {phase === "loading" && (
             <div className={styles.drawing} role="status">
               <DrawingBadge />
@@ -104,6 +111,9 @@ export function MissionPatchCard({ card, phase, imageUrl, shareUrl, localhostOnl
               width={1024}
               height={1024}
               unoptimized
+              onError={() => {
+                if (imageUrl.startsWith("/patches/")) onCacheError?.();
+              }}
             />
           )}
           {phase === "error" && <FallbackBadge />}
@@ -198,13 +208,18 @@ export function MissionPatch() {
     phase: "loading",
     imageUrl: null,
   });
+  const [brokenRunId, setBrokenRunId] = useState<string | null>(null);
 
   const viewRef = useRef(view);
   viewRef.current = view;
 
   const runId = outcome?.runId ?? null;
-  const phase = view.runId === runId ? view.phase : "loading";
-  const imageUrl = view.runId === runId ? view.imageUrl : null;
+  // Saved art for this ending, on the first paint. A live picture is asked for only if that file cannot be shown.
+  const cachedUrl = outcome ? cachedPatchPath(cachedPatchIdForOutcome(outcome)) : null;
+  const tone: PatchTone = outcome ? patchToneForOutcome(outcome) : "bad";
+  const cacheOk = cachedUrl !== null && brokenRunId !== runId;
+  const phase: PatchPhase = cacheOk ? "ready" : (view.runId === runId ? view.phase : "loading");
+  const imageUrl = cacheOk ? cachedUrl : (view.runId === runId ? view.imageUrl : null);
 
   const assigned = outcome ? assignFlightNumber(outcome.runId, numbers.current) : null;
   if (assigned) numbers.current = assigned.table;
@@ -252,6 +267,8 @@ export function MissionPatch() {
   useEffect(() => {
     const current = outcomeRef.current;
     if (!open || !current || flightNumber === null || scenarioName === null) return;
+    // The saved file is the picture. Ask Grok only when that file cannot be shown.
+    if (cachedUrl && brokenRunId !== current.runId) return;
     const ctl = new AbortController();
     let cancelled = false;
     const run = current.runId;
@@ -272,7 +289,7 @@ export function MissionPatch() {
     };
     // outcome identity changes when the sim commits, but one run should generate one patch.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, runId, flightNumber, scenarioName, attempt]);
+  }, [open, runId, flightNumber, scenarioName, attempt, brokenRunId, cachedUrl]);
 
   if (!open || !card) return null;
 
@@ -299,8 +316,12 @@ export function MissionPatch() {
         phase={phase}
         imageUrl={imageUrl}
         shareUrl={shareUrl}
+        tone={tone}
         localhostOnly={localhostOnly}
         onClose={close}
+        onCacheError={() => {
+          if (runId) setBrokenRunId(runId);
+        }}
         onRetry={() => {
           setView({ runId: outcome?.runId ?? null, phase: "loading", imageUrl: null });
           setAttempt((value) => value + 1);
