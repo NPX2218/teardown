@@ -10,7 +10,7 @@ describe("settings sheet", () => {
   it("shows engine sound, master sound, and vibration with the SpaceXAI controls", () => {
     const html = renderToStaticMarkup(
       <SettingsSheet
-        settings={{ engineSound: true, masterPercent: 80, vibration: false, musicPercent: 40 }}
+        settings={{ engineSound: true, masterPercent: 80, vibration: false, musicPercent: 40, hud: true }}
         titleId="settings-title"
         onEngineSound={() => {}}
         onMaster={() => {}}
@@ -39,7 +39,7 @@ describe("settings sheet", () => {
   it("shows a music slider under the master level", () => {
     const html = renderToStaticMarkup(
       <SettingsSheet
-        settings={{ engineSound: true, masterPercent: 100, vibration: true, musicPercent: 40 }}
+        settings={{ engineSound: true, masterPercent: 100, vibration: true, musicPercent: 40, hud: true }}
         titleId="settings-title"
         onEngineSound={() => {}}
         onMaster={() => {}}

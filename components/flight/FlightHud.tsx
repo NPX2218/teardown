@@ -9,6 +9,8 @@ import { MISSIONS } from "@/data/missions/index";
 import { historicalMissions, missionById } from "@/lib/flight/mission-select";
 import { referenceTrajectoryNote } from "@/lib/replay";
 import { useAppMode } from "@/lib/flight/app-mode";
+import { setMissionHud } from "@/lib/flight/mission-hud";
+import { useSettings } from "@/lib/settings/prefs";
 import {
   formatKm,
   formatSpeed,
@@ -27,6 +29,7 @@ import { resetChaseOrbit } from "./chaseOrbit";
 import { useScene } from "@/lib/store";
 import type { FlightWarp } from "@/lib/types";
 import { EmissionsPlacement } from "./EmissionsPlacement";
+import { MissionHud } from "./MissionHud";
 import styles from "./flight.module.css";
 
 export function FlightHud({ controlsOnly = false }: { controlsOnly?: boolean }) {
@@ -41,6 +44,8 @@ export function FlightHud({ controlsOnly = false }: { controlsOnly?: boolean }) 
   const warningLevel = useScene((s) => s.warningLevel);
   const guidanceNote = useScene((s) => s.guidanceNote);
   const view = useAppMode((s) => s.view);
+  const mode = useAppMode((s) => s.mode);
+  const hudOn = useSettings().hud;
   const status = flight.status;
   const readout = flight.readout;
   const steering = status === "flying";
@@ -98,7 +103,8 @@ export function FlightHud({ controlsOnly = false }: { controlsOnly?: boolean }) 
 
   return (
     <>
-      {!controlsOnly && <motion.section initial={reduce ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={collapseTransition} id="flight-status" className={`hud ${styles.readout}`} data-status={status} data-compact={compact} data-warning={warningLevel} data-sim-time={flight.simulatedTimeS} data-altitude-m={readout?.altitudeM ?? undefined} aria-label="Flight readout">
+      {!controlsOnly && <div className={`${styles.leftStack} ${styles.stack}`} data-compact={compact}>
+      <motion.section initial={reduce ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={collapseTransition} id="flight-status" className={`hud ${styles.readout}`} data-status={status} data-compact={compact} data-warning={warningLevel} data-sim-time={flight.simulatedTimeS} data-altitude-m={readout?.altitudeM ?? undefined} aria-label="Flight readout">
         <AnimatePresence initial={false}>
           {!compact && <motion.div key="readout-details" className={styles.collapsible} initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={collapseTransition}>
         {status === "ready" && (
@@ -175,7 +181,9 @@ export function FlightHud({ controlsOnly = false }: { controlsOnly?: boolean }) 
             <p className="hud__v hud__v--clock">{emissions.status === "estimate" ? "≈ " : ""}{emissionsCopy.valueText}</p>
           </section>
         ) : <EmissionsPlacement />}
-      </motion.section>}
+      </motion.section>
+      <MissionHud />
+      </div>}
       <section className={`hud ${styles.controls}`} data-compact={compact} data-motion={reduce ? "reduce" : "full"} aria-label="Flight controls">
         <div className={styles.stack}>
           <div className={styles.controlTop}>
@@ -197,6 +205,23 @@ export function FlightHud({ controlsOnly = false }: { controlsOnly?: boolean }) 
               </div>
             </motion.div>}
           </AnimatePresence>
+          {mode === "mission" && (
+            <label className={styles.hudSelect}>
+              HUD
+              <select
+                id="mission-hud"
+                aria-label="HUD"
+                value={hudOn ? "on" : "off"}
+                onChange={(event) => {
+                  setMissionHud(event.target.value === "on", window.localStorage);
+                  mark();
+                }}
+              >
+                <option value="on">On</option>
+                <option value="off">Off</option>
+              </select>
+            </label>
+          )}
           <label className="range" htmlFor="throttle-control">
             Engine power
             <input

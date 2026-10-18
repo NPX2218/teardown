@@ -17,6 +17,8 @@ export interface AppSettings {
    * 40 is the gentle default so the first visit is not a surprise.
    */
   musicPercent: number;
+  /** Mission altitude and speed strip. The phone never shows it. */
+  hud: boolean;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -24,6 +26,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   masterPercent: 100,
   vibration: true,
   musicPercent: 40,
+  hud: true,
 };
 
 export function defaultSettings(): AppSettings {
@@ -53,6 +56,7 @@ export function parseSettings(raw: unknown): AppSettings {
     masterPercent: clampMasterPercent(record.masterPercent),
     vibration: typeof record.vibration === "boolean" ? record.vibration : DEFAULT_SETTINGS.vibration,
     musicPercent: clampMusicPercent(record.musicPercent),
+    hud: typeof record.hud === "boolean" ? record.hud : DEFAULT_SETTINGS.hud,
   };
 }
 
@@ -107,6 +111,7 @@ export function settingsFromWire(message: { engineSound: boolean; master: number
     masterPercent: Math.round(clampUnit(message.master) * 100),
     vibration: message.vibrate,
     musicPercent: getSettings().musicPercent,
+    hud: getSettings().hud,
   });
 }
 
@@ -136,7 +141,8 @@ function same(a: AppSettings, b: AppSettings): boolean {
   return a.engineSound === b.engineSound
     && a.masterPercent === b.masterPercent
     && a.vibration === b.vibration
-    && a.musicPercent === b.musicPercent;
+    && a.musicPercent === b.musicPercent
+    && a.hud === b.hud;
 }
 
 export function commitSettings(next: AppSettings): void {

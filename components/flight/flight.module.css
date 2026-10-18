@@ -51,6 +51,74 @@
 .readout[data-compact="true"] { width: min(18rem, calc(100vw - 48px)); }
 
 .controlTop { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+
+.hudSelect {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.hudSelect select {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-pill);
+  background: #0a0a0a;
+  color: var(--text);
+  font: inherit;
+}
+
+/* The altitude strip sits in this column, directly under the carbon readout. */
+.leftStack {
+  position: absolute;
+  z-index: var(--z-hud);
+  top: 80px;
+  left: 24px;
+  bottom: 24px;
+  pointer-events: none;
+}
+
+.leftStack.stack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.leftStack > :first-child {
+  min-height: 0;
+  overflow: auto;
+  flex: 0 1 auto;
+  overscroll-behavior: contain;
+}
+
+.leftStack > :last-child:not(:first-child) { flex: 0 0 auto; }
+
+.leftStack .readout,
+.leftStack .readout[data-compact="true"] {
+  position: relative;
+  top: auto;
+  right: auto;
+  bottom: auto;
+  left: auto;
+  max-height: none;
+  transform: none;
+  pointer-events: auto;
+}
+
+/* Size to the figures. The carbon card above keeps the readout width. */
+.leftStack .missionHud,
+.leftStack .missionHud[data-compact="true"] {
+  width: max-content;
+  max-width: 100%;
+  align-self: flex-start;
+}
+
+.missionHud :global(.hud__v) { white-space: nowrap; }
 .controlTop > :only-child { grid-column: 1 / -1; }
 .collapsible { overflow: hidden; min-height: 0; }
 .compactEmissions { display: grid; gap: 8px; }
@@ -150,6 +218,15 @@
 
   .controls[data-compact="true"],
   .readout[data-compact="true"] { width: auto; }
+
+  .leftStack,
+  .leftStack[data-compact="true"] {
+    top: 128px;
+    left: 12px;
+    right: 12px;
+    bottom: calc(34dvh + 52px);
+    width: auto;
+  }
 
   .result {
     top: auto;
