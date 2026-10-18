@@ -46,19 +46,16 @@ export function MissionHud() {
 
   return (
     <section
-      className={`hud hud--passive ${styles.missionHud}`}
+      className={`hud hud--passive ${styles.readout}`}
+      data-compact={status === "flying"}
       data-status={status}
       data-motion={reduce ? "reduce" : "full"}
       aria-label="Altitude and speed"
     >
-      <div className={styles.missionHudPair} aria-hidden="true">
-        <p className="hud__k">Height</p>
-        <p className="hud__v">{lines.height}</p>
-      </div>
-      <div className={styles.missionHudPair} aria-hidden="true">
-        <p className="hud__k">Speed</p>
-        <p className="hud__v">{lines.speed}</p>
-      </div>
+      <p className="hud__k" aria-hidden="true">Height</p>
+      <p className="hud__v hud__v--clock" aria-hidden="true">{lines.height}</p>
+      <p className="hud__k" aria-hidden="true">Speed</p>
+      <p className="hud__v hud__v--clock" aria-hidden="true">{lines.speed}</p>
       <p className="sr-only" aria-live="polite">{spoken}</p>
     </section>
   );

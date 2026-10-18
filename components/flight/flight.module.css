@@ -73,32 +73,42 @@
   font: inherit;
 }
 
-.missionHud {
+/* The altitude strip sits in this column, directly under the carbon readout. */
+.leftStack {
+  position: absolute;
+  z-index: var(--z-hud);
   top: 80px;
-  left: 50%;
-  bottom: auto;
+  left: 24px;
+  bottom: 24px;
+  pointer-events: none;
+}
+
+.leftStack.stack {
   display: flex;
-  gap: 28px;
-  transform: translateX(-50%);
-  background: #0a0a0a;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 16px;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
+  flex-direction: column;
+  align-items: stretch;
 }
 
-.missionHudPair { display: grid; gap: 2px; }
-.missionHudPair p { margin: 0; }
-
-.missionHud :global(.hud__v) {
-  font-family: var(--font-display-sx);
-  font-size: 32px;
-  font-weight: 700;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
+.leftStack > :first-child {
+  min-height: 0;
+  overflow: auto;
+  flex: 0 1 auto;
+  overscroll-behavior: contain;
 }
 
-.missionHud[data-motion="reduce"] { transition: none; }
+.leftStack > :last-child:not(:first-child) { flex: 0 0 auto; }
+
+.leftStack .readout,
+.leftStack .readout[data-compact="true"] {
+  position: relative;
+  top: auto;
+  right: auto;
+  bottom: auto;
+  left: auto;
+  max-height: none;
+  transform: none;
+  pointer-events: auto;
+}
 .controlTop > :only-child { grid-column: 1 / -1; }
 .collapsible { overflow: hidden; min-height: 0; }
 .compactEmissions { display: grid; gap: 8px; }
@@ -199,15 +209,14 @@
   .controls[data-compact="true"],
   .readout[data-compact="true"] { width: auto; }
 
-  .missionHud {
-    top: 76px;
+  .leftStack,
+  .leftStack[data-compact="true"] {
+    top: 128px;
     left: 12px;
-    transform: none;
-    gap: 16px;
-    padding: 10px 14px;
+    right: 12px;
+    bottom: calc(34dvh + 52px);
+    width: auto;
   }
-
-  .missionHud :global(.hud__v) { font-size: 24px; }
 
   .result {
     top: auto;

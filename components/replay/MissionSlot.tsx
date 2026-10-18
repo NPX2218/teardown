@@ -4,7 +4,6 @@ import dynamic from "next/dynamic";
 import { useEffect } from "react";
 import { useAppMode } from "@/lib/flight/app-mode";
 import { FlightHud } from "@/components/flight/FlightHud";
-import { MissionHud } from "@/components/flight/MissionHud";
 import { FlightResult } from "@/components/flight/FlightResult";
 import { useExhibit } from "@/lib/viewer/exhibit";
 import { useScene } from "@/lib/store";
@@ -30,7 +29,6 @@ export function MissionSlot() {
     <div data-slot="mission" className={mode === "explore" ? undefined : styles.slot}>
       {mode !== "explore" && <FlightScene />}
       {mode !== "explore" && !quiet && <FlightHud />}
-      {mode === "mission" && !quiet && <MissionHud />}
       {mode !== "explore" && !quiet && <FlightResult />}
       <ExhibitRuntime />
     </div>

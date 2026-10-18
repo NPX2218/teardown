@@ -91,6 +91,13 @@ describe("mission hud visibility", () => {
     expect(on).toContain(formatKm(12_345));
     expect(on).toContain(formatSpeed(1_500));
     expect(on).toContain('aria-live="polite"');
+    expect(on).toContain("hud__v--clock");
+
+    const stacked = renderToStaticMarkup(<FlightHud />);
+    const carbonAt = stacked.indexOf("Carbon dioxide so far");
+    const heightAt = stacked.indexOf(">Height<");
+    expect(carbonAt).toBeGreaterThan(-1);
+    expect(heightAt).toBeGreaterThan(carbonAt);
 
     setMissionHud(false, memory());
     expect(renderToStaticMarkup(<MissionHud />)).toBe("");
