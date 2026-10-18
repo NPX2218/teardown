@@ -46,7 +46,7 @@ export function MissionHud() {
 
   return (
     <section
-      className={`hud hud--passive ${styles.readout}`}
+      className={`hud hud--passive ${styles.readout} ${styles.missionHud}`}
       data-compact={status === "flying"}
       data-status={status}
       data-motion={reduce ? "reduce" : "full"}
