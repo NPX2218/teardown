@@ -28,7 +28,7 @@ describe("xAI voice server (05, no live provider)", () => {
     expect(url).toBe(XAI_TTS_URL);
     expect((init.headers as Record<string, string>).Authorization).toBe("Bearer super-secret-key");
     const body = JSON.parse(init.body as string) as { text: string; voice_id: string; language: string };
-    expect(body).toEqual({ text: "Hello", voice_id: "eve", language: "en" });
+    expect(body).toEqual({ text: "Hello", voice_id: "rex", language: "en" });
   });
 
   it("VX3 an ephemeral token is returned and a token equal to the key is refused", async () => {

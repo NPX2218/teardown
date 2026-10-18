@@ -4,6 +4,9 @@
 export const AUDIO_EXT = "mp3";
 export const AUDIO_MIME = "audio/mpeg";
 
+/** Grok voice for narration and live talk. xAI's male voices are rex and leo. XAI_VOICE overrides TTS only. */
+export const GROK_VOICE = "rex";
+
 export const MAX_VOICE_CHARS = 500;
 
 export const SPEAK_BASE_MS = 1500;
